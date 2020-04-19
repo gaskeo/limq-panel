@@ -6,15 +6,22 @@
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
           crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
     {% block title %}
     <title>{{ title }}</title>
     {% endblock %}
+    <style type="text/css">
+    </style>
 </head>
 <body>
     <div class="header">
     <nav class="navbar navbar-light bg-light">
-        <a href="/" class="name_site"><h1>{{ name_site }}</h1></a>
+        <div>
+            <span class="lithium-label">Lithium</span>
+            <span class="lithium-label mq-label">MQ</span>
+        </div>
+
         <div class="nick">
         {% if current_user.is_authenticated %}
         <div>
@@ -22,8 +29,8 @@
         </div>
         {% else %}
             <div>
-                <a href="/register"><button type="submit" class="btn btn-primary">Register</button></a>
-                <a href="/login"><button type="submit" class="btn btn-success">Log in</button></a>
+                <a href="/register"><button type="submit" class="btn btn-primary">Зарегистрироваться</button></a>
+                <a href="/login"><button type="submit" class="btn btn-success">Войти</button></a>
 
             </div>
         {% endif %}
@@ -34,9 +41,9 @@
     <div class="data_container">
         {% if current_user.is_authenticated %}
         <h4>тут все токены, что есть и внизу или вверху кнопка для создания</h4>
-        <a href="/add_token"><button type="submit" class="btn btn-primary">Add token</button></a>
+        <a href="/add_token"><button type="submit" class="btn btn-primary">Создать токен</button></a>
         {% else %}
-        <h4>Описание нашего проекта, если не пользователь</h4>
+        <h4>Тут крутой шоукейс</h4>
         {% endif %}
     </div>
         {% endblock %}
