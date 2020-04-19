@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block title %}
+    <title>{{ title }}</title>
+    {% endblock %}
+</head>
+<body>
+    <div class="header">
+    <nav class="navbar navbar-light bg-light">
+        <a href="/" class="name_site"><h1>{{ name_site }}</h1></a>
+        <div class="nick">
+        {% if current_user.is_authenticated %}
+        <div>
+            <a href="/logout"><h4 class="nick">{{ current_user.username }}</h4></a>
+        </div>
+        {% else %}
+            <div>
+                <a href="/register"><button type="submit" class="btn btn-primary">Register</button></a>
+                <a href="/login"><button type="submit" class="btn btn-success">Log in</button></a>
+
+            </div>
+        {% endif %}
+        </div>
+    </nav>
+    </div>
+    {% block content %}
+    <div class="data_container">
+        {% if current_user.is_authenticated %}
+        <h4>тут все токены, что есть и внизу или вверху кнопка для создания</h4>
+        <a href="/add_token"><button type="submit" class="btn btn-primary">Add token</button></a>
+        {% else %}
+        <h4>Описание нашего проекта, если не пользователь</h4>
+        {% endif %}
+    </div>
+        {% endblock %}
+</body>
+</html>

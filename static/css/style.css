@@ -1,0 +1,32 @@
+a {
+	color: black;
+	text-decoration: none;
+}
+
+a:hover {
+	color: grey;
+	text-decoration: none;
+}
+
+.data_container {
+	max-width: 80%;
+	margin-left: 10%;
+	padding-top: 20px;
+}
+
+.header {
+	max-width: 84%;
+	margin-left: 8%;	
+	background-color: blue;
+
+}
+
+.name_site {
+	color: black;
+	text-decoration: none;
+}
+
+.name_site:hover {
+	color: grey;
+	text-decoration: none;
+}
