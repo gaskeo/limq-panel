@@ -1,12 +1,18 @@
-import datetime
+#   _        _   _     _       _                       __  __  ____
+#  | |      (_) | |   | |     (_)                     |  \/  |/ __ \
+#  | |       _  | |_  | |__    _   _   _   _ __ ___   | \  / | |  | |
+#  | |      | | | __| | "_ \  | | | | | | | "_ ` _ \  | |\/| | |  | |
+#  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
+#  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
+
+
 import sqlalchemy
 from flask_login import UserMixin
-from sqlalchemy import orm
-from .db_session import SqlAlchemyBase
+from .db_session import ModelBase
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
-class User(SqlAlchemyBase, UserMixin):
+class User(ModelBase, UserMixin):
     __tablename__ = 'users'
 
     id = sqlalchemy.Column(sqlalchemy.Integer,

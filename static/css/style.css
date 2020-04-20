@@ -61,6 +61,7 @@ span.mq-label {
 .card-usage-block {
 	padding-top: 0px;
 	margin-top: 0px;
+	margin-left: -8.5px;
 }
 
 .channel-id {
@@ -70,4 +71,29 @@ span.mq-label {
 .no-va {
     vertical-align: top;
     margin-top: 2px;
+}
+
+.activity-status {
+    height: 30px;
+}
+
+span.card-ic {
+    height: 36px;
+    width: 36px;
+}
+
+.fas-card {
+    font-size: 12px;
+    margin-top: 12px;
+    margin-left: 10px;
+}
+
+span.card-val {
+    width: 100px;
+    font-size: 12px;
+    padding-top: 6.5px;
+}
+
+.plan {
+    margin-top: 20px;
 }

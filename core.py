@@ -12,10 +12,9 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired
 
-from data import db_session
-from data.users import User
+from storage.users import User
 
-from data.db_session import create_session, global_init
+from storage.db_session import base_init
 
 app = Flask(__name__)
 
@@ -23,7 +22,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 app.config["SECRET_KEY"] = "lithium_secret_key"
-global_init("db/Users.sqlite")
+
+SessObject = base_init()
 
 
 class LoginForm(FlaskForm):
@@ -44,14 +44,14 @@ class RegisterForm(FlaskForm):
 
 @login_manager.user_loader
 def load_user(user_id):
-    session = db_session.create_session()
+    session = SessObject()
     return session.query(User).get(user_id)
 
 
 @app.route("/")
 def index():
     param = dict()
-    param["title"] = "title"
+    param["title"] = "LithiumMQ"
     param["name_site"] = "Lithium MQ"
     param["current_user"] = current_user
     return render_template("base.html", **param)
@@ -60,26 +60,29 @@ def index():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
-    param = dict()
-    param["name_site"] = "Lithium MQ"
-    param["title"] = "Регистрация"
-    param["form"] = form
+
+    param = {"name_site": "Lithium MQ", "title": "Регистрация", "form": form}
+
     if form.validate_on_submit():
         if form.password.data != form.password_again.data:
             return render_template("reg_form.html", title="Регистрация",
                                    form=form,
                                    message="Пароли не совпадают")
-        session = create_session()
+        session = SessObject()
         if session.query(User).filter(User.email == form.email.data).first():
             param["message"] = "Пользователь с таким email уже существует"
             return render_template("reg_form.html", **param)
+
+        # noinspection PyArgumentList
         user = User(
             email=form.email.data,
             username=form.username.data
         )
+
         user.set_password(form.password.data)
         session.add(user)
         session.commit()
+
         return redirect("/login")
 
     return render_template("reg_form.html", **param)
@@ -88,11 +91,11 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
-    param = dict()
-    param["name_site"] = "Lithium MQ"
-    param["form"] = form
+
+    param = {"name_site": "Lithium MQ", "form": form}
+
     if form.validate_on_submit():
-        session = db_session.create_session()
+        session = SessObject()
         user = session.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
