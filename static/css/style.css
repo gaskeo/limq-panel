@@ -47,3 +47,18 @@ span.mq-label {
     padding-left: 4px;
     padding-right: 38px;
 }
+
+.card-container {
+    padding-left: 0px;
+}
+
+.card-use {
+    font-size: 11px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.card-usage-block {
+	padding-top: 0px;
+	margin-top: 0px;
+}

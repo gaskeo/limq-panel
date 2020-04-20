@@ -6,7 +6,8 @@
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
           crossorigin="anonymous">
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap"
+          rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
     {% block title %}
     <title>{{ title }}</title>
@@ -15,7 +16,7 @@
     </style>
 </head>
 <body>
-    <div class="header">
+<div class="header">
     <nav class="navbar navbar-light bg-light">
         <div>
             <span class="lithium-label">Lithium</span>
@@ -23,29 +24,59 @@
         </div>
 
         <div class="nick">
-        {% if current_user.is_authenticated %}
-        <div>
-            <a href="/logout"><h4 class="nick">{{ current_user.username }}</h4></a>
-        </div>
-        {% else %}
+            {% if current_user.is_authenticated %}
             <div>
-                <a href="/register"><button type="submit" class="btn btn-primary">Зарегистрироваться</button></a>
-                <a href="/login"><button type="submit" class="btn btn-success">Войти</button></a>
+                <a href="/logout"><h4 class="nick">{{ current_user.username }}</h4></a>
+            </div>
+            {% else %}
+            <div>
+                <a href="/register">
+                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                </a>
+                <a href="/login">
+                    <button type="submit" class="btn btn-success">Войти</button>
+                </a>
 
             </div>
-        {% endif %}
+            {% endif %}
         </div>
     </nav>
+</div>
+{% block content %}
+<div class="data_container">
+    {% if current_user.is_authenticated %}
+    <h4>тут все токены, что есть и внизу или вверху кнопка для создания</h4>
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+            <h5 class="card-title">DlyaGovna</h5>
+            <h6 class="card-subtitle mb-2 text-muted">#23874r8wdsfuwahy47</h6>
+            <p class="card-text">Активен</p>
+            <div class="d-flex card-usage-block">
+                <div class="p-2"><img class="1" src="static/images/key.svg" width="16" height="16"></div>
+                <div class="p-2"><p class="card-use">1</p><p class="card-use">2</p></div>
+            </div>
+            <div class="container card-container">
+                <div class="d-flex flex-row d-inline-flex align-items-start align-items-lg-center">
+                    <svg class="bi bi-dot text-success" width="32" height="32" viewBox="0 0 16 16"
+                         fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"
+                              clip-rule="evenodd"/>
+                    </svg>
+                    <p class="card-text">Активен</p>
+                </div>
+            </div>
+
+            <a href="#" class="card-link">Card link</a>
+            <a href="#" class="card-link">Настройки</a>
+        </div>
     </div>
-    {% block content %}
-    <div class="data_container">
-        {% if current_user.is_authenticated %}
-        <h4>тут все токены, что есть и внизу или вверху кнопка для создания</h4>
-        <a href="/add_token"><button type="submit" class="btn btn-primary">Создать токен</button></a>
-        {% else %}
-        <h4>Тут крутой шоукейс</h4>
-        {% endif %}
-    </div>
-        {% endblock %}
+    <br><a href="/add_token">
+    <button type="submit" class="btn btn-primary">Создать токен</button>
+</a>
+    {% else %}
+    <h4>Тут крутой шоукейс</h4>
+    {% endif %}
+</div>
+{% endblock %}
 </body>
 </html>
