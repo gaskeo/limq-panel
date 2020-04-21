@@ -12,8 +12,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired
 
-from storage.users import User
-from storage.channels import Channel
+from storage.user import User
+from storage.channel import Channel
 from storage.db_session import base_init
 
 app = Flask(__name__)
