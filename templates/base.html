@@ -7,6 +7,7 @@
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
           crossorigin="anonymous">
     <script src="https://kit.fontawesome.com/e71433d341.js" crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap"
           rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
@@ -47,51 +48,57 @@
 <div class="data_container">
     {% if current_user.is_authenticated %}
     <h4>Каналы</h4>
-    <div class="card" style="width: 18rem;">
-        <div class="card-body">
-            <h5 class="card-title">DlyaGovna</h5>
-            <p class="channel-id card-subtitle mb-2 text-muted">#23874r8wdsfuwahy47</p>
 
+    {% if user_channels is not defined %}
+        <h6>Вы еще не создали ни одного канала. Попробуйте!</h6>
+    {% else %}
+        <div class="row">
+        {% for chan in user_channels %}
+            <div class="col-md-4 mb30">
+                <div class="card" style="width: 18rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ chan.name }}</h5>
+                        <p class="channel-id card-subtitle mb-2 text-muted">#{{ chan.public_id }}</p>
+                        <div class="d-flex card-usage-block">
+                            <span class="card-ic">
+                                <svg class="bi bi-dot text-success" width="32" height="32" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                            <span class="card-val">
+                                активен
+                            </span>
+                        </div>
 
-<!--            хуйговноимуровей-->
+                        <div class="d-flex card-usage-block">
+                            <span class="card-ic">
+                                <i class="fas fa-key fas-card"></i>
+                            </span>
+                            <span class="card-val">
+                                R: 5
+                                <br>
+                                W: 1
+                            </span>
+                        </div>
 
-            <div class="d-flex card-usage-block">
-                <span class="card-ic">
-                    <svg class="bi bi-dot text-success" width="32" height="32" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" clip-rule="evenodd"></path>
-                    </svg>
-                </span>
-                <span class="card-val">
-                    активен
-                </span>
+                        <div class="plan">
+                            <a href="#" class="card-link">
+                                <i class="fas fa-cog"></i>
+                            </a>
+                            <a href="#" class="card-link">
+                                <i class="fas fa-hockey-puck"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div class="d-flex card-usage-block">
-                <span class="card-ic">
-                    <i class="fas fa-key fas-card"></i>
-                </span>
-                <span class="card-val">
-                    R: 5
-                    <br>
-                    W: 1
-                </span>
-            </div>
-
-            <!-- <p class="card-text plan">Бесплатный тариф</p>-->
-
-            <div class="plan">
-                <a href="#" class="card-link">
-                    <i class="fas fa-cog"></i>
-                </a>
-                <a href="#" class="card-link">
-                    <i class="fas fa-hockey-puck"></i>
-                </a>
-            </div>
+            <br>
+        {% endfor %}
         </div>
-    </div>
-    <br><a href="/add_token">
+    {% endif %}
+    <a href="/add_token">
     <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Создать канал</button>
-</a>
+    </a>
     {% else %}
     <h4>Тут крутой шоукейс</h4>
     {% endif %}

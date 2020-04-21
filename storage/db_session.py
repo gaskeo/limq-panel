@@ -14,7 +14,7 @@ import sqlalchemy.ext.declarative as dec
 ModelBase = dec.declarative_base()
 
 
-engine = sqlalchemy.create_engine("sqlite:///db/limq.db?check_same_thread=False")
+engine = sqlalchemy.create_engine("mysql://limq-front:i77dj9wobb@localhost/limq")
 
 
 def base_init():

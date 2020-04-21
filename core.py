@@ -13,7 +13,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired
 
 from storage.users import User
-
+from storage.channels import Channel
 from storage.db_session import base_init
 
 app = Flask(__name__)
@@ -50,10 +50,14 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
-    param = dict()
-    param["title"] = "LithiumMQ"
-    param["name_site"] = "Lithium MQ"
-    param["current_user"] = current_user
+    param = {"title": "LithiumMQ", "name_site": "Lithium MQ", "current_user": current_user}
+
+    if current_user.is_authenticated:
+        sess = SessObject()
+        channels = sess.query(Channel).filter(Channel.owner_id == current_user.id).all()
+        if channels:
+            param["user_channels"] = channels
+
     return render_template("base.html", **param)
 
 
@@ -115,4 +119,4 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(port=8080, host="127.0.0.1")
+    app.run(port=8080, host="0.0.0.0")
