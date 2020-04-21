@@ -42,6 +42,11 @@ class RegisterForm(FlaskForm):
     submit = SubmitField("Зарегистрироваться")
 
 
+class RegisterChannel(FlaskForm):
+    name = StringField('Название', validators=[DataRequired()])
+    submit = SubmitField('Создать канал')
+
+
 @login_manager.user_loader
 def load_user(user_id):
     session = SessObject()
@@ -111,6 +116,20 @@ def login():
     return render_template("login.html", title="Авторизация", **param)
 
 
+@app.route('/create_channel', methods=['GET', 'POST'])
+def create_channel():
+    form = RegisterChannel()
+    param = {'name_site': 'Lithium MQ', 'title': 'Регистрация канала', 'form': form}
+    return render_template('create_channel.html', **param)
+
+
+@app.route('/do_create_channel', methods=('POST', ))
+def do_create_channel():
+    if current_user.is_authenticated:
+        print('success')
+    return redirect('/')
+
+
 @app.route("/logout")
 @login_required
 def logout():
@@ -120,3 +139,4 @@ def logout():
 
 if __name__ == "__main__":
     app.run(port=8080, host="0.0.0.0")
+
