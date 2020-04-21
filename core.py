@@ -15,6 +15,7 @@ from wtforms.validators import DataRequired
 from storage.user import User
 from storage.channel import Channel
 from storage.db_session import base_init
+from storage.keygen import chan_identifier
 
 app = Flask(__name__)
 
@@ -125,8 +126,19 @@ def create_channel():
 
 @app.route('/do_create_channel', methods=('POST', ))
 def do_create_channel():
+    form = RegisterChannel()
+
     if current_user.is_authenticated:
-        print('success')
+        print(current_user.id)
+        session = SessObject()
+        channel = Channel(
+            name=form.name.data,
+            is_active=True,
+            id=chan_identifier(),
+            owner_id=current_user.id
+        )
+        session.add(channel)
+        session.commit()
     return redirect('/')
 
 
