@@ -17,6 +17,8 @@ from storage.keygen import chan_identifier, generate_key
 
 from forms import RegisterForm, RegisterChannelForm, LoginForm, CreateKeyForm
 
+from errors import explain as explain_error
+
 app = Flask(__name__)
 
 login_manager = LoginManager()
@@ -25,6 +27,7 @@ login_manager.init_app(app)
 app.config["SECRET_KEY"] = "lithium_secret_key"
 
 SessObject = base_init()
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -171,7 +174,7 @@ def do_grant():
 
     read = form.read.data
     write = form.write.data
-    
+
     key.perm = write << 1 | read
     sess.add(key)
 
