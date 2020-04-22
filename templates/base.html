@@ -47,6 +47,11 @@
 {% block content %}
 <div class="data_container">
     {% if current_user.is_authenticated %}
+    {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+    {% endif %}
     <h4>Каналы</h4>
 
     {% if user_channels is not defined %}

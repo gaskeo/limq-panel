@@ -56,7 +56,9 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
-    param = {"title": "LithiumMQ", "name_site": "Lithium MQ", "current_user": current_user}
+    error = request.args['error'] if 'error' in request.args else None
+    param = {"title": "LithiumMQ", "name_site": "Lithium MQ",
+             "current_user": current_user, "error": error}
 
     if current_user.is_authenticated:
         sess = SessObject()
@@ -78,8 +80,8 @@ def register():
             return render_template("reg_form.html", title="Регистрация",
                                    form=form,
                                    message="Пароли не совпадают")
-        session = SessObject()
-        if session.query(User).filter(User.email == form.email.data).first():
+        sess = SessObject()
+        if sess.query(User).filter(User.email == form.email.data).first():
             param["message"] = "Пользователь с таким email уже существует"
             return render_template("reg_form.html", **param)
 
@@ -90,8 +92,8 @@ def register():
         )
 
         user.set_password(form.password.data)
-        session.add(user)
-        session.commit()
+        sess.add(user)
+        sess.commit()
 
         return redirect("/login")
 
@@ -105,8 +107,8 @@ def login():
     param = {"name_site": "Lithium MQ", "form": form}
 
     if form.validate_on_submit():
-        session = SessObject()
-        user = session.query(User).filter(User.email == form.email.data).first()
+        sess = SessObject()
+        user = sess.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
             return redirect("/")
@@ -129,17 +131,17 @@ def do_create_channel():
     form = RegisterChannel()
 
     if current_user.is_authenticated:
-        print(current_user.id)
-        session = SessObject()
+        sess = SessObject()
         channel = Channel(
             name=form.name.data,
             is_active=True,
             id=chan_identifier(),
             owner_id=current_user.id
         )
-        session.add(channel)
-        session.commit()
-    return redirect('/')
+        sess.add(channel)
+        sess.commit()
+    error = 'bad request'
+    return redirect(f'/?{"error=" + error if error else ""}')
 
 
 @app.route("/logout")
