@@ -8,14 +8,14 @@
 
 from flask import Flask, render_template, redirect, request, make_response, abort
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired
 
 from storage.user import User
 from storage.channel import Channel
+from storage.key import Key
 from storage.db_session import base_init
-from storage.keygen import chan_identifier
+from storage.keygen import chan_identifier, generate_key
+
+from forms import RegisterForm, RegisterChannelForm, LoginForm, CreateKeyForm
 
 app = Flask(__name__)
 
@@ -25,28 +25,6 @@ login_manager.init_app(app)
 app.config["SECRET_KEY"] = "lithium_secret_key"
 
 SessObject = base_init()
-
-
-class LoginForm(FlaskForm):
-    email = StringField("Электропочта", validators=[DataRequired()])
-    password = PasswordField("Пароль", validators=[DataRequired()])
-    remember_me = BooleanField("Запомнить меня")
-
-    submit = SubmitField("Войти")
-
-
-class RegisterForm(FlaskForm):
-    email = StringField("Электропочта", validators=[DataRequired()])
-    username = StringField("Ваше имя", validators=[DataRequired()])
-    password = PasswordField("Пароль", validators=[DataRequired()])
-    password_again = PasswordField("Еще раз пароль", validators=[DataRequired()])
-    submit = SubmitField("Зарегистрироваться")
-
-
-class RegisterChannel(FlaskForm):
-    name = StringField('Название', validators=[DataRequired()])
-    submit = SubmitField('Создать канал')
-
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -60,9 +38,24 @@ def index():
 
     if current_user.is_authenticated:
         sess = SessObject()
+
         channels = sess.query(Channel).filter(Channel.owner_id == current_user.id).all()
+
         if channels:
+            key_stats = [...] * len(channels)
+
+            for i, chan in enumerate(channels):
+                r, w = 0, 0
+                keys_assoc = sess.query(Key).filter(Key.chan_id == chan.id).all()
+                for key in keys_assoc:
+                    if key.can_write():
+                        w += 1
+                    if key.can_read():
+                        r += 1
+                key_stats[i] = r, w
+
             param["user_channels"] = channels
+            param["user_channels_stat"] = key_stats
 
     return render_template("base.html", **param)
 
@@ -73,29 +66,31 @@ def register():
 
     param = {"name_site": "Lithium MQ", "title": "Регистрация", "form": form}
 
-    if form.validate_on_submit():
-        if form.password.data != form.password_again.data:
-            return render_template("reg_form.html", title="Регистрация",
-                                   form=form,
-                                   message="Пароли не совпадают")
-        session = SessObject()
-        if session.query(User).filter(User.email == form.email.data).first():
-            param["message"] = "Пользователь с таким email уже существует"
-            return render_template("reg_form.html", **param)
+    if not form.validate_on_submit():
+        return render_template("reg_form.html", **param)
 
-        # noinspection PyArgumentList
-        user = User(
-            email=form.email.data,
-            username=form.username.data
-        )
+    if form.password.data != form.password_again.data:
+        return render_template("reg_form.html", title="Регистрация",
+                               form=form,
+                               message="Пароли не совпадают")
 
-        user.set_password(form.password.data)
-        session.add(user)
-        session.commit()
+    session = SessObject()
 
-        return redirect("/login")
+    if session.query(User).filter(User.email == form.email.data).first():
+        param["message"] = "Пользователь с таким email уже существует"
+        return render_template("reg_form.html", **param)
 
-    return render_template("reg_form.html", **param)
+    # noinspection PyArgumentList
+    user = User(
+        email=form.email.data,
+        username=form.username.data
+    )
+
+    user.set_password(form.password.data)
+    session.add(user)
+    session.commit()
+
+    return redirect("/login")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -117,29 +112,72 @@ def login():
     return render_template("login.html", title="Авторизация", **param)
 
 
-@app.route('/create_channel', methods=['GET', 'POST'])
+@app.route("/create_channel", methods=["GET", "POST"])
 def create_channel():
-    form = RegisterChannel()
-    param = {'name_site': 'Lithium MQ', 'title': 'Регистрация канала', 'form': form}
-    return render_template('create_channel.html', **param)
+    form = RegisterChannelForm()
+    param = {"name_site": "Lithium MQ", "title": "Регистрация канала", "form": form}
+    return render_template("create_channel.html", **param)
 
 
-@app.route('/do_create_channel', methods=('POST', ))
+@app.route("/do/create_channel", methods=("POST", ))
 def do_create_channel():
-    form = RegisterChannel()
+    form = RegisterChannelForm()
 
-    if current_user.is_authenticated:
-        print(current_user.id)
-        session = SessObject()
-        channel = Channel(
-            name=form.name.data,
-            is_active=True,
-            id=chan_identifier(),
-            owner_id=current_user.id
-        )
-        session.add(channel)
-        session.commit()
-    return redirect('/')
+    if not current_user.is_authenticated:
+        return redirect("/")
+
+    session = SessObject()
+    channel = Channel(
+        name=form.name.data,
+        is_active=True,
+        id=chan_identifier(),
+        owner_id=current_user.id
+    )
+    session.add(channel)
+    session.commit()
+    return redirect("/")
+
+
+@app.route("/grant")
+@login_required
+def grant():
+    f = CreateKeyForm()
+    return render_template("create_key.html", form=f)
+
+
+@app.route("/do/grant", methods=("GET", ))
+@login_required
+def do_grant():
+    form = CreateKeyForm(request.args)
+
+    if not form.validate():
+        return redirect("/?error=bad_request")
+
+    sess = SessObject()
+
+    channel = form.channel.data
+
+    print(channel)
+
+    chan: Channel = sess.query(Channel).filter(Channel.id == channel).first()
+    if not chan:
+        return redirect("/?error=channel_invalid")
+
+    if chan.owner_id != current_user.id:
+        return redirect("/?error=no_access_to_this_channel")
+
+    key_s = generate_key()
+    key = Key(key=key_s, chan_id=channel)
+
+    read = form.read.data
+    write = form.read.data
+
+    key.perm = write << 1 | read
+    sess.add(key)
+
+    sess.commit()
+
+    return redirect("/?key=" + key_s)
 
 
 @app.route("/logout")

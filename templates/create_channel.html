@@ -3,9 +3,8 @@
 {% block content %}
 <div class="data_container">
     <h3 class="register-label">Создание канала</h3>
-    <form action="/do_create_channel" method="post">
+    <form action="/do/create_channel" method="post">
         {{ form.hidden_tag() }}
-        {{ form.csrf_token }}
         <p>
             {{ form.name.label }}<br>
             {{ form.name(class="form-control") }}
