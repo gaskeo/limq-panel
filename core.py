@@ -148,7 +148,7 @@ def grant():
 @app.route("/do/grant", methods=("GET", ))
 @login_required
 def do_grant():
-    form = CreateKeyForm(request.args)
+    form = CreateKeyForm(request.args, csrf_enabled=False)
 
     if not form.validate():
         return redirect("/?error=bad_request")
@@ -170,8 +170,8 @@ def do_grant():
     key = Key(key=key_s, chan_id=channel)
 
     read = form.read.data
-    write = form.read.data
-
+    write = form.write.data
+    
     key.perm = write << 1 | read
     sess.add(key)
 

@@ -33,5 +33,5 @@ class RegisterChannelForm(FlaskForm):
 
 class CreateKeyForm(FlaskForm):
     channel = StringField("Канал", validators=[DataRequired()])
-    read = BooleanField("Чтение")
-    write = BooleanField("Запись")
+    read = BooleanField("Чтение", false_values=["0"])
+    write = BooleanField("Запись", false_values=["0"])
