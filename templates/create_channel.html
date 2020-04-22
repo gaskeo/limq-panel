@@ -2,6 +2,11 @@
 
 {% block content %}
 <div class="data_container">
+    {% if message %}
+        <div class="alert alert-danger" role="alert">
+            {{ message }}
+        </div>
+    {% endif %}
     <h3 class="register-label">Создание канала</h3>
     <form action="/do/create_channel" method="post">
         {{ form.hidden_tag() }}
@@ -13,11 +18,7 @@
                     {{ error }}
                 </p>
             {% endfor %}
-
         <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-        <p>
-            {{message}}
-        </p>
 
     </form>
 </div>
