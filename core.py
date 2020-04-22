@@ -37,7 +37,9 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
-    param = {"title": "LithiumMQ", "name_site": "Lithium MQ", "current_user": current_user}
+    error = request.args['error'] if 'error' in request.args else None
+    param = {"title": "LithiumMQ", "name_site": "Lithium MQ", "current_user": current_user,
+             "error": error}
 
     if current_user.is_authenticated:
         sess = SessObject()
@@ -103,8 +105,8 @@ def login():
     param = {"name_site": "Lithium MQ", "form": form}
 
     if form.validate_on_submit():
-        session = SessObject()
-        user = session.query(User).filter(User.email == form.email.data).first()
+        sess = SessObject()
+        user = sess.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
             return redirect("/")
