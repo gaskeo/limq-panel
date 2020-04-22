@@ -1,1 +1,26 @@
-{{ form.csrf_token }}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="data_container">
+    <h3 class="register-label">Создание ключа</h3>
+    <form action="/do/grant" method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            Канал:
+            <select name="channel">
+                {% for x in channels %}
+                    <option value="{{ x.id }}">{{ x.id }}</option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <input type="checkbox" id="read" name="read" value="1">
+        <label for="read"> Приём сообщений из канала</label><br>
+
+        <input type="checkbox" id="write" name="write" value="1">
+        <label for="write"> Отправка сообщений в канал</label><br>
+
+        <input class="btn btn-primary" id="submit" name="submit" type="submit" value="Создать">
+    </form>
+</div>
+{% endblock %}

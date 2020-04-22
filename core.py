@@ -37,9 +37,10 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
-    error = request.args['error'] if 'error' in request.args else None
+    error = request.args.get("error", None)
+
     param = {"title": "LithiumMQ", "name_site": "Lithium MQ", "current_user": current_user,
-             "error": error}
+             "error": explain_error(error) if error else None}
 
     if current_user.is_authenticated:
         sess = SessObject()
@@ -125,11 +126,9 @@ def create_channel():
 
 
 @app.route("/do/create_channel", methods=("POST", ))
+@login_required
 def do_create_channel():
     form = RegisterChannelForm()
-
-    if not current_user.is_authenticated:
-        return redirect("/")
 
     session = SessObject()
     channel = Channel(
@@ -147,13 +146,18 @@ def do_create_channel():
 @login_required
 def grant():
     f = CreateKeyForm()
-    return render_template("create_key.html", form=f)
+    uid = current_user.id
+    sess = SessObject()
+
+    channels = sess.query(Channel).filter(Channel.owner_id == uid).all()
+
+    return render_template("create_key.html", form=f, channels=channels)
 
 
-@app.route("/do/grant", methods=("GET", ))
+@app.route("/do/grant", methods=("POST", ))
 @login_required
 def do_grant():
-    form = CreateKeyForm(request.args, csrf_enabled=False)
+    form = CreateKeyForm(request.form)
 
     if not form.validate():
         return redirect("/?error=bad_request")

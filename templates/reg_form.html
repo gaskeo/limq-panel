@@ -5,7 +5,6 @@
     <h3 class="register-label">Регистрация</h3>
     <form action="" method="post">
         {{ form.hidden_tag() }}
-        {{ form.csrf_token }}
         <p>
             {{ form.email.label }}<br>
             {{ form.email(class="form-control", type="email") }}
