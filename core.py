@@ -40,7 +40,8 @@ def load_user(user_id):
 @app.route("/")
 def index():
     error = request.args['error'] if 'error' in request.args else None
-    param = {"title": "LithiumMQ", "name_site": "Lithium MQ", "current_user": current_user}
+    param = {"title": "LithiumMQ", "name_site": "Lithium MQ", "current_user": current_user,
+             "error": error}
 
     if current_user.is_authenticated:
         sess = SessObject()
