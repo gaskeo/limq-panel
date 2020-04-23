@@ -103,3 +103,7 @@ span.card-val {
     margin-bottom: 30px;
 }
 
+.badge-key {
+    background-color: #ddd;
+    color: #000;
+}

@@ -205,8 +205,10 @@ def settings(channel_id):
 
     form_keys = CreateKeyForm()
     form_keys.id.data = channel_id
+    keys = sess.query(Key).filter(Key.chan_id == channel_id).all()
     param = {"name_site": "Lithium MQ", "title": f"Settings for {chan.name}",
-             "form_main_settings": form_main_settings, "form_keys": form_keys, "chan": chan}
+             "form_main_settings": form_main_settings, "form_keys": form_keys,
+             "chan": chan, "keys": keys}
 
     return render_template('settings.html', **param)
 

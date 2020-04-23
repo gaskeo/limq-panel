@@ -10,9 +10,11 @@
                    data-toggle="list" href="#list-mainsettings" role="tab"
                    aria-controls="mainsettings">Основное</a>
                 <a class="list-group-item list-group-item-action" id="list-key-list"
-                   data-toggle="list" href="#list-key" role="tab" aria-controls="key">Ключи доступа</a>
+                   data-toggle="list" href="#list-key" role="tab" aria-controls="key">Ключи
+                    доступа</a>
                 <a class="list-group-item list-group-item-action" id="list-privacy-list"
-                   data-toggle="list" href="#list-privacy" role="tab" aria-controls="key">Приватность</a>
+                   data-toggle="list" href="#list-privacy" role="tab"
+                   aria-controls="key">Приватность</a>
             </div>
         </div>
         <div class="col-9">
@@ -29,12 +31,16 @@
                             {{ error }}
                         </p>
                         {% endfor %}
-                        <p>{{ form_main_settings.is_active() }} {{ form_main_settings.is_active.label }}</p>
-                        <p>{{ form_main_settings.submit(type="submit", class="btn btn-primary") }}</p>
+                        <p>{{ form_main_settings.is_active() }} {{ form_main_settings.is_active.label
+                            }}</p>
+                        <p>{{ form_main_settings.submit(type="submit", class="btn btn-primary")
+                            }}</p>
                     </form>
                 </div>
                 <div class="tab-pane fade" id="list-key" role="tabpanel"
                      aria-labelledby="list-key-list">
+                    <h3 class="register-label">Создать ключ</h3>
+
                     <form action="/do/grant" method="post">
                         {{ form_keys.hidden_tag() }}
                         <p>
@@ -49,6 +55,18 @@
                         <p>{{ form_keys.write() }} {{ form_keys.write.label }}</p>
                         <p>{{ form_keys.submit(type="submit", class="btn btn-primary") }}</p>
                     </form>
+                    {% for key in keys %}
+                    <div class="card w-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ key.name }}</h5>
+                            <p class="card-text"><span class="badge badge-secondary badge-key">{{ key.key }}</span></p>
+                            <a href="#" class="btn btn-warning">Приостановить</a>
+                            <a href="#" class="btn btn-danger">Удалить</a>
+
+                        </div>
+                    </div>
+                    <br>
+                    {% endfor %}
                 </div>
                 <div class="tab-pane fade" id="list-privacy" role="tabpanel"
                      aria-labelledby="list-key-list">
