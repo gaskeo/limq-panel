@@ -6,8 +6,8 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField
+from wtforms.validators import DataRequired, Length
 
 
 class LoginForm(FlaskForm):
@@ -31,7 +31,17 @@ class RegisterChannelForm(FlaskForm):
     submit = SubmitField("Создать канал")
 
 
+class MainSettingsChannelForm(FlaskForm):
+    id = HiddenField("", validators=[DataRequired()])
+    name = StringField("Название", validators=[DataRequired(), Length(min=1, max=20, message='eee')])
+    is_active = BooleanField("Активен", validators=[DataRequired()])
+    submit = SubmitField("Сохранить изменения")
+
+
 class CreateKeyForm(FlaskForm):
-    channel = StringField("Канал", validators=[DataRequired()])
+    id = HiddenField("", validators=[DataRequired()])
+    name = StringField("Название", validators=[DataRequired(), Length(min=1, max=20, message='eee')])
     read = BooleanField("Чтение", false_values=["0"])
     write = BooleanField("Запись", false_values=["0"])
+    submit = SubmitField("Создать ключ")
+

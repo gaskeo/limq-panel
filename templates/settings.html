@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="data_container" xmlns="http://www.w3.org/1999/html">
+    <div class="row">
+        <div class="col-4">
+            <div class="list-group" id="list-tab" role="tablist">
+                <a class="list-group-item list-group-item-action active" id="list-mainsettings-list"
+                   data-toggle="list" href="#list-mainsettings" role="tab"
+                   aria-controls="mainsettings">Основные настройки</a>
+                <a class="list-group-item list-group-item-action" id="list-key-list"
+                   data-toggle="list" href="#list-key" role="tab" aria-controls="key">Ключи</a>
+
+            </div>
+        </div>
+        <div class="col-8">
+            <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane fade show active"
+                     id="list-mainsettings" role="tabpanel" aria-labelledby="list-mainsettings-list">
+                    <form action="/do/settings" method="post">
+                        {{ form_main_settings.hidden_tag() }}
+                        <p>
+                            {{ form_main_settings.name.label }}<br>
+                            {{ form_main_settings.name(class="form-control") }}
+                            {% for error in form_main_settings.name.errors %}
+                        <p class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                        <p>{{ form_main_settings.is_active() }} {{ form_main_settings.is_active.label
+                            }}</p>
+                        <p>{{ form_main_settings.submit(type="submit", class="btn btn-primary")
+                            }}</p>
+                    </form>
+                </div>
+                <div class="tab-pane fade" id="list-key" role="tabpanel"
+                     aria-labelledby="list-key-list">
+                    <form action="/do/grant" method="post">
+                        {{ form_keys.hidden_tag() }}
+                        <p>
+                            {{ form_keys.name.label }}<br>
+                            {{ form_keys.name(class="form-control") }}
+                            {% for error in form_keys.name.errors %}
+                        <p class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                        <p>{{ form_keys.read() }} {{ form_keys.read.label }}</p>
+                        <p>{{ form_keys.write() }} {{ form_keys.write.label }}</p>
+                        <p>{{ form_keys.submit(type="submit", class="btn btn-primary") }}</p>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

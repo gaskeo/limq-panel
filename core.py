@@ -15,7 +15,8 @@ from storage.key import Key
 from storage.db_session import base_init
 from storage.keygen import chan_identifier, generate_key
 
-from forms import RegisterForm, RegisterChannelForm, LoginForm, CreateKeyForm
+from forms import RegisterForm, RegisterChannelForm, LoginForm, CreateKeyForm, \
+    MainSettingsChannelForm
 
 from errors import explain as explain_error
 
@@ -164,7 +165,7 @@ def do_grant():
 
     sess = SessObject()
 
-    channel = form.channel.data
+    channel = form.id.data
 
     print(channel)
 
@@ -176,7 +177,7 @@ def do_grant():
         return redirect("/?error=no_access_to_this_channel")
 
     key_s = generate_key()
-    key = Key(key=key_s, chan_id=channel)
+    key = Key(key=key_s, chan_id=channel, name=form.name.data)
 
     read = form.read.data
     write = form.write.data
@@ -186,7 +187,52 @@ def do_grant():
 
     sess.commit()
 
-    return redirect("/?key=" + key_s)
+    return redirect(f"/settings/{channel}?key=" + key_s)
+
+
+@app.route("/settings/<channel_id>", methods=["GET", "POST"])
+def settings(channel_id):
+    sess = SessObject()
+    chan: Channel = sess.query(Channel).filter(Channel.id == channel_id).first()
+    if not chan:
+        return redirect("/?error=channel_invalid")
+
+    if chan.owner_id != current_user.id:
+        return redirect("/?error=no_access_to_this_channel")
+    form_main_settings = MainSettingsChannelForm()
+    form_main_settings.id.data = channel_id
+    form_main_settings.name.data = chan.name
+    form_main_settings.is_active.data = chan.is_active
+    print(form_main_settings.id.data)
+    print(type(form_main_settings.hidden_tag()))
+    form_keys = CreateKeyForm()
+    form_keys.id.data = channel_id
+    param = {"name_site": "Lithium MQ",
+             "form_main_settings": form_main_settings, "form_keys": form_keys, "chan": chan}
+    return render_template('settings.html', **param)
+
+
+@app.route("/do/settings", methods=("POST", ))
+@login_required
+def do_settings():
+    form = MainSettingsChannelForm()
+    if not form.validate():
+        return redirect("/?error=bad_request")
+    print(form.id.data, form.name.data)
+    channel_id = form.id.data
+    sess = SessObject()
+
+    chan = sess.query(Channel).filter(Channel.id == channel_id).first()
+    if not chan:
+        return redirect("/?error=channel_invalid")
+
+    if chan.owner_id != current_user.id:
+        return redirect("/?error=no_access_to_this_channel")
+    print(chan)
+    chan.name = form.name.data
+    chan.is_active = form.is_active.data
+    sess.commit()
+    return redirect(f"/settings/{channel_id}")
 
 
 @app.route("/logout")
