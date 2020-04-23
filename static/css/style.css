@@ -9,9 +9,10 @@ a:hover {
 }
 
 .data_container {
-	max-width: 80%;
+	max-width: 1200px;
 	margin-left: 10%;
 	padding-top: 20px;
+	margin: auto;
 }
 
 .header {
@@ -101,3 +102,4 @@ span.card-val {
 .mb30 {
     margin-bottom: 30px;
 }
+

@@ -64,7 +64,7 @@ def index():
             param["user_channels"] = channels
             param["user_channels_stat"] = key_stats
 
-    return render_template("base.html", **param)
+    return render_template("mainpage.html", **param)
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -167,8 +167,6 @@ def do_grant():
 
     channel = form.id.data
 
-    print(channel)
-
     chan: Channel = sess.query(Channel).filter(Channel.id == channel).first()
     if not chan:
         return redirect("/?error=channel_invalid")
@@ -190,7 +188,7 @@ def do_grant():
     return redirect(f"/settings/{channel}?key=" + key_s)
 
 
-@app.route("/settings/<channel_id>", methods=["GET", "POST"])
+@app.route("/settings/<channel_id>", methods=("GET", "POST"))
 def settings(channel_id):
     sess = SessObject()
     chan: Channel = sess.query(Channel).filter(Channel.id == channel_id).first()
@@ -199,16 +197,17 @@ def settings(channel_id):
 
     if chan.owner_id != current_user.id:
         return redirect("/?error=no_access_to_this_channel")
+
     form_main_settings = MainSettingsChannelForm()
     form_main_settings.id.data = channel_id
     form_main_settings.name.data = chan.name
     form_main_settings.is_active.data = chan.is_active
-    print(form_main_settings.id.data)
-    print(type(form_main_settings.hidden_tag()))
+
     form_keys = CreateKeyForm()
     form_keys.id.data = channel_id
-    param = {"name_site": "Lithium MQ",
+    param = {"name_site": "Lithium MQ", "title": f"Settings for {chan.name}",
              "form_main_settings": form_main_settings, "form_keys": form_keys, "chan": chan}
+
     return render_template('settings.html', **param)
 
 
@@ -218,7 +217,7 @@ def do_settings():
     form = MainSettingsChannelForm()
     if not form.validate():
         return redirect("/?error=bad_request")
-    print(form.id.data, form.name.data)
+
     channel_id = form.id.data
     sess = SessObject()
 
@@ -228,7 +227,7 @@ def do_settings():
 
     if chan.owner_id != current_user.id:
         return redirect("/?error=no_access_to_this_channel")
-    print(chan)
+
     chan.name = form.name.data
     chan.is_active = form.is_active.data
     sess.commit()

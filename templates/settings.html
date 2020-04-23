@@ -1,19 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="data_container" xmlns="http://www.w3.org/1999/html">
+<div class="data_container">
+    <h4>Настройки для &laquo;{{ chan.name }}&raquo;</h4>
     <div class="row">
-        <div class="col-4">
+        <div class="col-3">
             <div class="list-group" id="list-tab" role="tablist">
                 <a class="list-group-item list-group-item-action active" id="list-mainsettings-list"
                    data-toggle="list" href="#list-mainsettings" role="tab"
-                   aria-controls="mainsettings">Основные настройки</a>
+                   aria-controls="mainsettings">Основное</a>
                 <a class="list-group-item list-group-item-action" id="list-key-list"
-                   data-toggle="list" href="#list-key" role="tab" aria-controls="key">Ключи</a>
-
+                   data-toggle="list" href="#list-key" role="tab" aria-controls="key">Ключи доступа</a>
+                <a class="list-group-item list-group-item-action" id="list-privacy-list"
+                   data-toggle="list" href="#list-privacy" role="tab" aria-controls="key">Приватность</a>
             </div>
         </div>
-        <div class="col-8">
+        <div class="col-9">
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane fade show active"
                      id="list-mainsettings" role="tabpanel" aria-labelledby="list-mainsettings-list">
@@ -27,10 +29,8 @@
                             {{ error }}
                         </p>
                         {% endfor %}
-                        <p>{{ form_main_settings.is_active() }} {{ form_main_settings.is_active.label
-                            }}</p>
-                        <p>{{ form_main_settings.submit(type="submit", class="btn btn-primary")
-                            }}</p>
+                        <p>{{ form_main_settings.is_active() }} {{ form_main_settings.is_active.label }}</p>
+                        <p>{{ form_main_settings.submit(type="submit", class="btn btn-primary") }}</p>
                     </form>
                 </div>
                 <div class="tab-pane fade" id="list-key" role="tabpanel"
@@ -48,9 +48,11 @@
                         <p>{{ form_keys.read() }} {{ form_keys.read.label }}</p>
                         <p>{{ form_keys.write() }} {{ form_keys.write.label }}</p>
                         <p>{{ form_keys.submit(type="submit", class="btn btn-primary") }}</p>
-
                     </form>
-
+                </div>
+                <div class="tab-pane fade" id="list-privacy" role="tabpanel"
+                     aria-labelledby="list-key-list">
+                    ито потом
                 </div>
             </div>
         </div>
