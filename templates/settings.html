@@ -31,15 +31,13 @@
                             {{ error }}
                         </p>
                         {% endfor %}
-                        <p>{{ form_main_settings.is_active() }} {{ form_main_settings.is_active.label
-                            }}</p>
-                        <p>{{ form_main_settings.submit(type="submit", class="btn btn-primary")
-                            }}</p>
+                        <p>{{ form_main_settings.is_active() }} {{ form_main_settings.is_active.label }}</p>
+                        <p>{{ form_main_settings.submit(type="submit", class="btn btn-primary") }}</p>
                     </form>
                 </div>
                 <div class="tab-pane fade" id="list-key" role="tabpanel"
                      aria-labelledby="list-key-list">
-                    <h3 class="register-label">Создать ключ</h3>
+                    <h5 class="register-label">Создать ключ</h5>
 
                     <form action="/do/grant" method="post">
                         {{ form_keys.hidden_tag() }}
@@ -59,6 +57,7 @@
                     <div class="card w-100">
                         <div class="card-body">
                             <h5 class="card-title">{{ key.name }}</h5>
+                            <p class="channel-id mb-2 text-muted">{{ rights[loop.index0] }}</p>
                             <p class="card-text"><span class="badge badge-secondary badge-key">{{ key.key }}</span></p>
                             <a href="#" class="btn btn-warning">Приостановить</a>
                             <a href="#" class="btn btn-danger">Удалить</a>

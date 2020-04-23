@@ -107,3 +107,8 @@ span.card-val {
     background-color: #ddd;
     color: #000;
 }
+
+.helpdesk-container {
+    margin: auto;
+    max-width: 1000px;
+}

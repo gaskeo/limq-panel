@@ -161,6 +161,7 @@ def do_grant():
     form = CreateKeyForm(request.form)
 
     if not form.validate():
+        print(form.errors)
         return redirect("/?error=bad_request")
 
     sess = SessObject()
@@ -188,6 +189,18 @@ def do_grant():
     return redirect(f"/settings/{channel}?key=" + key_s)
 
 
+# tmp
+def perm_formatter(k: Key) -> str:
+    r, w = k.can_read(), k.can_write()
+    if r and w:
+        return "Приём, отправка"
+    if r:
+        return "Приём"
+    if w:
+        return "Отправка"
+    return "Прав доступа не установлено"
+
+
 @app.route("/settings/<channel_id>", methods=("GET", "POST"))
 def settings(channel_id):
     sess = SessObject()
@@ -205,12 +218,14 @@ def settings(channel_id):
 
     form_keys = CreateKeyForm()
     form_keys.id.data = channel_id
-    keys = sess.query(Key).filter(Key.chan_id == channel_id).all()
+    keys = sess.query(Key).filter(Key.chan_id == channel_id).all()[::-1]
+    rights = [perm_formatter(k) for k in keys][::-1]
+
     param = {"name_site": "Lithium MQ", "title": f"Settings for {chan.name}",
              "form_main_settings": form_main_settings, "form_keys": form_keys,
-             "chan": chan, "keys": keys}
+             "chan": chan, "keys": keys, "rights": rights}
 
-    return render_template('settings.html', **param)
+    return render_template("settings.html", **param)
 
 
 @app.route("/do/settings", methods=("POST", ))
@@ -234,6 +249,11 @@ def do_settings():
     chan.is_active = form.is_active.data
     sess.commit()
     return redirect(f"/settings/{channel_id}")
+
+
+@app.route("/helpdesk")
+def helpdesk():
+    return render_template("helpdesk.html")
 
 
 @app.route("/logout")
