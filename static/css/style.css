@@ -104,8 +104,10 @@ span.card-val {
 }
 
 .badge-key {
-    background-color: #ddd;
+    background-color: #eee;
     color: #000;
+    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    padding: 15px;
 }
 
 .helpdesk-container {

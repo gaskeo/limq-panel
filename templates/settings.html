@@ -6,21 +6,21 @@
     <div class="row">
         <div class="col-3">
             <div class="list-group" id="list-tab" role="tablist">
-                <a class="list-group-item list-group-item-action active" id="list-mainsettings-list"
-                   data-toggle="list" href="#list-mainsettings" role="tab"
+                <a class="list-group-item list-group-item-action active" id="list-mainsettings-open"
+                   data-toggle="list" href="#list-mainsettings-open" role="tab"
                    aria-controls="mainsettings">Основное</a>
-                <a class="list-group-item list-group-item-action" id="list-key-list"
-                   data-toggle="list" href="#list-key" role="tab" aria-controls="key">Ключи
+                <a class="list-group-item list-group-item-action" id="list-key-open"
+                   data-toggle="list" href="#list-key-open" role="tab" aria-controls="key">Ключи
                     доступа</a>
-                <a class="list-group-item list-group-item-action" id="list-privacy-list"
-                   data-toggle="list" href="#list-privacy" role="tab"
+                <a class="list-group-item list-group-item-action" id="list-privacy-open"
+                   data-toggle="list" href="#list-privacy-open" role="tab"
                    aria-controls="key">Приватность</a>
             </div>
         </div>
         <div class="col-9">
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane fade show active"
-                     id="list-mainsettings" role="tabpanel" aria-labelledby="list-mainsettings-list">
+                     id="list-mainsettings" role="tabpanel" aria-labelledby="list-mainsettings-open">
                     <form action="/do/settings" method="post">
                         {{ form_main_settings.hidden_tag() }}
                         <p>
@@ -36,7 +36,7 @@
                     </form>
                 </div>
                 <div class="tab-pane fade" id="list-key" role="tabpanel"
-                     aria-labelledby="list-key-list">
+                     aria-labelledby="list-key-open">
                     <h5 class="register-label">Создать ключ</h5>
 
                     <form action="/do/grant" method="post">
@@ -68,11 +68,14 @@
                     {% endfor %}
                 </div>
                 <div class="tab-pane fade" id="list-privacy" role="tabpanel"
-                     aria-labelledby="list-key-list">
+                     aria-labelledby="list-key-open">
                     ито потом
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="/static/js/index.js" charset="utf-8"></script>
 {% endblock %}

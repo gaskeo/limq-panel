@@ -186,7 +186,7 @@ def do_grant():
 
     sess.commit()
 
-    return redirect(f"/settings/{channel}?key=" + key_s)
+    return redirect(f"/settings/{channel}#list-key-open")
 
 
 # tmp
