@@ -23,12 +23,11 @@ class Key(ModelBase):
     WRITE = 1 << 1
     PAUSED = 1 << 8
 
-    key = sqlalchemy.Column(sqlalchemy.String(length=32), nullable=False, primary_key=True,
-                            unique=True)
+    key = sqlalchemy.Column(sqlalchemy.String(length=32), nullable=False, primary_key=True, unique=True)
     name = sqlalchemy.Column(sqlalchemy.String(length=20), nullable=True, unique=False)
-    chan_id = sqlalchemy.Column(sqlalchemy.String(length=64), sqlalchemy.ForeignKey(Channel.id),
-                                nullable=False)
+    chan_id = sqlalchemy.Column(sqlalchemy.String(length=64), sqlalchemy.ForeignKey(Channel.id), nullable=False)
     perm = sqlalchemy.Column(sqlalchemy.Integer, nullable=False, default=0)
+    created = sqlalchemy.Column(sqlalchemy.DateTime, nullable=True)
 
     def can_read(self) -> bool:
         return self.perm & self.READ != 0
