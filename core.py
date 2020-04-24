@@ -20,6 +20,8 @@ from forms import RegisterForm, RegisterChannelForm, LoginForm, CreateKeyForm, \
 
 from errors import explain as explain_error
 
+from datetime import datetime
+
 app = Flask(__name__)
 
 login_manager = LoginManager()
@@ -176,7 +178,7 @@ def do_grant():
         return redirect("/?error=no_access_to_this_channel")
 
     key_s = generate_key()
-    key = Key(key=key_s, chan_id=channel, name=form.name.data)
+    key = Key(key=key_s, chan_id=channel, name=form.name.data, created=datetime.now())
 
     read = form.read.data
     write = form.write.data
@@ -186,7 +188,7 @@ def do_grant():
 
     sess.commit()
 
-    return redirect(f"/settings/{channel}#list-key-open")
+    return redirect(f"/settings/{channel}#list-keys-open")
 
 
 # tmp
@@ -202,6 +204,7 @@ def perm_formatter(k: Key) -> str:
 
 
 @app.route("/settings/<channel_id>", methods=("GET", "POST"))
+@login_required
 def settings(channel_id):
     sess = SessObject()
     chan: Channel = sess.query(Channel).filter(Channel.id == channel_id).first()

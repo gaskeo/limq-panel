@@ -3,7 +3,7 @@ $("#list-tab a").on("click", function (e) {
     $(this).tab("show");
 });
 
-const allowed = ["#list-mainsettings-open", "#list-key-open", "#list-privacy-open"];
+const allowed = ["#list-main-settings-open", "#list-keys-open", "#list-privacy-settings-open"];
 
 $(document).ready(() => {
     var hash = window.location.hash;
