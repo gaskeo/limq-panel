@@ -11,6 +11,7 @@ a:hover {
 .data_container {
 	max-width: 1200px;
 	margin-left: 10%;
+	margin-right: 10%;
 	padding-top: 20px;
 	margin: auto;
 }
@@ -113,4 +114,15 @@ span.card-val {
 .helpdesk-container {
     margin: auto;
     max-width: 1000px;
+}
+@media(max-width: 640px) {
+    .btn-user {
+        font-size: 10px;
+    }
+
+    .header {
+        max-width: 100%;
+        width: 100%;
+        margin-left: 0;
+    }
 }
