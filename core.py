@@ -8,6 +8,7 @@
 
 from flask import Flask, render_template, redirect, request, make_response, abort
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
+from sqlalchemy import desc
 
 from storage.user import User
 from storage.channel import Channel
@@ -195,12 +196,12 @@ def do_grant():
 def perm_formatter(k: Key) -> str:
     r, w = k.can_read(), k.can_write()
     if r and w:
-        return "Приём, отправка"
+        return f"Приём, отправка / создан {k.created.date()}"
     if r:
-        return "Приём"
+        return f"Приём / создан {k.created.date()}"
     if w:
-        return "Отправка"
-    return "Прав доступа не установлено"
+        return f"Отправка / создан {k.created.date()}"
+    return f"Прав доступа не установлено / создан {k.created.date()}"
 
 
 @app.route("/settings/<channel_id>", methods=("GET", "POST"))
@@ -221,8 +222,8 @@ def settings(channel_id):
 
     form_keys = CreateKeyForm()
     form_keys.id.data = channel_id
-    keys = sess.query(Key).filter(Key.chan_id == channel_id).all()[::-1]
-    rights = [perm_formatter(k) for k in keys][::-1]
+    keys = sess.query(Key).filter(Key.chan_id == channel_id).order_by(desc(Key.created)).all()
+    rights = [perm_formatter(k) for k in keys]
 
     param = {"name_site": "Lithium MQ", "title": f"Settings for {chan.name}",
              "form_main_settings": form_main_settings, "form_keys": form_keys,
