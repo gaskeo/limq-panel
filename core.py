@@ -6,22 +6,20 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
 
-from flask import Flask, render_template, redirect, request, make_response, abort
+from datetime import datetime
+
+from flask import Flask, render_template, redirect, request
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 from sqlalchemy import desc
 
-from storage.user import User
-from storage.channel import Channel
-from storage.key import Key
-from storage.db_session import base_init
-from storage.keygen import chan_identifier, generate_key
-
+from errors import explain as explain_error
 from forms import RegisterForm, RegisterChannelForm, LoginForm, CreateKeyForm, \
     MainSettingsChannelForm
-
-from errors import explain as explain_error
-
-from datetime import datetime
+from storage.channel import Channel
+from storage.db_session import base_init
+from storage.key import Key
+from storage.keygen import chan_identifier, generate_key
+from storage.user import User
 
 app = Flask(__name__)
 
@@ -129,7 +127,7 @@ def create_channel():
     return render_template("create_channel.html", **param)
 
 
-@app.route("/do/create_channel", methods=("POST", ))
+@app.route("/do/create_channel", methods=("POST",))
 @login_required
 def do_create_channel():
     form = RegisterChannelForm()
@@ -158,7 +156,7 @@ def grant():
     return render_template("create_key.html", form=f, channels=channels)
 
 
-@app.route("/do/grant", methods=("POST", ))
+@app.route("/do/grant", methods=("POST",))
 @login_required
 def do_grant():
     form = CreateKeyForm(request.form)
@@ -232,7 +230,7 @@ def settings(channel_id):
     return render_template("settings.html", **param)
 
 
-@app.route("/do/settings", methods=("POST", ))
+@app.route("/do/settings", methods=("POST",))
 @login_required
 def do_settings():
     form = MainSettingsChannelForm()
@@ -255,6 +253,38 @@ def do_settings():
     return redirect(f"/settings/{channel_id}")
 
 
+@app.route("/do/create_mixin", methods=("POST",))
+@login_required
+def do_create_mixin():
+    print(request.form)
+    channel: str = request.form["channel"]
+    mix_key: str = request.form["key"]
+    sess = SessObject()
+
+    chan: Channel = sess.query(Channel).filter(Channel.id == channel).first()
+    if chan is None or chan.owner_id != current_user.id:
+        return redirect("?error=channel_invalid")
+
+    key: Key = sess.query(Key).filter(Key.key == mix_key).first()
+    if key is None:
+        return redirect("?error=channel_invalid")
+    if key.chan_id == chan.id:
+        return redirect("?error=mixin_with_same_channel")
+
+    # Resolve source
+    src_chan: Channel = sess.query(Channel).filter(Channel.id == key.chan_id).first()
+
+    mixins = list(src_chan.mixins())
+    if chan.id in mixins:
+        return redirect("?error=already_mixed")
+    mixins.append(channel)
+    src_chan.update_mixins(mixins)
+
+    sess.commit()
+
+    return "ok"
+
+
 @app.route("/helpdesk")
 def helpdesk():
     return render_template("helpdesk.html")
@@ -268,5 +298,4 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(port=8080, host="0.0.0.0")
-
+    app.run(port=8077, host="0.0.0.0")

@@ -3,11 +3,6 @@ a {
 	text-decoration: none;
 }
 
-a:hover {
-	color: black;
-	text-decoration: none;
-}
-
 .data-container {
 	max-width: 1200px;
 	width: 80%;
@@ -30,6 +25,11 @@ a:hover {
     font-size: 20px;
 }
 
+.lithium-label:hover {
+    color: black;
+    text-decoration: none;
+}
+
 span.mq-label {
     background-color: red;
     color: white;
@@ -39,6 +39,16 @@ span.mq-label {
     height: 30px;
     padding-left: 4px;
     padding-right: 38px;
+}
+
+span.mq-label:hover {
+    color: white;
+    text-decoration: none;
+}
+
+.nohover:hover {
+    text-decoration: none;
+    color: #000;
 }
 
 .card-container {

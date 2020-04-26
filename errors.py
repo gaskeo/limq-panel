@@ -11,7 +11,9 @@ from typing import Optional
 ERRORS = {
     "bad_request": "Что-то пошло не так",
     "channel_invalid": "Указанного канала не существует",
-    "no_access_to_this_channel": "У Вас нет прав на создание ключей для этого канала"
+    "no_access_to_this_channel": "У Вас нет прав на создание ключей для этого канала",
+    "mixin_with_same_channel": "Рекурсивный миксин невозможен",
+    "already_mixed": "Миксин уже создан",
 }
 
 

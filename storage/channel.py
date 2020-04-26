@@ -6,21 +6,30 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
 
-import sqlalchemy
-from .db_session import ModelBase
+from typing import Iterable
 
-from .user import User
+import sqlalchemy
+
+from keygen import CHAN_ID_LENGTH
+from .db_session import ModelBase
 
 
 class Channel(ModelBase):
     __tablename__ = 'channels'
 
     name = sqlalchemy.Column(sqlalchemy.String(length=64), nullable=False)
-
     is_active = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False)
-
     id = sqlalchemy.Column(sqlalchemy.String(length=16), nullable=False, primary_key=True, unique=True)
+    owner_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"), nullable=False)
+    forwards = sqlalchemy.Column(sqlalchemy.String(length=512), nullable=True, unique=False)
 
-    owner_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(User.id), nullable=False)
+    def mixins(self) -> Iterable:
+        if self.forwards is None or len(self.forwards) == 0:
+            return ()
 
+        ll = len(self.forwards)
 
+        return (self.forwards[i:i + CHAN_ID_LENGTH] for i in range(0, ll, CHAN_ID_LENGTH))
+
+    def update_mixins(self, m: Iterable):
+        self.forwards = "".join(m)
