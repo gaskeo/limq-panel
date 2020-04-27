@@ -4,8 +4,7 @@
 #  | |      | | | __| | "_ \  | | | | | | | "_ ` _ \  | |\/| | |  | |
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
-
-
+from collections import Iterable
 from datetime import datetime
 
 from flask import Flask, render_template, redirect, request
@@ -14,7 +13,7 @@ from sqlalchemy import desc
 
 from errors import explain as explain_error
 from forms import RegisterForm, RegisterChannelForm, LoginForm, CreateKeyForm, \
-    MainSettingsChannelForm
+    MainSettingsChannelForm, CreateMixin
 from storage.channel import Channel
 from storage.db_session import base_init
 from storage.key import Key
@@ -223,9 +222,17 @@ def settings(channel_id):
     keys = sess.query(Key).filter(Key.chan_id == channel_id).order_by(desc(Key.created)).all()
     rights = [perm_formatter(k) for k in keys]
 
+    form_mixin = CreateMixin()
+    form_mixin.channel.data = channel_id
+    mixin_out = (sess.query(Channel).filter(Channel.id == id_chan).first() for id_chan in chan.mixins())
+    mixin_in: Iterable[Channel] = sess.query(Channel)\
+        .filter(Channel.forwards.like(f"%{chan.id}%")).all()
+    print(chan.name)
+
     param = {"name_site": "Lithium MQ", "title": f"Settings for {chan.name}",
              "form_main_settings": form_main_settings, "form_keys": form_keys,
-             "chan": chan, "keys": keys, "rights": rights}
+             "chan": chan, "keys": keys, "rights": rights,
+             "form_mixin": form_mixin, "mixin_in": mixin_in, "mixin_out": mixin_out}
 
     return render_template("settings.html", **param)
 
@@ -263,26 +270,27 @@ def do_create_mixin():
 
     chan: Channel = sess.query(Channel).filter(Channel.id == channel).first()
     if chan is None or chan.owner_id != current_user.id:
-        return redirect("?error=channel_invalid")
+        return redirect("/?error=channel_invalid")
 
     key: Key = sess.query(Key).filter(Key.key == mix_key).first()
     if key is None:
-        return redirect("?error=channel_invalid")
+        return redirect("/?error=channel_invalid")
     if key.chan_id == chan.id:
-        return redirect("?error=mixin_with_same_channel")
+        return redirect("/?error=mixin_with_same_channel")
 
     # Resolve source
     src_chan: Channel = sess.query(Channel).filter(Channel.id == key.chan_id).first()
 
     mixins = list(src_chan.mixins())
     if chan.id in mixins:
-        return redirect("?error=already_mixed")
+        return redirect("/?error=already_mixed")
     mixins.append(channel)
+    print(mixins)
     src_chan.update_mixins(mixins)
 
     sess.commit()
 
-    return "ok"
+    return redirect(f"/settings/{channel}")
 
 
 @app.route("/helpdesk")

@@ -12,15 +12,16 @@
                 <a class="list-group-item list-group-item-action" id="list-keys-open"
                    data-toggle="list" href="#list-key" role="tab" aria-controls="key">Ключи
                     доступа</a>
-                <a class="list-group-item list-group-item-action" id="list-privacy-settings-open"
-                   data-toggle="list" href="#list-privacy" role="tab"
-                   aria-controls="key">Приватность</a>
+                <a class="list-group-item list-group-item-action" id="list-mixin-settings-open"
+                   data-toggle="list" href="#list-mixin" role="tab"
+                   aria-controls="key">Максины</a>
             </div>
         </div>
         <div class="col-9">
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane fade show active"
-                     id="list-mainsettings" role="tabpanel" aria-labelledby="list-main-settings-open">
+                     id="list-mainsettings" role="tabpanel"
+                     aria-labelledby="list-main-settings-open">
                     <form action="/do/settings" method="post">
                         {{ form_main_settings.hidden_tag() }}
                         <p>
@@ -67,9 +68,64 @@
                     <br>
                     {% endfor %}
                 </div>
-                <div class="tab-pane fade" id="list-privacy" role="tabpanel"
-                     aria-labelledby="list-keys-open">
-                    ито потом
+
+                <div class="tab-pane fade" id="list-mixin" role="tabpanel"
+                     aria-labelledby="list-mixin-settings-open">
+                    <h5 class="register-label">Создать миксин</h5>
+
+                        <form action="/do/create_mixin" method="post">
+                            {{ form_mixin.hidden_tag() }}
+                            <p>
+                                {{ form_mixin.key.label }}<br>
+                                {{ form_mixin.key(class="form-control") }}
+                                {% for error in form_mixin.key.errors %}
+                            <p class="alert alert-danger" role="alert">
+                                {{ error }}
+                            </p>
+                            {% endfor %}
+                            <p>{{ form_mixin.submit(type="submit", class="btn btn-primary")
+                                }}</p>
+                        </form>
+
+                    <div class="list-group list-group-horizontal-lg list-mixin" id="mixin-groups">
+                        <a class="list-group-item list-group-item-action active mixin-tab-link" id="mixin-list-in"
+                           data-toggle="list" href="#mixin-in" role="tab"
+                           aria-controls="home">Входящие</a>
+                        <a class="list-group-item list-group-item-action mixin-tab-link" id="mixin-list-out"
+                           data-toggle="list" href="#mixin-out" role="tab"
+                           aria-controls="profile">Исходящие</a>
+                    </div><br>
+                    <div>
+                        <div class="tab-content" id="nav-tabContent-2">
+                            <div class="tab-pane fade show active" id="mixin-in" role="tabpanel"
+                                 aria-labelledby="mixin-list-in">
+
+                                {% for mix in mixin_in %}
+                                <div class="card w-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ mix.name }}</h5>
+                                        <p class="channel-id card-subtitle mb-2 text-muted">#{{ mix.id }}</p>
+
+                                        <a href="#" class="btn btn-danger">Удалить</a>
+                                    </div>
+                                </div><br>
+                                {% endfor %}
+                            </div>
+                            <div class="tab-pane fade" id="mixin-out" role="tabpanel"
+                                 aria-labelledby="mixin-list-out">
+                                {% for mix in mixin_out %}
+                                <div class="card w-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ mix.name }}</h5>
+                                        <p class="channel-id card-subtitle mb-2 text-muted">#{{ mix.id }}</p>
+
+                                        <a href="#" class="btn btn-danger">Удалить</a>
+                                    </div>
+                                </div><br>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

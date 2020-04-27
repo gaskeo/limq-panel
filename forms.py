@@ -35,7 +35,8 @@ class RegisterChannelForm(FlaskForm):
 
 class MainSettingsChannelForm(FlaskForm):
     id = HiddenField("", validators=[DataRequired()])
-    name = StringField("Название", validators=[DataRequired(), Length(min=1, max=20, message='eee')])
+    name = StringField("Название", validators=[DataRequired(), Length(
+        min=1, max=20, message="Не больше 20 символов")])
     is_active = BooleanField("Активен", validators=[DataRequired()])
 
     submit = SubmitField("Сохранить изменения")
@@ -43,11 +44,14 @@ class MainSettingsChannelForm(FlaskForm):
 
 class CreateKeyForm(FlaskForm):
     id = HiddenField("", validators=[DataRequired()])
-    name = StringField("Название", validators=[DataRequired(), Length(min=1, max=20, message='eee')])
+    name = StringField("Название", validators=[DataRequired(), Length(
+        min=1, max=20, message="Не больше 20 символов")])
     read = BooleanField("Приём", false_values=["0"])
     write = BooleanField("Отправка", false_values=["0"])
     submit = SubmitField("Создать ключ")
 
 
 class CreateMixin(FlaskForm):
-    ...
+    channel = HiddenField("", validators=[DataRequired()])
+    key = StringField("Ключ канала", validators=[DataRequired()])
+    submit = SubmitField("Создать миксин")

@@ -127,3 +127,13 @@ span.card-val {
         margin-left: 0;
     }
 }
+
+.list-mixin {
+    max-width: 300px;
+    margin: auto;
+    content-align: center;
+}
+
+.mixin-tab-link {
+    text-align: center;
+}
