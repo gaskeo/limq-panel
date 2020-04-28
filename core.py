@@ -4,8 +4,10 @@
 #  | |      | | | __| | "_ \  | | | | | | | "_ ` _ \  | |\/| | |  | |
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
-from collections import Iterable
+
+
 from datetime import datetime
+from typing import Iterable
 
 from flask import Flask, render_template, redirect, request
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
@@ -180,8 +182,9 @@ def do_grant():
 
     read = form.read.data
     write = form.write.data
+    info = form.info_allowed.data
 
-    key.perm = write << 1 | read
+    key.perm = info << 2 | write << 1 | read
     sess.add(key)
 
     sess.commit()
@@ -290,7 +293,7 @@ def do_create_mixin():
 
     sess.commit()
 
-    return redirect(f"/settings/{channel}")
+    return redirect(f"/settings/{channel}#list-mixin-settings-open")
 
 
 @app.route("/helpdesk")
