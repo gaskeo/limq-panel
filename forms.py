@@ -49,7 +49,6 @@ class CreateKeyForm(FlaskForm):
     read = BooleanField("Приём", false_values=["0"])
     write = BooleanField("Отправка", false_values=["0"])
     info_allowed = BooleanField("Разрешить info", false_values=["0"])
-
     submit = SubmitField("Создать ключ")
 
 

@@ -14,7 +14,6 @@ $(document).ready(() => {
     }
 });
 
-$('#mixin-groups a').on('click', function (e) {
-  e.preventDefault()
-  $(this).tab('show')
-})
+$("#can-read").click(() => {
+    $("#allow-info").toggle();
+});
