@@ -227,7 +227,6 @@ def settings(channel_id):
     mixin_out = (sess.query(Channel).filter(Channel.id == id_chan).first() for id_chan in chan.mixins())
     mixin_in: Iterable[Channel] = sess.query(Channel)\
         .filter(Channel.forwards.like(f"%{chan.id}%")).all()
-    print(chan.name)
 
     param = {"name_site": "Lithium MQ", "title": f"Settings for {chan.name}",
              "form_main_settings": form_main_settings, "form_keys": form_keys,
@@ -263,9 +262,9 @@ def do_settings():
 @app.route("/do/create_mixin", methods=("POST",))
 @login_required
 def do_create_mixin():
-    print(request.form)
-    channel: str = request.form["channel"]
-    mix_key: str = request.form["key"]
+    form = CreateMixin()
+    channel: str = form.channel.data
+    mix_key: str = form.key.data
     sess = SessObject()
 
     chan: Channel = sess.query(Channel).filter(Channel.id == channel).first()
@@ -285,7 +284,6 @@ def do_create_mixin():
     if chan.id in mixins:
         return redirect("/?error=already_mixed")
     mixins.append(channel)
-    print(mixins)
     src_chan.update_mixins(mixins)
 
     sess.commit()
