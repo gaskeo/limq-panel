@@ -51,7 +51,7 @@
                         </p>
                         {% endfor %}
                         <p id="can-read">{{ form_keys.read() }} {{ form_keys.read.label }}</p>
-                        <p id="allow-info">{{ form_keys.info() }} {{ form_keys.info.label }}</p>
+                        <p id="allow-info">{{ form_keys.info_allowed() }} {{ form_keys.info_allowed.label }}</p>
                         <p>{{ form_keys.write() }} {{ form_keys.write.label }}</p>
                         <p>{{ form_keys.submit(type="submit", class="btn btn-primary") }}</p>
                     </form>
