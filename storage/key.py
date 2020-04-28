@@ -7,9 +7,9 @@
 
 
 import sqlalchemy
-from .db_session import ModelBase
 
 from .channel import Channel
+from .db_session import ModelBase
 
 
 class Key(ModelBase):
@@ -21,6 +21,7 @@ class Key(ModelBase):
 
     READ = 1 << 0
     WRITE = 1 << 1
+    INFO_ENABLED = 1 << 2
     PAUSED = 1 << 8
 
     key = sqlalchemy.Column(sqlalchemy.String(length=32), nullable=False, primary_key=True, unique=True)
@@ -46,3 +47,5 @@ class Key(ModelBase):
 
         return self.active()
 
+    def info_allowed(self) -> bool:
+        return self.perm & self.INFO_ENABLED != 0

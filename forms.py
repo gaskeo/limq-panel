@@ -48,11 +48,13 @@ class CreateKeyForm(FlaskForm):
         min=1, max=20, message="Не больше 20 символов")])
     read = BooleanField("Приём", false_values=["0"])
     write = BooleanField("Отправка", false_values=["0"])
-    info = BooleanField("Разрешить метод info", false_values=["0"])
+    info_allowed = BooleanField("Разрешить info", false_values=["0"])
     submit = SubmitField("Создать ключ")
 
 
 class CreateMixin(FlaskForm):
     channel = HiddenField("", validators=[DataRequired()])
-    key = StringField("Ключ канала", validators=[DataRequired()])
+    key = StringField("Ключ на чтение", validators=[DataRequired()], render_kw={
+        "placeholder": "4L7Vxsfw4Zjb5WRZXmbYGWzoF2sX8Ve4"
+    })
     submit = SubmitField("Создать миксин")
