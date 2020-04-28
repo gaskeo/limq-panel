@@ -137,3 +137,7 @@ span.card-val {
 .mixin-tab-link {
     text-align: center;
 }
+
+#allow-info {
+    display: none;
+}

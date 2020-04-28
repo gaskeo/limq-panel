@@ -48,6 +48,7 @@ class CreateKeyForm(FlaskForm):
         min=1, max=20, message="Не больше 20 символов")])
     read = BooleanField("Приём", false_values=["0"])
     write = BooleanField("Отправка", false_values=["0"])
+    info = BooleanField("Разрешить метод info", false_values=["0"])
     submit = SubmitField("Создать ключ")
 
 
