@@ -24,8 +24,6 @@ class Channel(ModelBase):
     forwards = sqlalchemy.Column(sqlalchemy.String(length=512), nullable=True, unique=False)
 
     def mixins(self) -> Iterable:
-        print(self.name)
-        print(self.forwards)
         if self.forwards is None or len(self.forwards) == 0:
             return ()
         ll = len(self.forwards)

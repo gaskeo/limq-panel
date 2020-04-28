@@ -163,7 +163,6 @@ def do_grant():
     form = CreateKeyForm(request.form)
 
     if not form.validate():
-        print(form.errors)
         return redirect("/?error=bad_request")
 
     sess = SessObject()

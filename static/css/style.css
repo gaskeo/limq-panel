@@ -61,6 +61,10 @@ span.mq-label:hover {
     margin-bottom: 0px;
 }
 
+.nomb {
+    margin-bottom: 0px;
+}
+
 .card-usage-block {
 	padding-top: 0px;
 	margin-top: 0px;
@@ -138,6 +142,15 @@ span.card-val {
     text-align: center;
 }
 
-#allow-info {
+#allow-info, #selected-info {
     display: none;
+}
+
+#allow-info {
+    margin-bottom: 1rem;
+}
+
+.subselect {
+    font-size: 12px;
+    margin-bottom: 20px !important;
 }

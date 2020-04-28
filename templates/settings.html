@@ -51,7 +51,17 @@
                         </p>
                         {% endfor %}
                         <p id="can-read">{{ form_keys.read() }} {{ form_keys.read.label }}</p>
-                        <p id="allow-info">{{ form_keys.info_allowed() }} {{ form_keys.info_allowed.label }}</p>
+
+                        <div id="allow-info">
+                            <p class="nomb"> {{ form_keys.info_allowed() }} {{ form_keys.info_allowed.label }} </p>
+                            <p class="subselect mb-2 text-muted" id="selected-info">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Выбирайте этот параметр, только если точно понимаете, зачем он нужен.
+                                Подробнее можно прочитать в <a href="/helpdesk#api-info-method">документации</a>
+                            </p>
+                        </div>
+
+
                         <p>{{ form_keys.write() }} {{ form_keys.write.label }}</p>
                         <p>{{ form_keys.submit(type="submit", class="btn btn-primary") }}</p>
                     </form>
