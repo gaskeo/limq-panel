@@ -154,3 +154,9 @@ span.card-val {
     font-size: 12px;
     margin-bottom: 20px !important;
 }
+
+.no-keys, .no-mixin {
+    text-align: center;
+    font-size: 80%;
+    color: #aaa;
+}

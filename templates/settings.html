@@ -64,20 +64,26 @@
 
                         <p>{{ form_keys.write() }} {{ form_keys.write.label }}</p>
                         <p>{{ form_keys.submit(type="submit", class="btn btn-primary") }}</p>
-                    </form>
-                    {% for key in keys %}
-                    <div class="card w-100">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ key.name }}</h5>
-                            <p class="channel-id mb-2 text-muted">{{ rights[loop.index0] }}</p>
-                            <p class="card-text"><span class="badge badge-secondary badge-key">{{ key.key }}</span></p>
-                            <a href="#" class="btn btn-warning">Приостановить</a>
-                            <a href="#" class="btn btn-danger">Удалить</a>
+                    </form><br>
+                    <h5 class="register-label">Ключи</h5><br>
 
+                    {% if not keys %}
+                        <h6 class="no-keys">Вы еще не создали ни одного ключа</h6>
+                    {% else %}
+                        {% for key in keys %}
+                        <div class="card w-100">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ key.name }}</h5>
+                                <p class="channel-id mb-2 text-muted">{{ rights[loop.index0] }}</p>
+                                <p class="card-text"><span class="badge badge-secondary badge-key">{{ key.key }}</span></p>
+                                <a href="#" class="btn btn-warning">Приостановить</a>
+                                <a href="#" class="btn btn-danger">Удалить</a>
+
+                            </div>
                         </div>
-                    </div>
-                    <br>
-                    {% endfor %}
+                        <br>
+                        {% endfor %}
+                    {% endif %}
                 </div>
 
                 <div class="tab-pane fade" id="list-mixin" role="tabpanel"
@@ -110,30 +116,37 @@
                         <div class="tab-content" id="nav-tabContent-2">
                             <div class="tab-pane fade show active" id="mixin-in" role="tabpanel"
                                  aria-labelledby="mixin-list-in">
+                                {% if not keys %}
+                                    <h6 class="no-mixin">Вы еще никого не добавили в <a href="/helpdesk">миксин</a></h6>
+                                {% else %}
+                                    {% for mix in mixin_in %}
+                                    <div class="card w-100">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ mix.name }}</h5>
+                                            <p class="channel-id card-subtitle mb-2 text-muted">#{{ mix.id }}</p>
 
-                                {% for mix in mixin_in %}
-                                <div class="card w-100">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ mix.name }}</h5>
-                                        <p class="channel-id card-subtitle mb-2 text-muted">#{{ mix.id }}</p>
-
-                                        <a href="#" class="btn btn-danger">Удалить</a>
-                                    </div>
-                                </div><br>
-                                {% endfor %}
+                                            <a href="#" class="btn btn-danger">Удалить</a>
+                                        </div>
+                                    </div><br>
+                                    {% endfor %}
+                                {% endif %}
                             </div>
                             <div class="tab-pane fade" id="mixin-out" role="tabpanel"
                                  aria-labelledby="mixin-list-out">
-                                {% for mix in mixin_out %}
-                                <div class="card w-100">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ mix.name }}</h5>
-                                        <p class="channel-id card-subtitle mb-2 text-muted">#{{ mix.id }}</p>
+                                {% if not keys %}
+                                    <h6 class="no-mixin">Этот канал еще никто не добавил в <a href="/helpdesk">миксин</a></h6>
+                                {% else %}
+                                    {% for mix in mixin_out %}
+                                    <div class="card w-100">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ mix.name }}</h5>
+                                            <p class="channel-id card-subtitle mb-2 text-muted">#{{ mix.id }}</p>
 
-                                        <a href="#" class="btn btn-danger">Удалить</a>
-                                    </div>
-                                </div><br>
-                                {% endfor %}
+                                            <a href="#" class="btn btn-danger">Удалить</a>
+                                        </div>
+                                    </div><br>
+                                    {% endfor %}
+                                {% endif %}
                             </div>
                         </div>
                     </div>
