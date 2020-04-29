@@ -230,7 +230,7 @@ def settings(channel_id):
     mixin_in: Iterable[Channel] = sess.query(Channel)\
         .filter(Channel.forwards.like(f"%{chan.id}%")).all()
 
-    param = {"name_site": "Lithium MQ", "title": f"Settings for {chan.name}",
+    param = {"name_site": "Lithium MQ",
              "form_main_settings": form_main_settings, "form_keys": form_keys,
              "chan": chan, "keys": keys, "rights": rights,
              "form_mixin": form_mixin, "mixin_in": mixin_in, "mixin_out": mixin_out}
