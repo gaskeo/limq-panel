@@ -295,7 +295,7 @@ def do_create_mixin():
 
 @app.route("/helpdesk")
 def helpdesk():
-    return render_template("helpdesk.html")
+    return render_template("helpdesk/helpdesk.html")
 
 
 @app.route("/logout")
