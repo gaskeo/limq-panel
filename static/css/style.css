@@ -57,7 +57,7 @@ span.mq-label:hover {
 }
 
 .card-container {
-    padding-left: 0px;
+    margin-top: 10px;
 }
 
 .card-use {
@@ -184,3 +184,11 @@ span.card-val {
 .card-container {
     display: inline-block
 }
+
+
+@media screen and (max-width: 576px) {
+    .register-label {
+        margin-top: 15px;
+    }
+}
+

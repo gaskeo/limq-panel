@@ -6,7 +6,7 @@
 <div class="data-container">
     <h4>Настройки для &laquo;{{ chan.name }}&raquo;</h4>
     <div class="row">
-        <div class="col-3">
+        <div class="col-12 col-sm-4 col-md-3">
             <div class="list-group" id="list-tab" role="tablist">
                 <a class="list-group-item list-group-item-action active" id="list-main-settings-open"
                    data-toggle="list" href="#list-mainsettings" role="tab"
@@ -19,12 +19,15 @@
                    aria-controls="key">Миксины</a>
             </div>
         </div>
-        <div class="col-9">
+        <div class="col-12 col-sm-8 col-md-9">
             <div class="tab-content" id="nav-tabContent">
+
+                <!-- Основное -->
                 <div class="tab-pane fade show active"
                      id="list-mainsettings" role="tabpanel"
                      aria-labelledby="list-main-settings-open">
                     <form action="/do/settings" method="post">
+                        <h5 class="register-label">Основное</h5>
                         {{ form_main_settings.hidden_tag() }}
                         <p>
                             {{ form_main_settings.name.label }}<br>
@@ -38,6 +41,8 @@
                         <p>{{ form_main_settings.submit(type="submit", class="btn btn-primary") }}</p>
                     </form>
                 </div>
+
+                <!-- Создание ключа -->
                 <div class="tab-pane fade" id="list-key" role="tabpanel"
                      aria-labelledby="list-keys-open">
                     <h5 class="register-label">Создать ключ</h5>
@@ -97,6 +102,7 @@
                     {% endif %}
                 </div>
 
+                <!-- Создание миксина -->
                 <div class="tab-pane fade" id="list-mixin" role="tabpanel"
                      aria-labelledby="list-mixin-settings-open">
                     <h5 class="register-label">Создать миксин</h5>

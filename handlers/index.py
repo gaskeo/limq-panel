@@ -1,0 +1,58 @@
+#   _        _   _     _       _                       __  __  ____
+#  | |      (_) | |   | |     (_)                     |  \/  |/ __ \
+#  | |       _  | |_  | |__    _   _   _   _ __ ___   | \  / | |  | |
+#  | |      | | | __| | "_ \  | | | | | | | "_ ` _ \  | |\/| | |  | |
+#  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
+#  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
+
+
+from typing import ClassVar
+
+from flask import Blueprint, render_template, request, redirect
+from flask_login import current_user, login_required, logout_user
+
+from errors import explain as explain_error
+from storage.channel import Channel
+from storage.key import Key
+
+
+def create_handler(sess_cr: ClassVar) -> Blueprint:
+    app = Blueprint("index", __name__)
+
+    @app.route("/")
+    def index():
+        error = request.args.get("error", None)
+
+        param = {"title": "LithiumMQ", "name_site": "Lithium MQ", "current_user": current_user,
+                 "error": explain_error(error) if error else None}
+
+        if current_user.is_authenticated:
+            sess = sess_cr()
+
+            channels = sess.query(Channel).filter(Channel.owner_id == current_user.id).all()
+
+            if channels:
+                key_stats = [...] * len(channels)
+
+                for i, chan in enumerate(channels):
+                    r, w = 0, 0
+                    keys_assoc = sess.query(Key).filter(Key.chan_id == chan.id).all()
+                    for key in keys_assoc:
+                        if key.can_write():
+                            w += 1
+                        if key.can_read():
+                            r += 1
+                    key_stats[i] = r, w
+
+                param["user_channels"] = channels
+                param["user_channels_stat"] = key_stats
+
+        return render_template("mainpage.html", **param)
+
+    @app.route("/logout")
+    @login_required
+    def logout():
+        logout_user()
+        return redirect("/")
+
+    return app

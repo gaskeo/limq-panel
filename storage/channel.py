@@ -10,7 +10,7 @@ from typing import Iterable
 
 import sqlalchemy
 
-from keygen import CHAN_ID_LENGTH
+from storage.keygen import CHAN_ID_LENGTH
 from .db_session import ModelBase
 
 

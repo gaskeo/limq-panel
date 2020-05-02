@@ -11,6 +11,8 @@
 import random
 
 LENGTH = 32
+CHAN_ID_LENGTH = 16
+
 CHARS = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
 
 

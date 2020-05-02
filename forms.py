@@ -51,7 +51,7 @@ class CreateKeyForm(FlaskForm):
     submit = SubmitField("Создать ключ")
 
 
-class CreateMixin(FlaskForm):
+class CreateMixinForm(FlaskForm):
     channel = HiddenField("", validators=[DataRequired()])
     key = StringField("Ключ на чтение", validators=[DataRequired()], render_kw={
         "placeholder": "4L7Vxsfw4Zjb5WRZXmbYGWzoF2sX8Ve4"
