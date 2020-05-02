@@ -17,6 +17,10 @@ $("#can-read").change(() => {
     $("#allow-info").toggle();
 });
 
+$("#can-write").change(() => {
+    $("#allow-info").toggle();
+});
+
 
 $("#allow-info").change(() => {
     $("#selected-info").toggle();

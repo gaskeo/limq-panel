@@ -164,7 +164,6 @@ def do_grant():
 
     if not form.validate():
         return redirect("/?error=bad_request")
-
     sess = SessObject()
 
     channel = form.id.data
@@ -178,9 +177,15 @@ def do_grant():
 
     key_s = generate_key()
     key = Key(key=key_s, chan_id=channel, name=form.name.data, created=datetime.now())
-
-    read = form.read.data
-    write = form.write.data
+    if form.permissions.data == '0':
+        read = 1
+        write = 0
+    elif form.permissions.data == '1':
+        read = 0
+        write = 1
+    else:
+        read = 0
+        write = 0
     info = form.info_allowed.data
 
     key.perm = info << 2 | write << 1 | read

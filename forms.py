@@ -6,7 +6,7 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, RadioField
 from wtforms.validators import DataRequired, Length
 
 
@@ -46,8 +46,7 @@ class CreateKeyForm(FlaskForm):
     id = HiddenField("", validators=[DataRequired()])
     name = StringField("Название", validators=[DataRequired(), Length(
         min=1, max=20, message="Не больше 20 символов")])
-    read = BooleanField("Приём", false_values=["0"])
-    write = BooleanField("Отправка", false_values=["0"])
+    permissions = RadioField("", choices=[('0', 'Прием'), ('1', 'Отправка')], default='1')
     info_allowed = BooleanField("Разрешить info", false_values=["0"])
     submit = SubmitField("Создать ключ")
 
