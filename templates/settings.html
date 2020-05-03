@@ -143,7 +143,13 @@
                                             <h5 class="card-title">{{ mix.name }}</h5>
                                             <p class="channel-id card-subtitle mb-2 text-muted">#{{ mix.id }}</p>
 
-                                            <a href="#" class="btn btn-danger">Удалить</a>
+                                            <form action="/do/restrict_in_mx" method="post"
+                                                  style="display: inline-block;">
+                                                {{ mixin_restrict.csrf_token }}
+                                                <input type="hidden" value="{{ chan.id }}" name="subject">
+                                                <input type="hidden" value="{{ mix.id }}" name="chan">
+                                                <input type="submit" class="btn btn-danger" value="Удалить">
+                                            </form>
                                         </div>
                                     </div><br>
                                     {% endfor %}
@@ -160,7 +166,13 @@
                                             <h5 class="card-title">{{ mix.name }}</h5>
                                             <p class="channel-id card-subtitle mb-2 text-muted">#{{ mix.id }}</p>
 
-                                            <a href="#" class="btn btn-danger">Удалить</a>
+                                            <form action="/do/restrict_out_mx" method="post"
+                                                  style="display: inline-block;">
+                                                {{ mixin_restrict.csrf_token }}
+                                                <input type="hidden" value="{{ chan.id }}" name="subject">
+                                                <input type="hidden" value="{{ mix.id }}" name="chan">
+                                                <input type="submit" class="btn btn-danger" value="Удалить">
+                                            </form>
                                         </div>
                                     </div><br>
                                     {% endfor %}

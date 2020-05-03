@@ -12,7 +12,7 @@ from flask import Blueprint, render_template, redirect
 from flask_login import current_user, login_required
 from sqlalchemy import desc
 
-from forms import CreateKeyForm, CreateMixinForm, MainSettingsChannelForm
+from forms import CreateKeyForm, CreateMixinForm, MainSettingsChannelForm, RestrictMxForm
 from storage.channel import Channel
 from storage.key import Key
 
@@ -52,6 +52,9 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         form_mixin = CreateMixinForm()
         form_mixin.channel.data = channel_id
+
+        form_mixin_restrict = RestrictMxForm()
+
         mixin_out = (sess.query(Channel).filter(Channel.id == id_chan).first() for id_chan in chan.mixins())
         mixin_in: Iterable[Channel] = sess.query(Channel) \
             .filter(Channel.forwards.like(f"%{chan.id}%")).all()
@@ -59,7 +62,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         param = {"name_site": "Lithium MQ",
                  "form_main_settings": form_main_settings, "form_keys": form_keys,
                  "chan": chan, "keys": keys, "rights": rights,
-                 "form_mixin": form_mixin, "mixin_in": mixin_in, "mixin_out": mixin_out}
+                 "form_mixin": form_mixin, "mixin_in": mixin_in,
+                 "mixin_out": mixin_out, "mixin_restrict": form_mixin_restrict}
 
         return render_template("settings.html", **param)
 
