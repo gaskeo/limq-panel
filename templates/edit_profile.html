@@ -5,7 +5,6 @@
 {% block content %}
 
 <div class="data-container">
-    <div class="data-container">
     {% if error %}
     <div class="alert alert-danger" role="alert">
         {{ error }}
@@ -47,6 +46,7 @@
                         <p>{{ form_change_username.submit(type="submit", class="btn btn-primary") }}</p>
                     </form>
                 </div>
+
                 <!-- Смена email -->
                 <div class="tab-pane fade" id="change-email" role="tabpanel"
                      aria-labelledby="list-email-change">
@@ -74,7 +74,7 @@
                     </form><br>
                 </div>
 
-                <!-- смена пароля -->
+                <!-- Смена пароля -->
                 <div class="tab-pane fade" id="change-password" role="tabpanel"
                      aria-labelledby="list-password-change">
                     <h5 class="register-label">Смена пароля</h5>
@@ -99,14 +99,7 @@
                             </p>
                             {% endfor %}
 
-                            <p>
-                                {{ form_change_password.password_again.label }}<br>
-                                {{ form_change_password.password_again(class="form-control", type="password") }}
-                                {% for error in form_change_password.password_again.errors %}
-                            <p class="alert alert-danger" role="alert">
-                                {{ error }}
-                            </p>
-                            {% endfor %}
+
                             <p>{{ form_change_password.submit(type="submit", class="btn btn-primary")
                                 }}</p>
                         </form>
@@ -114,7 +107,6 @@
                 </div>
             </div>
         </div>
-    </div>
 </div>
 
 <script src="/static/js/index.js" charset="utf-8" defer></script>

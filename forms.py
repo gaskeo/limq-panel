@@ -54,7 +54,7 @@ class CreateKeyForm(FlaskForm):
 class CreateMixinForm(FlaskForm):
     channel = HiddenField("", validators=[DataRequired()])
     key = StringField("Ключ на чтение", validators=[DataRequired()], render_kw={
-        "placeholder": "4L7Vxsfw4Zjb5WRZXmbYGWzoF2sX8Ve4"
+        "placeholder": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     })
     submit = SubmitField("Создать миксин")
 
@@ -64,28 +64,24 @@ class DeleteKeyForm(FlaskForm):
     submit = SubmitField("Удалить")
 
 
-class ChangeUsername(FlaskForm):
-    id = HiddenField("", validators=[DataRequired()])
+class ChangeUsernameForm(FlaskForm):
     new_username = StringField("Новое имя", validators=[DataRequired()])
     submit = SubmitField("Изменить")
 
 
-class ChangeEmail(FlaskForm):
-    id = HiddenField("", validators=[DataRequired()])
-    new_email = StringField("Новая почта", validators=[DataRequired()])
+class ChangeEmailForm(FlaskForm):
+    new_email = StringField("Новая электропочта", validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
     submit = SubmitField("Изменить")
 
 
-class ChangePassword(FlaskForm):
-    id = HiddenField("", validators=[DataRequired()])
+class ChangePasswordForm(FlaskForm):
     old_password = PasswordField("Старый пароль", validators=[DataRequired()])
     password = PasswordField("Новый пароль", validators=[DataRequired()])
-    password_again = PasswordField("Еще раз новый пароль", validators=[DataRequired()])
     submit = SubmitField("Изменить")
 
 
-class RestrictMx(FlaskForm):
+class RestrictMxForm(FlaskForm):
     subject = HiddenField("", validators=[DataRequired()])
     chan = HiddenField("", validators=[DataRequired()])
     submit = SubmitField("Удалить")

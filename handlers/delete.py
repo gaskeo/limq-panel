@@ -3,7 +3,7 @@ from typing import ClassVar
 from flask import Blueprint, redirect
 from flask_login import current_user, login_required
 
-from forms import DeleteKeyForm, RestrictMx
+from forms import DeleteKeyForm, RestrictMxForm
 from storage.channel import Channel
 from storage.key import Key
 
@@ -45,7 +45,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     def restrict_in_mx():
         # User treats that their chan_1 is scraping messages from chan_2. He wants to break that link
 
-        form = RestrictMx()
+        form = RestrictMxForm()
 
         if not form.validate():
             return redirect("/?error=bad_request")
@@ -82,7 +82,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     def restrict_out_mx():
         # User treats that chan_2 is scraping user's chan_1. User wants to break that link
 
-        form = RestrictMx()
+        form = RestrictMxForm()
 
         if not form.validate():
             return redirect("/?error=bad_request")
