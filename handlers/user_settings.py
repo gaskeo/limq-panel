@@ -8,6 +8,24 @@ from forms import ChangeEmailForm, ChangePasswordForm, ChangeUsernameForm
 from storage.user import User
 
 
+def hide_email(e: str) -> str:
+    """
+    Hides an e-mail under the asterisks.
+
+    :param e: e-mail
+    :return hidden
+
+    """
+
+    name, full_domain = e.split("@")
+    domain, zone = full_domain.split(".")
+
+    name = name[0] + "*" * (len(name) - 2) + name[1]
+    domain = domain[0] + "*" * (len(domain) - 2) + domain[1]
+
+    return f"{name}@{domain}.{zone}"
+
+
 def create_handler(sess_cr: ClassVar) -> Blueprint:
     app = Blueprint("user_settings", __name__)
 
@@ -24,6 +42,9 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         form_change_username.new_username.data = user.username
 
         form_change_email = ChangeEmailForm()
+        form_change_email.new_email.render_kw = {
+            "placeholder": hide_email(user.email)
+        }
 
         form_change_password = ChangePasswordForm()
 
