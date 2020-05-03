@@ -62,3 +62,9 @@ class CreateMixinForm(FlaskForm):
 class DeleteKeyForm(FlaskForm):
     key = HiddenField("", validators=[DataRequired()])
     submit = SubmitField("Удалить")
+
+
+class RestrictMx(FlaskForm):
+    subject = HiddenField("", validators=[DataRequired()])
+    chan = HiddenField("", validators=[DataRequired()])
+    submit = SubmitField("Удалить")
