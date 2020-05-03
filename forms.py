@@ -57,3 +57,8 @@ class CreateMixinForm(FlaskForm):
         "placeholder": "4L7Vxsfw4Zjb5WRZXmbYGWzoF2sX8Ve4"
     })
     submit = SubmitField("Создать миксин")
+
+
+class DeleteKeyForm(FlaskForm):
+    key = HiddenField("", validators=[DataRequired()])
+    submit = SubmitField("Удалить")

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}
-    <title>Settings for &laquo;{{ chan.name }}&raquo;</title>
+<title xmlns="http://www.w3.org/1999/html">Settings for &laquo;{{ chan.name }}&raquo;</title>
 {% endblock %}
 {% block content %}
 <div class="data-container">
@@ -76,9 +76,6 @@
                         {% endfor %}
                         </div>
 
-
-
-
                         <p>{{ form_keys.submit(type="submit", class="btn btn-primary") }}</p>
                     </form><br>
                     <h5 class="register-label">Ключи</h5><br>
@@ -92,9 +89,13 @@
                                 <h5 class="card-title">{{ key.name }}</h5>
                                 <p class="channel-id mb-2 text-muted">{{ rights[loop.index0] }}</p>
                                 <p class="card-text"><span class="badge badge-secondary badge-key">{{ key.key }}</span></p>
-                                <a href="#" class="btn btn-warning">Приостановить</a>
-                                <a href="#" class="btn btn-danger">Удалить</a>
-
+                                <div>
+                                    <a href="#" class="btn btn-warning">Приостановить</a>
+                                    <form action="/do/delete_key" method="post" style="display: inline-block;">
+                                        <input type="hidden" value="{{ key.key }}" id="key" name="key">
+                                        <input type="submit" class="btn btn-danger" value="Удалить">
+                                    </form>
+                                </div>
                             </div>
                         </div>
                         <br>

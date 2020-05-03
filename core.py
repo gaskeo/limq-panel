@@ -9,7 +9,7 @@
 from flask import Flask
 from flask_login import LoginManager
 
-from handlers import index, register, login, create_channel, grant, helpdesk, settings
+from handlers import index, register, login, create_channel, grant, helpdesk, settings, delete
 from storage.db_session import base_init
 
 app = Flask(__name__)
@@ -28,6 +28,7 @@ app.register_blueprint(create_channel.create_handler(SessObject))
 app.register_blueprint(grant.create_handler(SessObject))
 app.register_blueprint(settings.create_handler(SessObject))
 app.register_blueprint(helpdesk.create_handler(SessObject))
+app.register_blueprint(delete.create_handler(SessObject))
 
 
 if __name__ == "__main__":
