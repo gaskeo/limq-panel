@@ -4,7 +4,8 @@ $("#list-tab a").on("click", function (e) {
     $(this).tab("show");
 });
 
-const allowed = ["#list-main-settings-open", "#list-keys-open", "#list-mixin-settings-open"];
+const allowed = ["#list-main-settings-open", "#list-keys-open", "#list-mixin-settings-open",
+"#list-username-change", "#list-email-change", "#list-password-change"];
 
 $(document).ready(() => {
     var hash = window.location.hash;
