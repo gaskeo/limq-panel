@@ -15,6 +15,11 @@ ERRORS = {
     "mixin_with_same_channel": "Рекурсивный миксин невозможен",
     "already_mixed": "Миксин уже создан",
     "wrong_permissions": "Неверно заданы права для ключа",
+    "user_invalid": "Указанного пользователя не существует",
+    "no_access_to_this_user": "У Вас нет доступа к этому пользователю",
+    "wrong_password": "Указан неверный пароль",
+    "email_exist": "Пользователь с таким email уже существует",
+    "passwords_not_match": "Пароли не совпадают"
 }
 
 

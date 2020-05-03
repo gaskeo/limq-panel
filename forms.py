@@ -62,3 +62,25 @@ class CreateMixinForm(FlaskForm):
 class DeleteKeyForm(FlaskForm):
     key = HiddenField("", validators=[DataRequired()])
     submit = SubmitField("Удалить")
+
+
+class ChangeUsername(FlaskForm):
+    id = HiddenField("", validators=[DataRequired()])
+    new_username = StringField("Новое имя", validators=[DataRequired()])
+    submit = SubmitField("Изменить")
+
+
+class ChangeEmail(FlaskForm):
+    id = HiddenField("", validators=[DataRequired()])
+    new_email = StringField("Новая почта", validators=[DataRequired()])
+    password = PasswordField("Пароль", validators=[DataRequired()])
+    submit = SubmitField("Изменить")
+
+
+class ChangePassword(FlaskForm):
+    id = HiddenField("", validators=[DataRequired()])
+    old_password = PasswordField("Старый пароль", validators=[DataRequired()])
+    password = PasswordField("Новый пароль", validators=[DataRequired()])
+    password_again = PasswordField("Еще раз новый пароль", validators=[DataRequired()])
+    submit = SubmitField("Изменить")
+

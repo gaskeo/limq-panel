@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}
+<title xmlns="http://www.w3.org/1999/html">Settings for &laquo;{{ current_user.username }}&raquo;</title>
+{% endblock %}
+{% block content %}
+
+<div class="data-container">
+    <div class="data-container">
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+    <h4>Настройки для &laquo;{{ current_user.username }}&raquo;</h4>
+    <div class="row">
+        <div class="col-12 col-sm-4 col-md-3">
+            <div class="list-group" id="list-tab" role="tablist">
+                <a class="list-group-item list-group-item-action active" id="list-username-change"
+                   data-toggle="list" href="#change-username" role="tab"
+                   aria-controls="username">Сменить имя</a>
+                <a class="list-group-item list-group-item-action" id="list-email-change"
+                   data-toggle="list" href="#change-email" role="tab" aria-controls="email">Сменить email</a>
+                <a class="list-group-item list-group-item-action" id="list-password-change"
+                   data-toggle="list" href="#change-password" role="tab"
+                   aria-controls="password">Сменить пароль</a>
+            </div>
+        </div>
+        <div class="col-12 col-sm-8 col-md-9">
+            <div class="tab-content" id="nav-tabContent">
+
+                <!-- Смена имени -->
+                <div class="tab-pane fade show active"
+                     id="change-username" role="tabpanel"
+                     aria-labelledby="list-username-change">
+                    <form action="/do/change_username" method="post">
+                        <h5 class="register-label">Смена имени</h5>
+                        {{ form_change_username.hidden_tag() }}
+                        <p>
+                            {{ form_change_username.new_username.label }}<br>
+                            {{ form_change_username.new_username(class="form-control") }}
+                            {% for error in form_change_username.new_username.errors %}
+
+                                <p class="alert alert-danger" role="alert">
+                                    {{ error }}
+                                </p>
+                            {% endfor %}
+                        <p>{{ form_change_username.submit(type="submit", class="btn btn-primary") }}</p>
+                    </form>
+                </div>
+                <!-- Смена email -->
+                <div class="tab-pane fade" id="change-email" role="tabpanel"
+                     aria-labelledby="list-email-change">
+                    <h5 class="register-label">Смена email</h5>
+
+                    <form action="/do/change_email" method="post">
+                        {{ form_change_email.hidden_tag() }}
+                        <p>
+                            {{ form_change_email.new_email.label }}<br>
+                            {{ form_change_email.new_email(class="form-control") }}
+                            {% for error in form_change_email.new_email.errors %}
+                                <p class="alert alert-danger" role="alert">
+                                {{ error }}
+                                </p>
+                            {% endfor %}
+                        <p>{{ form_change_email.password.label }}<br>
+                            {{ form_change_email.password(class="form-control", type="password") }}
+                            {% for error in form_change_email.password.errors %}
+                                <p class="alert alert-danger" role="alert">
+                                {{ error }}
+                                </p>
+                            {% endfor %}
+
+                        <p>{{ form_change_email.submit(type="submit", class="btn btn-primary") }}</p>
+                    </form><br>
+                </div>
+
+                <!-- смена пароля -->
+                <div class="tab-pane fade" id="change-password" role="tabpanel"
+                     aria-labelledby="list-password-change">
+                    <h5 class="register-label">Смена пароля</h5>
+
+                        <form action="/do/change_password" method="post">
+                            {{ form_change_password.hidden_tag() }}
+                            <p>
+                                {{ form_change_password.old_password.label }}<br>
+                                {{ form_change_password.old_password(class="form-control", type="password") }}
+                                {% for error in form_change_password.old_password.errors %}
+                            <p class="alert alert-danger" role="alert">
+                                {{ error }}
+                            </p>
+                            {% endfor %}
+
+                            <p>
+                                {{ form_change_password.password.label }}<br>
+                                {{ form_change_password.password(class="form-control", type="password") }}
+                                {% for error in form_change_password.password.errors %}
+                            <p class="alert alert-danger" role="alert">
+                                {{ error }}
+                            </p>
+                            {% endfor %}
+
+                            <p>
+                                {{ form_change_password.password_again.label }}<br>
+                                {{ form_change_password.password_again(class="form-control", type="password") }}
+                                {% for error in form_change_password.password_again.errors %}
+                            <p class="alert alert-danger" role="alert">
+                                {{ error }}
+                            </p>
+                            {% endfor %}
+                            <p>{{ form_change_password.submit(type="submit", class="btn btn-primary")
+                                }}</p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/index.js" charset="utf-8" defer></script>
+{% endblock %}
