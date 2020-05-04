@@ -1,0 +1,27 @@
+{% extends "helpdesk/hbase.html" %}
+{% block helpdesk_content %}
+<h2>Создание ключа</h2>
+
+<ol>
+    <li><a href="/helpdesk/channels/edit">Пройдите в настройки</a> нужного канала</li>
+    <li>Перейдите в пункт меню «Ключи доступа»
+        <p>
+            Страница настроек ключей выглядит так: <br><br>
+            <img src="/static/images/helpdesk/keys_create.png" width="785px" height="295px"> <br><br>
+        </p>
+    </li>
+    <li>Придумайте название для вашего ключа. По этому названию ключ можно будет определить</li>
+    <li><a href="/helpdesk/keys_perm">Выберите права</a> для этого ключа: на прием или отправку</li>
+    <li>При успешном создании ключ добавится в список под формой</li>
+</ol>
+<p>
+            Карточка ключа выглядит так: <br><br>
+            <img src="/static/images/helpdesk/keys_create_2.png" width="800px" height="320px"> <br><br>
+            На ней отображаются:
+        </p>
+<ul>
+    <li>Название ключа, введённое вами ранее</li>
+    <li>#ID ключа, выданный системой</li>
+    <li>Кнопки для приостановки и удаления ключа</li>
+</ul>
+{% endblock %}

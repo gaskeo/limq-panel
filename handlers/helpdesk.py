@@ -22,4 +22,20 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     def helpdesk_ch_cr():
         return render_template("helpdesk/channels_create.html")
 
+    @app.route("/helpdesk/channels_edit")
+    def helpdesk_ch_ed():
+        return render_template("helpdesk/channels_edit.html")
+
+    @app.route("/helpdesk/keys_create")
+    def helpdesk_keys_cr():
+        return render_template("helpdesk/keys_create.html")
+
+    @app.route("/helpdesk/keys_perm")
+    def helpdesk_keys_pe():
+        return render_template("helpdesk/keys_perm.html")
+
+    @app.route("/helpdesk/keys_revoke")
+    def helpdesk_keys_re():
+        return render_template("helpdesk/keys_revoke.html")
+
     return app

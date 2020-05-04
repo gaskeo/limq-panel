@@ -1,0 +1,16 @@
+{% extends "helpdesk/hbase.html" %}
+{% block helpdesk_content %}
+<h2>Удаление ключа</h2>
+
+<ol>
+    <li><a href="/helpdesk/channels/edit">Пройдите в настройки</a> нужного канала</li>
+    <li>Перейдите в пункт меню «Ключи доступа»
+    </li>
+    <li>Найдите карточку нужного ключа под формой создания нового ключа
+    <p><img src="/static/images/helpdesk/keys_create_2.png" width="800px" height="320px"> <br>
+        </p>
+    </li>
+    <li>На карточке нажмите на кнопку «Удалить»</li>
+    <li>При успешном удалении ключ пропадет из списка под формой</li>
+</ol>
+{% endblock %}
