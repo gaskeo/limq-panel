@@ -18,4 +18,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     def helpdesk():
         return render_template("helpdesk/helpdesk.html")
 
+    @app.route("/helpdesk/channels_create")
+    def helpdesk_ch_cr():
+        return render_template("helpdesk/channels_create.html")
+
     return app
