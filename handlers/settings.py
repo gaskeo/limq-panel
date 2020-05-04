@@ -106,6 +106,9 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         if key.chan_id == chan.id:
             return redirect("/?error=mixin_with_same_channel")
 
+        if not key.can_read():
+            return redirect("/?error=wrong_permissions")
+
         # Resolve source
         src_chan: Channel = sess.query(Channel).filter(Channel.id == key.chan_id).first()
 
