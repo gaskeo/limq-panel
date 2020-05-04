@@ -6,7 +6,7 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
 
-from typing import ClassVar, Iterable
+from typing import ClassVar
 
 from flask import Blueprint, render_template, redirect
 from flask_login import current_user, login_required
@@ -55,9 +55,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         form_mixin_restrict = RestrictMxForm()
 
-        mixin_out = (sess.query(Channel).filter(Channel.id == id_chan).first() for id_chan in chan.mixins())
-        mixin_in: Iterable[Channel] = sess.query(Channel) \
-            .filter(Channel.forwards.like(f"%{chan.id}%")).all()
+        mixin_out = tuple(sess.query(Channel).filter(Channel.id == id_chan).first() for id_chan in chan.mixins())
+        mixin_in = tuple(sess.query(Channel).filter(Channel.forwards.like(f"%{chan.id}%")).all())
 
         param = {"name_site": "Lithium MQ",
                  "form_main_settings": form_main_settings, "form_keys": form_keys,

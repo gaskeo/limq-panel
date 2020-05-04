@@ -17,6 +17,9 @@ def hide_email(e: str) -> str:
 
     """
 
+    if len(e) < 3:
+        return ""
+
     name, full_domain = e.split("@")
     domain, zone = full_domain.split(".")
 
