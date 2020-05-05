@@ -148,7 +148,7 @@
 
                                             <form action="/do/restrict_in_mx" method="post"
                                                   style="display: inline-block;"
-                                                  onsubmit="return confirm('Do you really want to remove this mixin?');">
+                                                  onsubmit="return confirm('Вы действительно хотите убрать канал из миксина?');">
                                                 {{ mixin_restrict.csrf_token }}
                                                 <input type="hidden" value="{{ chan.id }}" name="subject">
                                                 <input type="hidden" value="{{ mix.id }}" name="chan">
@@ -171,7 +171,7 @@
                                             <p class="channel-id card-subtitle mb-2 text-muted">#{{ mix.id }}</p>
 
                                             <form action="/do/restrict_out_mx" method="post"
-                                                  onsubmit="return confirm('Do you really want to remove this mixin?');"
+                                                  onsubmit="return confirm('Вы действительно хотите убрать канал из миксина?');"
                                                   style="display: inline-block;">
                                                 {{ mixin_restrict.csrf_token }}
                                                 <input type="hidden" value="{{ chan.id }}" name="subject">
