@@ -91,7 +91,9 @@
                                 <p class="card-text"><span class="badge badge-secondary badge-key">{{ key.key }}</span></p>
                                 <div>
                                     <a href="#" class="btn btn-warning">Приостановить</a>
-                                    <form action="/do/delete_key" method="post" style="display: inline-block;">
+                                    <form action="/do/delete_key" method="post" style="display: inline-block;"
+                                          onsubmit="return confirm('Вы действительно хотите удалить этот ключ?');">
+                                        {{ form_keys.hidden_tag() }}
                                         <input type="hidden" value="{{ key.key }}" id="key" name="key">
                                         <input type="submit" class="btn btn-danger" value="Удалить">
                                     </form>
@@ -145,7 +147,8 @@
                                             <p class="channel-id card-subtitle mb-2 text-muted">#{{ mix.id }}</p>
 
                                             <form action="/do/restrict_in_mx" method="post"
-                                                  style="display: inline-block;">
+                                                  style="display: inline-block;"
+                                                  onsubmit="return confirm('Do you really want to remove this mixin?');">
                                                 {{ mixin_restrict.csrf_token }}
                                                 <input type="hidden" value="{{ chan.id }}" name="subject">
                                                 <input type="hidden" value="{{ mix.id }}" name="chan">
@@ -168,6 +171,7 @@
                                             <p class="channel-id card-subtitle mb-2 text-muted">#{{ mix.id }}</p>
 
                                             <form action="/do/restrict_out_mx" method="post"
+                                                  onsubmit="return confirm('Do you really want to remove this mixin?');"
                                                   style="display: inline-block;">
                                                 {{ mixin_restrict.csrf_token }}
                                                 <input type="hidden" value="{{ chan.id }}" name="subject">

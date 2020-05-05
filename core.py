@@ -31,6 +31,5 @@ app.register_blueprint(helpdesk.create_handler(SessObject))
 app.register_blueprint(delete.create_handler(SessObject))
 app.register_blueprint(user_settings.create_handler(SessObject))
 
-
 if __name__ == "__main__":
     app.run(port=8077, host="0.0.0.0")
