@@ -9,7 +9,7 @@
 from flask import Flask
 from flask_login import LoginManager
 
-from handlers import index, register, login, create_channel, grant, helpdesk, settings, delete, user_settings
+from handlers import index, register, login, create_channel, grant, helpdesk, settings, delete, user_settings, error_handlers
 from storage.db_session import base_init
 
 app = Flask(__name__)
@@ -30,6 +30,7 @@ app.register_blueprint(settings.create_handler(SessObject))
 app.register_blueprint(helpdesk.create_handler(SessObject))
 app.register_blueprint(delete.create_handler(SessObject))
 app.register_blueprint(user_settings.create_handler(SessObject))
+app.register_error_handler(401, error_handlers.error_401)
 
 if __name__ == "__main__":
     app.run(port=8077, host="0.0.0.0")
