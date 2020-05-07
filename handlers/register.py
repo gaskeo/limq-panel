@@ -15,10 +15,18 @@ from storage.user import User
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
+    """
+    A closure for instantiating the handler that maintains register process.
+    Must borrow a SqlAlchemy session creator for further usage.
+    :param sess_cr: sqlalchemy.orm.sessionmaker class
+    :return Blueprint class
+    """
+
     app = Blueprint("register", __name__)
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
+        """ Handler for register """
         form = RegisterForm()
 
         param = {"name_site": "Lithium MQ", "title": "Регистрация", "form": form}

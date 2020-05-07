@@ -19,6 +19,12 @@ from storage.keygen import generate_key
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
+    """
+    A closure for instantiating the handler that maintains keys creating processes.
+    Must borrow a SqlAlchemy session creator for further usage.
+    :param sess_cr: sqlalchemy.orm.sessionmaker class
+    :return Blueprint class
+    """
     app = Blueprint("grant", __name__)
 
     @app.route("/grant")
