@@ -9,11 +9,18 @@ from storage.key import Key
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
+    """
+    A closure for instantiating the handler that maintains keys and mixins delete processes.
+    Must borrow a SqlAlchemy session creator for further usage.
+    :param sess_cr: sqlalchemy.orm.sessionmaker class
+    :return Blueprint class
+    """
     app = Blueprint("delete", __name__)
 
     @app.route("/do/delete_key", methods=("POST",))
     @login_required
     def delete_key():
+        """ Handler for deletion of keys """
         form = DeleteKeyForm()
 
         if not form.validate():
@@ -43,6 +50,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/do/restrict_in_mx", methods=("POST",))
     @login_required
     def restrict_in_mx():
+        """ Handler for restriction of incoming mixin """
         # User treats that their chan_1 is scraping messages from chan_2. He wants to break that link
 
         form = RestrictMxForm()
@@ -80,6 +88,9 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/do/restrict_out_mx", methods=("POST",))
     @login_required
     def restrict_out_mx():
+        """
+        Handler for restriction of outcoming mixin
+        """
         # User treats that chan_2 is scraping user's chan_1. User wants to break that link
 
         form = RestrictMxForm()

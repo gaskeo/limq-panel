@@ -19,10 +19,19 @@ from storage.user import User
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
+    """
+    A closure for instantiating the handler that maintains mainpage.
+    Must borrow a SqlAlchemy session creator for further usage.
+    :param sess_cr: sqlalchemy.orm.sessionmaker class
+    :return Blueprint class
+    """
+
     app = Blueprint("index", __name__)
 
     @app.route("/", methods=["GET", "POST"])
     def index():
+        """ Handler for main page """
+
         error = request.args.get("error", None)
         param = {"title": "LithiumMQ", "name_site": "Lithium MQ", "current_user": current_user,
                  "error": explain_error(error) if error else None}
@@ -85,6 +94,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/logout")
     @login_required
     def logout():
+        """ Handler for logout """
         logout_user()
         return redirect("/")
 

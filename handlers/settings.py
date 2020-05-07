@@ -27,11 +27,20 @@ def perm_formatter(k: Key) -> str:
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
+    """
+    A closure for instantiating the handler that maintains channel settings process.
+    Must borrow a SqlAlchemy session creator for further usage.
+    :param sess_cr: sqlalchemy.orm.sessionmaker class
+    :return Blueprint class
+    """
+
     app = Blueprint("settings", __name__)
 
     @app.route("/settings/<channel_id>", methods=("GET", "POST"))
     @login_required
     def settings(channel_id):
+        """ Handler for settings """
+
         sess = sess_cr()
         chan: Channel = sess.query(Channel).filter(Channel.id == channel_id).first()
         if not chan:
@@ -91,6 +100,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/do/create_mixin", methods=("POST",))
     @login_required
     def do_create_mixin():
+        """ Handler for creation mixin """
         form = CreateMixinForm()
         channel: str = form.channel.data
         mix_key: str = form.key.data

@@ -16,15 +16,25 @@ from storage.user import User
 
 
 def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
+    """
+    A closure for instantiating the handler that maintains login process.
+    Must borrow a SqlAlchemy session creator for further usage.
+    :param sess_cr: sqlalchemy.orm.sessionmaker class
+    :return Blueprint class
+    """
+
     app = Blueprint("login", __name__)
 
     @lm.user_loader
     def load_user(user_id):
+        """ Function for loading the user """
+
         session = sess_cr()
         return session.query(User).get(user_id)
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
+        """ Handler for login """
         form = LoginForm()
 
         param = {"name_site": "Lithium MQ", "form": form}

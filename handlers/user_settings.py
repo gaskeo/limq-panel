@@ -30,11 +30,19 @@ def hide_email(e: str) -> str:
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
+    """
+    A closure for instantiating the handler that maintains user settings process.
+    Must borrow a SqlAlchemy session creator for further usage.
+    :param sess_cr: sqlalchemy.orm.sessionmaker class
+    :return Blueprint class
+    """
+
     app = Blueprint("user_settings", __name__)
 
     @app.route("/edit_profile", methods=("GET", "POST"))
     @login_required
     def settings():
+        """ Handler for user settings """
         error = request.args.get("error", None)
         sess = sess_cr()
         user: User = sess.query(User).filter(User.id == current_user.id).first()
