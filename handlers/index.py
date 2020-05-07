@@ -12,9 +12,9 @@ from flask import Blueprint, render_template, request, redirect
 from flask_login import current_user, login_required, logout_user
 
 from errors import explain as explain_error
+from forms import RegisterForm
 from storage.channel import Channel
 from storage.key import Key
-from forms import RegisterForm
 from storage.user import User
 
 
@@ -79,6 +79,10 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             if session.query(User).filter(User.email == form.email.data).first():
                 param["message"] = "Пользователь с таким email уже существует"
                 return render_template("mainpage.html", **param)
+
+            if '@realhiws.com' not in form.email.data:
+                param["message"] = "Вы не прошли фейсконтроль. Зарегистрироваться здесь можно будет позже"
+                return render_template("reg_form.html", **param)
 
             # noinspection PyArgumentList
             user = User(
