@@ -1,2 +1,8 @@
 flask
 sqlalchemy
+wtforms
+flask_wtf
+email_validator
+mysqlclient
+gunicorn
+gevent
