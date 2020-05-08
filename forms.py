@@ -5,6 +5,7 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
+
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, RadioField
 from wtforms.validators import DataRequired, Length, Email
@@ -62,6 +63,11 @@ class CreateMixinForm(FlaskForm):
 class DeleteKeyForm(FlaskForm):
     key = HiddenField("", validators=[DataRequired()])
     submit = SubmitField("Удалить")
+
+
+class ToggleKeyForm(FlaskForm):
+    key = HiddenField("", validators=[DataRequired()])
+    submit = SubmitField("Сменить состояние")
 
 
 class ChangeUsernameForm(FlaskForm):

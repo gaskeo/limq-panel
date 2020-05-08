@@ -9,7 +9,8 @@
 from flask import Flask
 from flask_login import LoginManager
 
-from handlers import index, register, login, create_channel, grant, helpdesk, settings, delete, user_settings, error_handlers
+from handlers import index, register, login, create_channel, grant, helpdesk, settings, delete, user_settings, \
+    error_handlers
 from storage.db_session import base_init
 
 app = Flask(__name__)
