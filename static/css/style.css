@@ -129,6 +129,11 @@ span.card-val {
 	padding-top: 20px;
 	margin: auto;
 }
+
+.text-nologin {
+    font-size: 50px;
+}
+
 @media(max-width: 640px) {
     .btn-user {
         font-size: 10px;
@@ -143,6 +148,11 @@ span.card-val {
     .helpdesk-container {
         margin-left: 15px;
         margin-right: 15px;
+    }
+
+
+    .text-nologin {
+        font-size: 25px;
     }
 }
 

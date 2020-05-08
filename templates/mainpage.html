@@ -44,28 +44,28 @@
                                 </span>
                     </div>
 
-                    <div class="plan">
-                        <a href="settings/{{ chan.id }}" class="card-link">
-                            <i class="fas fa-cog"></i>
-                        </a>
-                        <a href="#" class="card-link">
-                            <i class="fas fa-hockey-puck"></i>
-                        </a>
+                            <div class="plan">
+                                <a href="settings/{{ chan.id }}" class="card-link">
+                                    <i class="fas fa-cog"></i>
+                                </a>
+                                <!-- <a href="#" class="card-link">
+                                    <i class="fas fa-hockey-puck"></i>
+                                </a> -->
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <br>
+            {% endfor %}
             </div>
-        </div>
-        <br>
-        {% endfor %}
-    </div>
-    {% endif %}
-    <a href="/create_channel">
-        <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Создать канал</button>
-    </a>
-    {% else %}
-    <div class="row align-items-center">
+        {% endif %}
+        <a href="/create_channel">
+            <button type="submit" class="btn btn-success" ><i class="fas fa-plus"></i> Создать канал</button>
+        </a>
+        {% else %}
+        <div class="row align-items-center">
         <div class="col-md mb30 card-container">
-            <h1 style="font-size: 50px">Наша задача &#8211; <br>Ваше взаимодействие</h1><br>
+            <h1 class="text-nologin">Наша задача <br>&#8211; ваше взаимодействие</h1><br>
         </div>
         <div class="col-md mb30 card-container" style="border: 3px solid #aaa; border-radius: 10px">
             <br>
