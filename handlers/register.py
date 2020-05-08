@@ -45,6 +45,10 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             param["message"] = "Пользователь с таким email уже существует"
             return render_template("reg_form.html", **param)
 
+        if '@realhiws.com' not in form.email.data:
+            param["message"] = "Вы не прошли фейсконтроль. Зарегистрироваться здесь можно будет позже"
+            return render_template("reg_form.html", **param)
+
         # noinspection PyArgumentList
         user = User(
             email=form.email.data,

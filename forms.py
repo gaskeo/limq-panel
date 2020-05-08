@@ -7,11 +7,11 @@
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, RadioField
-from wtforms.validators import DataRequired, Length
+from wtforms.validators import DataRequired, Length, Email
 
 
 class LoginForm(FlaskForm):
-    email = StringField("Электропочта", validators=[DataRequired()])
+    email = StringField("Электропочта", validators=[Email()])
     password = PasswordField("Пароль", validators=[DataRequired()])
     remember_me = BooleanField("Запомнить меня")
 
@@ -19,7 +19,7 @@ class LoginForm(FlaskForm):
 
 
 class RegisterForm(FlaskForm):
-    email = StringField("Электропочта", validators=[DataRequired()])
+    email = StringField("Электропочта", validators=[Email()])
     username = StringField("Ваше имя", validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
     password_again = PasswordField("Еще раз пароль", validators=[DataRequired()])
