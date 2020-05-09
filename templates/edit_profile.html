@@ -92,13 +92,22 @@
 
                             <p>
                                 {{ form_change_password.password.label }}<br>
-                                {{ form_change_password.password(class="form-control", type="password") }}
+                                {{ form_change_password.password(class="form-control pass1", type="password") }}
                                 {% for error in form_change_password.password.errors %}
-                            <p class="alert alert-danger" role="alert">
-                                {{ error }}
-                            </p>
-                            {% endfor %}
+                                    <p class="alert alert-danger" role="alert">
+                                        {{ error }}
+                                    </p>
+                                    {% endfor %}
 
+                            <p>
+                                {{ form_change_password.password_again.label }}<br>
+                                {{ form_change_password.password_again(class="form-control pass2", type="password") }}
+                                {% for error in form_change_password.password_again.errors %}
+                                    <p class="alert alert-danger" role="alert">
+                                        {{ error }}
+                                    </p>
+                                    {% endfor %}
+                            <span class="passwords-mismatch" style="font-size: 80%; color: #aaa"></span>
 
                             <p>{{ form_change_password.submit(type="submit", class="btn btn-primary")
                                 }}</p>

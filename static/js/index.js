@@ -26,3 +26,17 @@ $("#can-write").change(() => {
 $("#allow-info").change(() => {
     $("#selected-info").toggle();
 });
+
+
+$('form').submit(function () {
+    console.log(111);
+
+    var value_input1 = $(".pass1").val();
+    var value_input2 = $(".pass2").val();
+    if(value_input1 != value_input2) {
+        $(".passwords-mismatch").html("Пароли не совпадают");
+        return false;
+    } else {
+        return true;
+    }
+});
