@@ -37,7 +37,6 @@ class MainSettingsChannelForm(FlaskForm):
     id = HiddenField("", validators=[DataRequired()])
     name = StringField("Название", validators=[DataRequired(), Length(
         min=1, max=20, message="Не больше 20 символов")])
-    is_active = BooleanField("Активен", validators=[DataRequired()])
 
     submit = SubmitField("Сохранить изменения")
 

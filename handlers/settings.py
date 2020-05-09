@@ -52,7 +52,6 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         form_main_settings = MainSettingsChannelForm()
         form_main_settings.id.data = channel_id
         form_main_settings.name.data = chan.name
-        form_main_settings.is_active.data = chan.is_active
 
         form_keys = CreateKeyForm()
         form_keys.id.data = channel_id
@@ -93,7 +92,6 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             return redirect("/?error=no_access_to_this_channel")
 
         chan.name = form.name.data
-        chan.is_active = form.is_active.data
         sess.commit()
         return redirect(f"/settings/{channel_id}")
 

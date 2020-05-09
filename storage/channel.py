@@ -18,7 +18,6 @@ class Channel(ModelBase):
     __tablename__ = 'channels'
 
     name = sqlalchemy.Column(sqlalchemy.String(length=64), nullable=False)
-    is_active = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False)
     id = sqlalchemy.Column(sqlalchemy.String(length=16), nullable=False, primary_key=True, unique=True)
     owner_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"), nullable=False)
     forwards = sqlalchemy.Column(sqlalchemy.String(length=512), nullable=True, unique=False)

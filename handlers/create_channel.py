@@ -39,7 +39,6 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         session = sess_cr()
         channel = Channel(
             name=form.name.data,
-            is_active=True,
             id=chan_identifier(),
             owner_id=current_user.id
         )
