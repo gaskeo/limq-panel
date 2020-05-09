@@ -85,11 +85,26 @@
                         {% for key in keys %}
                         <div class="card w-100">
                             <div class="card-body">
-                                <h5 class="card-title">{{ key.name }}</h5>
+                                <h5 class="card-title">{{ key.name }} {% if not key.active()%} <a class="text-muted">(приостановлен)</a>
+                                    {% endif %} </h5>
                                 <p class="channel-id mb-2 text-muted">{{ rights[loop.index0] }}</p>
                                 <p class="card-text"><span class="badge badge-secondary badge-key">{{ key.key }}</span></p>
                                 <div>
-                                    <a href="#" class="btn btn-warning">Приостановить</a>
+                                    {% if key.active() %}
+                                    <form action="/do/toggle_key" method="post" style="display: inline-block;"
+                                          onsubmit="return confirm('С этим ключом будет нельзя вызывать методы API до тех пор, пока вы не активируете ключ снова');">
+                                        {{ form_keys.hidden_tag() }}
+                                        <input type="hidden" value="{{ key.key }}" id="key-pause" name="key">
+                                        <input type="submit" class="btn btn-warning" value="Приостановить">
+                                    </form>
+                                    {% else %}
+                                    <form action="/do/toggle_key" method="post" style="display: inline-block;">
+                                        {{ form_keys.hidden_tag() }}
+                                        <input type="hidden" value="{{ key.key }}" id="key-unpause" name="key">
+                                        <input type="submit" class="btn btn-success" value="Восстановить">
+                                    </form>
+                                    {% endif %}
+
                                     <form action="/do/delete_key" method="post" style="display: inline-block;"
                                           onsubmit="return confirm('Вы действительно хотите удалить этот ключ?');">
                                         {{ form_keys.hidden_tag() }}
