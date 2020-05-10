@@ -23,6 +23,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     :param sess_cr: sqlalchemy.orm.sessionmaker object
     :return Blueprint object
     """
+
     app = Blueprint("create_channel", __name__)
 
     @app.route("/create_channel", methods=["GET", "POST"])

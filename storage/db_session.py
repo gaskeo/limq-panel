@@ -13,7 +13,7 @@ import sqlalchemy.orm as orm
 ModelBase = dec.declarative_base()
 
 # Frontend MySQL user (check init.sql)
-engine = sqlalchemy.create_engine("mysql://limq-front:i77dj9wobb@localhost/limq")
+engine = sqlalchemy.create_engine("mysql://limq-front:i77dj9wobb@localhost/limq?charset=utf8mb4")
 
 
 def base_init():
