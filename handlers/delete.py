@@ -20,8 +20,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     """
     A closure for instantiating the handler that maintains keys and mixins delete processes.
     Must borrow a SqlAlchemy session creator for further usage.
-    :param sess_cr: sqlalchemy.orm.sessionmaker class
-    :return Blueprint class
+    :param sess_cr: sqlalchemy.orm.sessionmaker object
+    :return Blueprint object
     """
 
     app = Blueprint("delete", __name__)
