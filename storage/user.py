@@ -8,11 +8,16 @@
 
 import sqlalchemy
 from flask_login import UserMixin
-from .db_session import ModelBase
 from werkzeug.security import generate_password_hash, check_password_hash
+
+from .db_session import ModelBase
 
 
 class User(ModelBase, UserMixin):
+    """
+    SqlAlchemy-integrated user descriptor.
+    """
+
     __tablename__ = 'users'
 
     id = sqlalchemy.Column(sqlalchemy.Integer,

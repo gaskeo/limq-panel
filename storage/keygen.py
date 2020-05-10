@@ -21,6 +21,7 @@ def generate_key() -> str:
     return str(random.getrandbits(3)) + "".join(random.choices(CHARS, k=LENGTH - 1))
 
 
+# Generates channel's identifier
 def chan_identifier() -> str:
     return f"{random.getrandbits(64):x}"
 

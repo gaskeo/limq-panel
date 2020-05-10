@@ -25,6 +25,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     :param sess_cr: sqlalchemy.orm.sessionmaker class
     :return Blueprint class
     """
+
     app = Blueprint("grant", __name__)
 
     @app.route("/grant")
@@ -48,6 +49,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         sess = sess_cr()
 
         channel = form.id.data
+
+        # Key and channel validations
 
         chan: Channel = sess.query(Channel).filter(Channel.id == channel).first()
         if not chan:

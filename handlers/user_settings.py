@@ -45,6 +45,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         """ Handler for user settings """
         error = request.args.get("error", None)
         sess = sess_cr()
+
+        # User validation
         user: User = sess.query(User).filter(User.id == current_user.id).first()
         if not user:
             return redirect("/?error=user_invalid")
@@ -87,11 +89,15 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/do/change_email", methods=("POST",))
     @login_required
     def do_change_email():
+        """ E-mail changing handler. """
+
         form = ChangeEmailForm()
         email: str = form.new_email.data
         password: str = form.password.data
 
         sess = sess_cr()
+
+        # User validation
 
         user: User = sess.query(User).filter(User.id == current_user.id).first()
 
@@ -111,11 +117,15 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/do/change_password", methods=("POST",))
     @login_required
     def do_change_password():
+        """ Password changing handler. """
+
         form = ChangePasswordForm()
         old_password: str = form.old_password.data
         password: str = form.password.data
 
         sess = sess_cr()
+
+        # User validation
 
         user: User = sess.query(User).filter(User.id == current_user.id).first()
 

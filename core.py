@@ -13,6 +13,7 @@ from handlers import index, register, login, create_channel, grant, helpdesk, se
     error_handlers
 from storage.db_session import base_init
 
+# Flask init
 app = Flask(__name__)
 
 login_manager = LoginManager()
@@ -20,8 +21,10 @@ login_manager.init_app(app)
 
 app.config["SECRET_KEY"] = "lithium_secret_key"
 
+# Database init
 SessObject = base_init()
 
+# Blueprints registration
 app.register_blueprint(index.create_handler(SessObject))
 app.register_blueprint(register.create_handler(SessObject))
 app.register_blueprint(login.create_handler(SessObject, login_manager))

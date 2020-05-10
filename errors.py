@@ -8,6 +8,8 @@
 
 from typing import Optional
 
+# Functions for error manipulation.
+
 ERRORS = {
     "bad_request": "Что-то пошло не так",
     "channel_invalid": "Запрошенного канала не существует",

@@ -23,6 +23,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     :param sess_cr: sqlalchemy.orm.sessionmaker class
     :return Blueprint class
     """
+
     app = Blueprint("delete", __name__)
 
     @app.route("/do/delete_key", methods=("POST",))
@@ -37,6 +38,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         key_id = form.key.data
 
         sess = sess_cr()
+
+        # Key and channel validations
 
         key: Key = sess.query(Key).filter(Key.key == key_id).first()
 
@@ -58,7 +61,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/do/restrict_in_mx", methods=("POST",))
     @login_required
     def restrict_in_mx():
-        """ Handler for restriction of incoming mixin """
+        """ Handler for restriction of incoming mixin. """
+
         # User treats that their chan_1 is scraping messages from chan_2. He wants to break that link
 
         form = RestrictMxForm()
@@ -70,6 +74,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         chan = form.chan.data
 
         sess = sess_cr()
+
+        # Channels validation
 
         chan_1: Channel = sess.query(Channel).filter(Channel.id == subject).first()
         if chan_1 is None:
@@ -96,7 +102,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/do/restrict_out_mx", methods=("POST",))
     @login_required
     def restrict_out_mx():
-        """ Handler for restriction of outcoming mixin """
+        """ Handler for restriction of outcoming mixin. """
+
         # User treats that chan_2 is scraping user's chan_1. User wants to break that link
 
         form = RestrictMxForm()
@@ -108,6 +115,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         chan = form.chan.data
 
         sess = sess_cr()
+
+        # Channels validation
 
         chan_1: Channel = sess.query(Channel).filter(Channel.id == subject).first()
         if chan_1 is None:
@@ -142,6 +151,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         if not form.validate():
             return redirect("/?error=bad_request")
+
+        # Key and channel validations
 
         key_val = form.key.data
         key: Key = sess.query(Key).filter(Key.key == key_val).first()

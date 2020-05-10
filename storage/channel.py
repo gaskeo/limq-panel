@@ -15,6 +15,11 @@ from .db_session import ModelBase
 
 
 class Channel(ModelBase):
+    """
+    SqlAlchemy-integrated channel descriptor.
+    Has special methods for mixin management.
+    """
+
     __tablename__ = 'channels'
 
     name = sqlalchemy.Column(sqlalchemy.String(length=64), nullable=False)

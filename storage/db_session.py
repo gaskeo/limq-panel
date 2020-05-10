@@ -7,17 +7,17 @@
 
 
 import sqlalchemy
-import sqlalchemy.orm as orm
 import sqlalchemy.ext.declarative as dec
-
+import sqlalchemy.orm as orm
 
 ModelBase = dec.declarative_base()
 
-
+# Frontend MySQL user (check init.sql)
 engine = sqlalchemy.create_engine("mysql://limq-front:i77dj9wobb@localhost/limq")
 
 
 def base_init():
+    # Base init
     ModelBase.metadata.create_all(engine)
 
     so = orm.sessionmaker(bind=engine)

@@ -18,7 +18,7 @@
                    data-toggle="list" href="#change-username" role="tab"
                    aria-controls="username">Сменить имя</a>
                 <a class="list-group-item list-group-item-action" id="list-email-change"
-                   data-toggle="list" href="#change-email" role="tab" aria-controls="email">Сменить email</a>
+                   data-toggle="list" href="#change-email" role="tab" aria-controls="email">Сменить электропочту</a>
                 <a class="list-group-item list-group-item-action" id="list-password-change"
                    data-toggle="list" href="#change-password" role="tab"
                    aria-controls="password">Сменить пароль</a>
@@ -47,10 +47,10 @@
                     </form>
                 </div>
 
-                <!-- Смена email -->
+                <!-- Смена электопочты -->
                 <div class="tab-pane fade" id="change-email" role="tabpanel"
                      aria-labelledby="list-email-change">
-                    <h5 class="register-label">Смена email</h5>
+                    <h5 class="register-label">Смена электропочты</h5>
 
                     <form action="/do/change_email" method="post">
                         {{ form_change_email.hidden_tag() }}

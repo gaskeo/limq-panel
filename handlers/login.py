@@ -40,6 +40,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         param = {"name_site": "Lithium MQ", "form": form}
 
         if form.validate_on_submit():
+            # User validation
             sess = sess_cr()
             user = sess.query(User).filter(User.email == form.email.data).first()
             if user and user.check_password(form.password.data):

@@ -12,6 +12,7 @@ from wtforms.validators import DataRequired, Length, Email
 
 
 class LoginForm(FlaskForm):
+    """ WTForm for logging in """
     email = StringField("Электропочта", validators=[Email()])
     password = PasswordField("Пароль", validators=[DataRequired()])
     remember_me = BooleanField("Запомнить меня")
@@ -20,6 +21,8 @@ class LoginForm(FlaskForm):
 
 
 class RegisterForm(FlaskForm):
+    """ WTForm for registration """
+
     email = StringField("Электропочта", validators=[Email()])
     username = StringField("Ваше имя", validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
@@ -29,12 +32,16 @@ class RegisterForm(FlaskForm):
 
 
 class RegisterChannelForm(FlaskForm):
+    """ WTForm for channel creation """
+
     name = StringField("Название", validators=[DataRequired()])
 
     submit = SubmitField("Создать канал")
 
 
-class MainSettingsChannelForm(FlaskForm):
+class RenameChannelForm(FlaskForm):
+    """ WTForm for channel name changing """
+
     id = HiddenField("", validators=[DataRequired()])
     name = StringField("Название", validators=[DataRequired(), Length(
         min=1, max=20, message="Не больше 20 символов")])
@@ -43,6 +50,8 @@ class MainSettingsChannelForm(FlaskForm):
 
 
 class CreateKeyForm(FlaskForm):
+    """ WTForm for key creating """
+
     id = HiddenField("", validators=[DataRequired()])
     name = StringField("Название", validators=[DataRequired(), Length(
         min=1, max=20, message="Не больше 20 символов")])
@@ -52,6 +61,8 @@ class CreateKeyForm(FlaskForm):
 
 
 class CreateMixinForm(FlaskForm):
+    """ WTForm for mixin creation """
+
     channel = HiddenField("", validators=[DataRequired()])
     key = StringField("Ключ на чтение", validators=[DataRequired()], render_kw={
         "placeholder": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -60,27 +71,37 @@ class CreateMixinForm(FlaskForm):
 
 
 class DeleteKeyForm(FlaskForm):
+    """ WTForm for key deletion """
+
     key = HiddenField("", validators=[DataRequired()])
     submit = SubmitField("Удалить")
 
 
 class ToggleKeyForm(FlaskForm):
+    """ WTForm for key toggling """
+
     key = HiddenField("", validators=[DataRequired()])
     submit = SubmitField("Сменить состояние")
 
 
 class ChangeUsernameForm(FlaskForm):
+    """ WTForm for username changing """
+
     new_username = StringField("Новое имя", validators=[DataRequired()])
     submit = SubmitField("Изменить")
 
 
 class ChangeEmailForm(FlaskForm):
+    """ WTForm for e-mail changing """
+
     new_email = StringField("Новая электропочта", validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
     submit = SubmitField("Изменить")
 
 
 class ChangePasswordForm(FlaskForm):
+    """ WTForm for password changing """
+
     old_password = PasswordField("Старый пароль", validators=[DataRequired()])
     password = PasswordField("Новый пароль", validators=[DataRequired()])
     password_again = PasswordField("Новый пароль еще раз", validators=[DataRequired()])
@@ -89,6 +110,8 @@ class ChangePasswordForm(FlaskForm):
 
 
 class RestrictMxForm(FlaskForm):
+    """ WTForm for mixin restriction """
+
     subject = HiddenField("", validators=[DataRequired()])
     chan = HiddenField("", validators=[DataRequired()])
     submit = SubmitField("Удалить")

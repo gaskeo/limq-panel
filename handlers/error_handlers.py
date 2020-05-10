@@ -14,6 +14,7 @@ app = Blueprint("errors", __name__)
 
 @app.errorhandler(401)
 def error_401(e):
-    """ Handler for procession of error 401 """
+    """ Handler for 401 error. When unauthorized, just goto login page. """
+
     return redirect("/login")
 

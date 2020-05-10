@@ -12,7 +12,7 @@ from flask import Blueprint, render_template, redirect
 from flask_login import current_user, login_required
 from sqlalchemy import desc
 
-from forms import CreateKeyForm, CreateMixinForm, MainSettingsChannelForm, RestrictMxForm
+from forms import CreateKeyForm, CreateMixinForm, RenameChannelForm, RestrictMxForm
 from storage.channel import Channel
 from storage.key import Key
 
@@ -39,7 +39,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/settings/<channel_id>", methods=("GET", "POST"))
     @login_required
     def settings(channel_id):
-        """ Handler for settings """
+        """ Handler for settings page. """
 
         sess = sess_cr()
         chan: Channel = sess.query(Channel).filter(Channel.id == channel_id).first()
@@ -49,7 +49,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         if chan.owner_id != current_user.id:
             return redirect("/?error=no_access_to_this_channel")
 
-        form_main_settings = MainSettingsChannelForm()
+        # Gathering channel information
+        form_main_settings = RenameChannelForm()
         form_main_settings.id.data = channel_id
         form_main_settings.name.data = chan.name
 
@@ -77,13 +78,16 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/do/settings", methods=("POST",))
     @login_required
     def do_settings():
-        form = MainSettingsChannelForm()
+        """ Handler for settings changing page. """
+
+        form = RenameChannelForm()
         if not form.validate():
             return redirect("/?error=bad_request")
 
         channel_id = form.id.data
         sess = sess_cr()
 
+        # Channel validation.
         chan = sess.query(Channel).filter(Channel.id == channel_id).first()
         if not chan:
             return redirect("/?error=channel_invalid")
@@ -93,16 +97,20 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         chan.name = form.name.data
         sess.commit()
+
         return redirect(f"/settings/{channel_id}")
 
     @app.route("/do/create_mixin", methods=("POST",))
     @login_required
     def do_create_mixin():
-        """ Handler for creation mixin """
+        """ Handler for mixin creating. """
+
         form = CreateMixinForm()
         channel: str = form.channel.data
         mix_key: str = form.key.data
         sess = sess_cr()
+
+        # Key and channel validation
 
         chan: Channel = sess.query(Channel).filter(Channel.id == channel).first()
         if chan is None or chan.owner_id != current_user.id:

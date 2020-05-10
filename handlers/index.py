@@ -48,6 +48,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
                 if channels:
                     key_stats = [...] * len(channels)
 
+                    # Calculating key stats
                     for i, chan in enumerate(channels):
                         r, w = 0, 0
                         keys_assoc = sess.query(Key).filter(Key.chan_id == chan.id).all()
@@ -61,6 +62,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
                     param["user_channels"] = channels
                     param["user_channels_stat"] = key_stats
 
+            # Render home panel
             return render_template("mainpage.html", **param)
         else:
             form = RegisterForm()
@@ -68,6 +70,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             param["form"] = form
             if not form.validate_on_submit():
                 return render_template("mainpage.html", **param)
+
+            # Registration
 
             if form.password.data != form.password_again.data:
                 return render_template("mainpage.html",
@@ -79,10 +83,6 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             if session.query(User).filter(User.email == form.email.data).first():
                 param["message"] = "Пользователь с таким email уже существует"
                 return render_template("mainpage.html", **param)
-
-            if '@realhiws.com' not in form.email.data:
-                param["message"] = "Вы не прошли фейсконтроль. Зарегистрироваться здесь можно будет позже"
-                return render_template("reg_form.html", **param)
 
             # noinspection PyArgumentList
             user = User(
@@ -98,7 +98,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/logout")
     @login_required
     def logout():
-        """ Handler for logout """
+        """ Handler for logging out """
+
         logout_user()
         return redirect("/")
 
