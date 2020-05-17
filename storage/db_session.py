@@ -13,7 +13,8 @@ import sqlalchemy.orm as orm
 ModelBase = dec.declarative_base()
 
 # Frontend MySQL user (check init.sql)
-engine = sqlalchemy.create_engine("mysql://limq-front:i77dj9wobb@localhost/limq?charset=utf8mb4")
+engine = sqlalchemy.create_engine("mysql://limq-front:i77dj9wobb@localhost/limq?charset=utf8mb4", pool_size=20,
+                                  pool_recycle=3600)
 
 
 def base_init():
@@ -22,4 +23,3 @@ def base_init():
 
     so = orm.sessionmaker(bind=engine)
     return so
-
