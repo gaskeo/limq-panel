@@ -6,8 +6,9 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
 
-from flask import redirect, Blueprint
+from base64 import b64encode
 
+from flask import redirect, Blueprint, request
 
 app = Blueprint("errors", __name__)
 
@@ -16,5 +17,4 @@ app = Blueprint("errors", __name__)
 def error_401(e):
     """ Handler for 401 error. When unauthorized, just goto login page. """
 
-    return redirect("/login")
-
+    return redirect("/login?path=" + b64encode(request.path.encode()).decode())
