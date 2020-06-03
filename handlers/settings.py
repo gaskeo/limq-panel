@@ -114,7 +114,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         chan: Channel = sess.query(Channel).filter(Channel.id == channel).first()
         if chan is None or chan.owner_id != current_user.id:
-            return redirect("/?error=channel_invalid")
+            return redirect("/?error=no_access_to_this_channel")
 
         key: Key = sess.query(Key).filter(Key.key == mix_key).first()
         if key is None or not key.active():
