@@ -117,8 +117,9 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             return redirect("/?error=channel_invalid")
 
         key: Key = sess.query(Key).filter(Key.key == mix_key).first()
-        if key is None:
+        if key is None or not key.active():
             return redirect("/?error=channel_invalid")
+
         if key.chan_id == chan.id:
             return redirect("/?error=mixin_with_same_channel")
 
