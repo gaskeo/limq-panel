@@ -23,8 +23,8 @@ def hide_email(e: str) -> str:
     name, full_domain = e.split("@")
     domain, zone = full_domain.split(".")
 
-    name = name[0] + "*" * (len(name) - 2) + name[1]
-    domain = domain[0] + "*" * (len(domain) - 2) + domain[1]
+    name = name[0] + "*" * (len(name) - 2) + name[-1]
+    domain = domain[0] + "*" * (len(domain) - 2) + domain[-1]
 
     return f"{name}@{domain}.{zone}"
 

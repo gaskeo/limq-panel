@@ -1,12 +1,12 @@
 CREATE DATABASE limq;
 
 -- frontend user
-CREATE USER 'limq-front'@'localhost' IDENTIFIED BY 'i77dj9wobb';
+CREATE USER limq_front WITH ENCRYPTED PASSWORD 'i77dj9wobb';
 
 -- api user
-CREATE USER 'limq-api'@'localhost' IDENTIFIED BY 'acah9bh3fn';
+CREATE USER limq_api WITH ENCRYPTED PASSWORD 'acah9bh3fn';
 
-GRANT ALL PRIVILEGES ON limq.* TO 'limq-front'@'localhost';
-GRANT ALL PRIVILEGES ON limq.* TO 'limq-api'@'localhost';
+GRANT ALL PRIVILEGES ON DATABASE limq TO limq_front;
+GRANT ALL PRIVILEGES ON DATABASE limq TO limq_api;
 
 

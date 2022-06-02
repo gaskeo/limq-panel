@@ -6,3 +6,5 @@ email_validator
 mysqlclient
 gunicorn
 gevent
+flask_login
+psycopg2
