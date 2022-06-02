@@ -5,16 +5,54 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
-
+from abc import ABC
 from base64 import b64decode
 from binascii import Error as DecErr
 from typing import ClassVar
+from html.parser import HTMLParser
 
-from flask import Blueprint, render_template, redirect, request
+from flask import Blueprint, request, abort
 from flask_login import LoginManager, login_user
+from flask_wtf import FlaskForm
 
 from forms import LoginForm
 from storage.user import User
+
+
+class CSRFNotFoundError(Exception):
+    ...
+
+
+class HTMLCSRFParser(HTMLParser, ABC):
+    def __init__(self):
+        super().__init__()
+        self.csrf = None
+
+    def handle_starttag(self, tag, attrs):
+        csrf = dict(attrs).get("value", None)
+        if csrf:
+            self.csrf = csrf
+        else:
+            raise CSRFNotFoundError
+
+
+def get_path(encoded_path: str or bytes) -> str:
+    if not encoded_path:
+        return "/"
+    try:
+        loc = b64decode(encoded_path).decode()
+        if len(loc) < 2 or (not loc.startswith("/")):
+            return "/"
+        return loc
+    except (DecErr, UnicodeDecodeError):
+        return "/"
+
+
+def get_csrf_token(form: FlaskForm) -> str:
+    parser = HTMLCSRFParser()
+
+    parser.feed(form.hidden_tag())
+    return parser.csrf
 
 
 def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
@@ -29,7 +67,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
     app = Blueprint("login", __name__)
 
     @lm.user_loader
-    def load_user(user_id):
+    def load_user(user_id: int):
         """ Function for loading the user """
 
         session = sess_cr()
@@ -37,36 +75,41 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         session.close()
         return u
 
-    @app.route("/login", methods=["GET", "POST"])
+    @app.route("/do/get_csrf_login", methods=["GET"])
+    def get_csrf_login():
+        form = LoginForm()
+        try:
+            csrf = get_csrf_token(form)
+        except CSRFNotFoundError:
+            return abort(500)
+        return {"csrf": csrf}, 200
+
+    @app.route("/do/login", methods=["POST"])
     def login():
         """ Handler for login """
         form = LoginForm()
-
-        param = {"name_site": "Lithium MQ", "form": form}
-
         if not form.validate_on_submit():
-            return render_template("login.html", title="Авторизация", **param)
+            return abort(403)
 
         # User validation
         sess = sess_cr()
-        user = sess.query(User).filter(User.email == form.email.data).first()
+        user = sess.query(
+            User).filter(User.email == form.email.data).first()
 
-        if user and user.check_password(form.password.data):
-            login_user(user)
+        # TODO Сделать ошибки информативными
+        if not user:
+            return abort(403)
+        if not user.check_password(form.password.data):
+            return abort(403)
 
-            path = request.args.get("path", None)
-            if path:
-                try:
-                    loc = b64decode(path).decode()
-                    if len(loc) < 2 or (not loc.startswith("/")):
-                        return redirect("/")
-                    return redirect(loc)
-                except (DecErr, UnicodeDecodeError):
-                    return redirect("/")
-            return redirect("/")
+        login_user(user)
 
-        return render_template("login.html",
-                               message="Неправильный логин или пароль",
-                               form=form)
+        path = get_path(request.args.get("path", None))
+
+        return {"user": {
+            "email": user.email,
+            "username": user.username,
+            "id": user.id
+        }, "path": path}
 
     return app
