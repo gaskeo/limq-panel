@@ -5,35 +5,15 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
-from abc import ABC
 from base64 import b64decode
 from binascii import Error as DecErr
 from typing import ClassVar
-from html.parser import HTMLParser
 
 from flask import Blueprint, request, abort
-from flask_login import LoginManager, login_user
-from flask_wtf import FlaskForm
+from flask_login import LoginManager, login_user, current_user
 
 from forms import LoginForm
 from storage.user import User
-
-
-class CSRFNotFoundError(Exception):
-    ...
-
-
-class HTMLCSRFParser(HTMLParser, ABC):
-    def __init__(self):
-        super().__init__()
-        self.csrf = None
-
-    def handle_starttag(self, tag, attrs):
-        csrf = dict(attrs).get("value", None)
-        if csrf:
-            self.csrf = csrf
-        else:
-            raise CSRFNotFoundError
 
 
 def get_path(encoded_path: str or bytes) -> str:
@@ -46,13 +26,6 @@ def get_path(encoded_path: str or bytes) -> str:
         return loc
     except (DecErr, UnicodeDecodeError):
         return "/"
-
-
-def get_csrf_token(form: FlaskForm) -> str:
-    parser = HTMLCSRFParser()
-
-    parser.feed(form.hidden_tag())
-    return parser.csrf
 
 
 def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
@@ -75,21 +48,25 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         session.close()
         return u
 
-    @app.route("/do/get_csrf_login", methods=["GET"])
-    def get_csrf_login():
-        form = LoginForm()
-        try:
-            csrf = get_csrf_token(form)
-        except CSRFNotFoundError:
-            return abort(500)
-        return {"csrf": csrf}, 200
+    @app.after_request
+    def response(res):
+        res.headers['Access-Control-Allow-Origin'] = '*'
+        return res
+
+    @app.route("/do/get_user", methods=["GET"])
+    def get_user():
+        if current_user.is_authenticated:
+            return {'auth': True, 'user': {
+                'id': current_user.id,
+                'username': current_user.username,
+                'email': current_user.email
+            }}
+        return {'auth': False, 'user': None}
 
     @app.route("/do/login", methods=["POST"])
     def login():
         """ Handler for login """
         form = LoginForm()
-        if not form.validate_on_submit():
-            return abort(403)
 
         # User validation
         sess = sess_cr()
@@ -106,7 +83,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
         path = get_path(request.args.get("path", None))
 
-        return {"user": {
+        return {"auth": True, "user": {
             "email": user.email,
             "username": user.username,
             "id": user.id
