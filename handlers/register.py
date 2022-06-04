@@ -8,7 +8,7 @@
 
 from typing import ClassVar
 
-from flask import Blueprint, render_template, redirect
+from flask import Blueprint, abort, make_response
 
 from forms import RegisterForm
 from storage.user import User
@@ -24,26 +24,20 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
     app = Blueprint("register", __name__)
 
-    @app.route("/register", methods=["GET", "POST"])
+    @app.route("/do/register", methods=["POST"])
     def register():
         """ Handler for register """
         form = RegisterForm()
 
-        param = {"name_site": "Lithium MQ", "title": "Регистрация", "form": form}
-
-        if not form.validate_on_submit():
-            return render_template("reg_form.html", **param)
-
         if form.password.data != form.password_again.data:
-            return render_template("reg_form.html", title="Регистрация",
-                                   form=form,
-                                   message="Пароли не совпадают")
+            return abort(make_response(
+                {'message': 'Passwords do not match'}, 401))
 
         session = sess_cr()
 
         if session.query(User).filter(User.email == form.email.data).first():
-            param["message"] = "Пользователь с таким email уже существует"
-            return render_template("reg_form.html", **param)
+            return abort(make_response(
+                {'message': 'User with this email already exists'}, 409))
 
         # noinspection PyArgumentList
         user = User(
@@ -55,6 +49,6 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         session.add(user)
         session.commit()
 
-        return redirect("/login")
+        return {"status": True, "path": "/login"}
 
     return app
