@@ -8,7 +8,7 @@
 
 from typing import ClassVar, NamedTuple, Iterable, Dict, TypedDict
 
-from flask import Blueprint, redirect
+from flask import Blueprint, redirect, jsonify
 from flask_login import current_user, login_required
 
 from storage.channel import Channel
@@ -64,8 +64,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         json_channels = []
 
-        # Calculating key stats
-        for i, channel in enumerate(channels):
+        for channel in channels:
             json_channel = get_base_json_channel(channel)
 
             keys = session.query(Key).filter(
@@ -76,6 +75,6 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             json_channel['write_keys'] = keys_stats.can_write
 
             json_channels.append(json_channel)
-        return json_channels
+        return jsonify(json_channels)
 
     return app
