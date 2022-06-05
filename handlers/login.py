@@ -7,13 +7,46 @@
 
 from base64 import b64decode
 from binascii import Error as DecErr
-from typing import ClassVar
+from enum import Enum
+from typing import ClassVar, TypedDict
 
-from flask import Blueprint, request, abort
+from flask import Blueprint, request, \
+    abort, Response, make_response, jsonify
 from flask_login import LoginManager, login_user, current_user
 
 from forms import LoginForm
 from storage.user import User
+
+MIN_PATH_LENGTH = 2
+
+
+class UserJson(TypedDict):
+    id: int
+    username: str
+    email: str
+
+
+class UserResponseJson(TypedDict):
+    auth: bool
+    user: UserJson
+    path: str
+
+
+class FormMessage(Enum):
+    Ok = ""
+    EmailError = "Bad email"
+    PasswordError = "Bad password"
+    UserError = "Bad user"
+
+
+def confirm_form(form: LoginForm) -> FormMessage:
+    if not form.email.data:
+        return FormMessage.EmailError.value
+
+    if not form.password.data:
+        return FormMessage.PasswordError.value
+
+    return FormMessage.Ok.value
 
 
 def get_path(encoded_path: str or bytes) -> str:
@@ -21,7 +54,7 @@ def get_path(encoded_path: str or bytes) -> str:
         return "/"
     try:
         loc = b64decode(encoded_path).decode()
-        if len(loc) < 2 or (not loc.startswith("/")):
+        if len(loc) < MIN_PATH_LENGTH or (not loc.startswith("/")):
             return "/"
         return loc
     except (DecErr, UnicodeDecodeError):
@@ -44,49 +77,61 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         """ Function for loading the user """
 
         session = sess_cr()
-        u = session.query(User).get(user_id)
+        user = session.query(User).get(user_id)
         session.close()
-        return u
+        return user
 
     @app.after_request
-    def response(res):
-        res.headers['Access-Control-Allow-Origin'] = '*'
-        return res
+    def allow_cors(response: Response):
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
     @app.route("/do/get_user", methods=["GET"])
     def get_user():
         if current_user.is_authenticated:
-            return {'auth': True, 'user': {
-                'id': current_user.id,
-                'username': current_user.username,
-                'email': current_user.email
-            }}
-        return {'auth': False, 'user': None}
+            return jsonify(UserResponseJson(
+                auth=True,
+                user=UserJson(
+                    id=current_user.id,
+                    username=current_user.username,
+                    email=current_user.email
+                ),
+                path='/'))
+
+        return jsonify(UserResponseJson(auth=False, user={}, path='/'))
 
     @app.route("/do/login", methods=["POST"])
     def login():
         """ Handler for login """
         form = LoginForm()
+        error_message = confirm_form(form)
+        if error_message != FormMessage.Ok.value:
+            return abort(make_response({'message': error_message}, 400))
 
-        # User validation
-        sess = sess_cr()
-        user = sess.query(
+        session = sess_cr()
+        user = session.query(
             User).filter(User.email == form.email.data).first()
 
         # TODO Сделать ошибки информативными
         if not user:
-            return abort(403)
+            return abort(make_response(
+                {'message': FormMessage.UserError.value}, 403))
+
         if not user.check_password(form.password.data):
-            return abort(403)
+            return abort(make_response(
+                {'message': FormMessage.PasswordError.value}, 403))
 
         login_user(user)
 
         path = get_path(request.args.get("path", None))
 
-        return {"auth": True, "user": {
-            "email": user.email,
-            "username": user.username,
-            "id": user.id
-        }, "path": path}
+        return jsonify(UserResponseJson(
+                auth=True,
+                user=UserJson(
+                    id=current_user.id,
+                    username=current_user.username,
+                    email=current_user.email
+                ),
+                path=path))
 
     return app

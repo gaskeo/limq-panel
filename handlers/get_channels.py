@@ -6,9 +6,9 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
 
-from typing import ClassVar, NamedTuple, Iterable, Dict, TypedDict
+from typing import ClassVar, NamedTuple, Iterable, TypedDict
 
-from flask import Blueprint, redirect, jsonify
+from flask import Blueprint, jsonify
 from flask_login import current_user, login_required
 
 from storage.channel import Channel
@@ -20,7 +20,7 @@ class KeysCount(NamedTuple):
     can_write: int
 
 
-class ChannelDict(TypedDict):
+class ChannelJson(TypedDict):
     channel_id: str
     channel_name: str
     read_keys: int
@@ -37,8 +37,8 @@ def get_keys_count(keys: Iterable[Key]) -> KeysCount:
     return KeysCount(can_read=can_read, can_write=can_write)
 
 
-def get_base_json_channel(channel: Channel) -> ChannelDict:
-    return ChannelDict(channel_id=channel.id,
+def get_base_json_channel(channel: Channel) -> ChannelJson:
+    return ChannelJson(channel_id=channel.id,
                        channel_name=channel.name,
                        read_keys=0, write_keys=0)
 
@@ -60,7 +60,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         channels = session.query(Channel)\
             .filter(Channel.owner_id == current_user.id).all()
         if not channels:
-            return []
+            return jsonify([])
 
         json_channels = []
 
