@@ -53,7 +53,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
     app = Blueprint("get_channels", __name__)
 
-    @app.route("/do/get_channels", methods=["POST"])
+    @app.route("/do/get_channels", methods=["GET"])
     @login_required
     def do_create_channel():
         session = sess_cr()

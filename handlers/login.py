@@ -49,7 +49,7 @@ def confirm_form(form: LoginForm) -> FormMessage:
     return FormMessage.Ok.value
 
 
-def get_path(encoded_path: str or bytes) -> str:
+def get_path(encoded_path: str or bytes or None) -> str:
     if not encoded_path:
         return "/"
     try:
