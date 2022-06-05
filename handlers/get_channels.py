@@ -15,32 +15,47 @@ from storage.channel import Channel
 from storage.key import Key
 
 
+class KeysTypesCount(TypedDict):
+    active: int
+    inactive: int
+
+
 class KeysCount(NamedTuple):
-    can_read: int
-    can_write: int
+    can_read: KeysTypesCount
+    can_write: KeysTypesCount
 
 
 class ChannelJson(TypedDict):
     channel_id: str
     channel_name: str
-    read_keys: int
-    write_keys: int
+    read_keys: KeysTypesCount
+    write_keys: KeysTypesCount
 
 
 def get_keys_count(keys: Iterable[Key]) -> KeysCount:
-    can_write = can_read = 0
+    can_write = can_read = write_active = read_active = 0
     for key in keys:
         if key.can_write():
             can_write += 1
+            if key.active():
+                write_active += 1
         if key.can_read():
             can_read += 1
-    return KeysCount(can_read=can_read, can_write=can_write)
+            if key.active():
+                read_active += 1
+
+    return KeysCount(
+        can_read=KeysTypesCount(active=read_active,
+                                inactive=can_read - read_active),
+        can_write=KeysTypesCount(active=write_active,
+                                 inactive=can_write - write_active))
 
 
 def get_base_json_channel(channel: Channel) -> ChannelJson:
     return ChannelJson(channel_id=channel.id,
                        channel_name=channel.name,
-                       read_keys=0, write_keys=0)
+                       read_keys=KeysTypesCount(active=0, inactive=0),
+                       write_keys=KeysTypesCount(active=0, inactive=0))
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
@@ -57,7 +72,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @login_required
     def do_create_channel():
         session = sess_cr()
-        channels = session.query(Channel)\
+        channels = session.query(Channel) \
             .filter(Channel.owner_id == current_user.id).all()
         if not channels:
             return jsonify([])
