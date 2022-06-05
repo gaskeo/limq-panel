@@ -10,7 +10,7 @@ from typing import ClassVar
 from flask import Blueprint, abort, make_response, jsonify
 from flask_login import current_user, login_required
 
-from forms import RegisterChannelForm
+from forms import RegisterChannelForm, RenameChannelForm
 from storage.channel import Channel
 from storage.keygen import chan_identifier
 
@@ -20,11 +20,17 @@ from .get_channels import get_base_json_channel
 class FormMessage(Enum):
     Ok = ""
     NameError = "Bad channel name"
+    LongNameError = "Channel name too long"
 
 
-def confirm_form(form: RegisterChannelForm) -> FormMessage:
+def confirm_form(form: RegisterChannelForm or RenameChannelForm) -> \
+        FormMessage:
     if not form.name.data:
         return FormMessage.NameError.value
+
+    if len(form.name.data) > 50:
+        return FormMessage.LongNameError.value
+
     return FormMessage.Ok.value
 
 

@@ -4,17 +4,21 @@
 #  | |      | | | __| | "_ \  | | | | | | | "_ ` _ \  | |\/| | |  | |
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
-
-
+from enum import Enum
 from typing import ClassVar
 
-from flask import Blueprint, render_template, redirect
+from flask import Blueprint, redirect, abort, \
+    make_response, jsonify
 from flask_login import current_user, login_required
-from sqlalchemy import desc
 
-from forms import CreateKeyForm, CreateMixinForm, RenameChannelForm, RestrictMxForm
+from forms import CreateKeyForm, CreateMixinForm, RenameChannelForm, \
+    RestrictMxForm
 from storage.channel import Channel
 from storage.key import Key
+from storage.user import User
+
+from .create_channel import confirm_form, FormMessage
+from .get_channels import get_json_channel
 
 
 def perm_formatter(k: Key) -> str:
@@ -24,6 +28,20 @@ def perm_formatter(k: Key) -> str:
     if w:
         return f"Отправка, создан {k.created.date()}"
     return f"Прав доступа не установлено создан {k.created.date()}"
+
+
+class ChannelMessage(Enum):
+    Ok = ""
+    ChannelNotExistError = "Channel doesn't exist"
+    NotOwnerError = "You aren't owner of this channel"
+
+
+def confirm_channel(channel: Channel or None, user: User) -> ChannelMessage:
+    if not channel:
+        return ChannelMessage.ChannelNotExistError
+    if channel.owner_id != user.id:
+        return ChannelMessage.NotOwnerError
+    return ChannelMessage.Ok
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
@@ -36,69 +54,31 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
     app = Blueprint("settings", __name__)
 
-    @app.route("/settings/<channel_id>", methods=("GET", "POST"))
-    @login_required
-    def settings(channel_id):
-        """ Handler for settings page. """
-
-        sess = sess_cr()
-        chan: Channel = sess.query(Channel).filter(Channel.id == channel_id).first()
-        if not chan:
-            return redirect("/?error=channel_invalid")
-
-        if chan.owner_id != current_user.id:
-            return redirect("/?error=no_access_to_this_channel")
-
-        # Gathering channel information
-        form_main_settings = RenameChannelForm()
-        form_main_settings.id.data = channel_id
-        form_main_settings.name.data = chan.name
-
-        form_keys = CreateKeyForm()
-        form_keys.id.data = channel_id
-        keys = sess.query(Key).filter(Key.chan_id == channel_id).order_by(desc(Key.created)).all()
-        rights = [perm_formatter(k) for k in keys]
-
-        form_mixin = CreateMixinForm()
-        form_mixin.channel.data = channel_id
-
-        form_mixin_restrict = RestrictMxForm()
-
-        mixin_out = tuple(sess.query(Channel).filter(Channel.id == id_chan).first() for id_chan in chan.mixins())
-        mixin_in = tuple(sess.query(Channel).filter(Channel.forwards.like(f"%{chan.id}%")).all())
-
-        param = {"name_site": "Lithium MQ",
-                 "form_main_settings": form_main_settings, "form_keys": form_keys,
-                 "chan": chan, "keys": keys, "rights": rights,
-                 "form_mixin": form_mixin, "mixin_in": mixin_in,
-                 "mixin_out": mixin_out, "mixin_restrict": form_mixin_restrict}
-
-        return render_template("settings.html", **param)
-
-    @app.route("/do/settings", methods=("POST",))
+    @app.route("/do/edit_channel", methods=["POST"])
     @login_required
     def do_settings():
         """ Handler for settings changing page. """
 
         form = RenameChannelForm()
-        if not form.validate():
-            return redirect("/?error=bad_request")
+        error_message = confirm_form(form)
+        if error_message != FormMessage.Ok.value:
+            return abort(make_response({'message': error_message}, 400))
 
         channel_id = form.id.data
-        sess = sess_cr()
+        session = sess_cr()
 
         # Channel validation.
-        chan = sess.query(Channel).filter(Channel.id == channel_id).first()
-        if not chan:
-            return redirect("/?error=channel_invalid")
+        channel = session.query(Channel). \
+            filter(Channel.id == channel_id).first()
 
-        if chan.owner_id != current_user.id:
-            return redirect("/?error=no_access_to_this_channel")
+        error_message = confirm_channel(channel, current_user)
+        if error_message != ChannelMessage.Ok:
+            return abort(make_response({'message': error_message}, 401))
 
-        chan.name = form.name.data
-        sess.commit()
+        channel.name = form.name.data
+        session.commit()
 
-        return redirect(f"/settings/{channel_id}")
+        return jsonify(get_json_channel(channel, sess_cr()))
 
     @app.route("/do/create_mixin", methods=("POST",))
     @login_required
@@ -112,7 +92,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         # Key and channel validation
 
-        chan: Channel = sess.query(Channel).filter(Channel.id == channel).first()
+        chan: Channel = sess.query(Channel).filter(
+            Channel.id == channel).first()
         if chan is None or chan.owner_id != current_user.id:
             return redirect("/?error=no_access_to_this_channel")
 
@@ -127,7 +108,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             return redirect("/?error=wrong_permissions")
 
         # Resolve source
-        src_chan: Channel = sess.query(Channel).filter(Channel.id == key.chan_id).first()
+        src_chan: Channel = sess.query(Channel).filter(
+            Channel.id == key.chan_id).first()
 
         mixins = list(src_chan.mixins())
         if chan.id in mixins:

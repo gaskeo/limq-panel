@@ -58,6 +58,18 @@ def get_base_json_channel(channel: Channel) -> ChannelJson:
                        write_keys=KeysTypesCount(active=0, inactive=0))
 
 
+def get_json_channel(channel: Channel, session: ClassVar) -> \
+        ChannelJson:
+    json_channel = get_base_json_channel(channel)
+    keys = session.query(Key).filter(
+        Key.chan_id == channel.id).all()
+
+    keys_stats = get_keys_count(keys)
+    json_channel['read_keys'] = keys_stats.can_read
+    json_channel['write_keys'] = keys_stats.can_write
+    return json_channel
+
+
 def create_handler(sess_cr: ClassVar) -> Blueprint:
     """
     A closure for instantiating the handler that maintains channel creating processes.
@@ -80,14 +92,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         json_channels = []
 
         for channel in channels:
-            json_channel = get_base_json_channel(channel)
-
-            keys = session.query(Key).filter(
-                Key.chan_id == channel.id).all()
-
-            keys_stats = get_keys_count(keys)
-            json_channel['read_keys'] = keys_stats.can_read
-            json_channel['write_keys'] = keys_stats.can_write
+            json_channel = get_json_channel(channel, session)
 
             json_channels.append(json_channel)
         return jsonify(json_channels)
