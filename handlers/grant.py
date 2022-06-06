@@ -7,15 +7,62 @@
 
 
 from datetime import datetime
-from typing import ClassVar
+from enum import Enum
+from typing import ClassVar, TypedDict, NamedTuple, Literal
 
-from flask import Blueprint, render_template, redirect, request
+from flask import Blueprint, render_template, redirect, request, abort, \
+    make_response, jsonify
 from flask_login import current_user, login_required
 
-from forms import CreateKeyForm
+from forms import CreateKeyForm, GetKeysForm
+from handlers.settings import confirm_channel, ChannelMessage
 from storage.channel import Channel
 from storage.key import Key
 from storage.keygen import generate_key
+
+
+class FormMessage(Enum):
+    Ok = ""
+    NameError = "Bad key name"
+    LongNameError = "Key name too long"
+    PermissionsError = "Wrong permissions"
+
+
+def confirm_form(form: CreateKeyForm) -> FormMessage:
+    if not form.name.data:
+        return FormMessage.NameError.value
+    if len(form.name.data) > 50:
+        return FormMessage.LongNameError.value
+
+    if form.permissions.data not in "01":
+        return FormMessage.PermissionsError.value
+
+    return FormMessage.Ok.value
+
+
+class KeyJson(TypedDict):
+    key: str
+    name: str
+    perm: int
+    created: str
+
+
+class KeyPermission(NamedTuple):
+    can_read: int = 0
+    can_write: int = 1
+
+
+def get_permission(perm: Literal['0'] or Literal['1']) -> KeyPermission:
+    read = perm == "0"
+    write = read ^ 1
+    return KeyPermission(can_read=read, can_write=write)
+
+
+def get_json_key(key: Key) -> KeyJson:
+    return KeyJson(key=key.key,
+                   name=key.name,
+                   perm=key.perm,
+                   created=str(key.created.date()))
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
@@ -35,47 +82,68 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         uid = current_user.id
         sess = sess_cr()
 
-        channels = sess.query(Channel).filter(Channel.owner_id == uid).all()
+        channels = sess.query(Channel).filter(
+            Channel.owner_id == uid).all()
 
-        return render_template("create_key.html", form=f, channels=channels)
+        return render_template("create_key.html", form=f,
+                               channels=channels)
 
-    @app.route("/do/grant", methods=("POST",))
+    @app.route("/do/grant", methods=["POST"])
     @login_required
     def do_grant():
         form = CreateKeyForm(request.form)
 
-        if not form.validate():
-            return redirect("/?error=bad_request")
-        sess = sess_cr()
+        error_message = confirm_form(form)
+        if error_message != FormMessage.Ok.value:
+            return abort(make_response({'message': error_message}, 400))
 
-        channel = form.id.data
+        session = sess_cr()
 
-        # Key and channel validations
+        channel_id = form_channel_id = form.id.data
 
-        chan: Channel = sess.query(Channel).filter(Channel.id == channel).first()
-        if not chan:
-            return redirect("/?error=channel_invalid")
+        channel: Channel = session.query(Channel). \
+            filter(Channel.id == channel_id).first()
 
-        if chan.owner_id != current_user.id:
-            return redirect("/?error=no_access_to_this_channel")
+        error_message = confirm_channel(channel, current_user)
+        if error_message != ChannelMessage.Ok:
+            return abort(make_response({'message': error_message}, 401))
 
-        key_s = generate_key()
-        key = Key(key=key_s, chan_id=channel, name=form.name.data, created=datetime.now())
+        key_id = generate_key()
+        key = Key(key=key_id, chan_id=form_channel_id,
+                  name=form.name.data, created=datetime.now())
 
-        perm = form.permissions.data
-        if perm not in "01":
-            return redirect("/?error=wrong_permissions")
-
-        read = perm == "0"
-        write = read ^ 1
+        perm = get_permission(form.permissions.data)
 
         info = form.info_allowed.data
 
-        key.perm = info << 2 | write << 1 | read
-        sess.add(key)
+        key.perm = info << 2 | perm.can_write << 1 | perm.can_read
+        session.add(key)
 
-        sess.commit()
+        session.commit()
 
-        return redirect(f"/settings/{channel}#list-keys-open")
+        return jsonify(get_json_key(key))
+
+    @app.route("/do/get_keys", methods=["GET"])
+    @login_required
+    def do_get_keys():
+        channel_id = request.args.get('channel_id', None)
+
+        session = sess_cr()
+
+        channel: Channel = session.query(Channel). \
+            filter(Channel.id == channel_id).first()
+
+        error_message = confirm_channel(channel, current_user)
+        if error_message != ChannelMessage.Ok:
+            return abort(make_response({'message': error_message}, 401))
+
+        keys = session.query(Key). \
+            filter(Key.chan_id == channel_id).all()
+
+        keys_json = []
+        for key in keys:
+            keys_json.append(get_json_key(key))
+
+        return jsonify(keys_json)
 
     return app

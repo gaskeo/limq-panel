@@ -60,6 +60,10 @@ class CreateKeyForm(FlaskForm):
     submit = SubmitField("Создать ключ")
 
 
+class GetKeysForm(FlaskForm):
+    channel_id = HiddenField("", validators=[DataRequired()])
+
+
 class CreateMixinForm(FlaskForm):
     """ WTForm for mixin creation """
 

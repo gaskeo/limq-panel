@@ -33,14 +33,14 @@ def perm_formatter(k: Key) -> str:
 class ChannelMessage(Enum):
     Ok = ""
     ChannelNotExistError = "Channel doesn't exist"
-    NotOwnerError = "You aren't owner of this channel"
+    NotOwnerError = "No access to this channel"
 
 
 def confirm_channel(channel: Channel or None, user: User) -> ChannelMessage:
     if not channel:
-        return ChannelMessage.ChannelNotExistError
+        return ChannelMessage.ChannelNotExistError.value
     if channel.owner_id != user.id:
-        return ChannelMessage.NotOwnerError
+        return ChannelMessage.NotOwnerError.value
     return ChannelMessage.Ok
 
 
