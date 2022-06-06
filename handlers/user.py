@@ -4,17 +4,18 @@
 #  | |      | | | __| | "_ \  | | | | | | | "_ ` _ \  | |\/| | |  | |
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
-
 from base64 import b64decode
-from binascii import Error as DecErr
 from enum import Enum
+from binascii import Error as DecErr
+
 from typing import ClassVar, TypedDict
 
-from flask import Blueprint, request, \
-    abort, Response, make_response, jsonify
-from flask_login import LoginManager, login_user, current_user
+from flask import Blueprint, redirect, abort, \
+    make_response, request, jsonify, Response
+from flask_login import login_required, logout_user, login_user, \
+    current_user, LoginManager
 
-from forms import LoginForm
+from forms import RegisterForm, LoginForm
 from storage.user import User
 
 MIN_PATH_LENGTH = 2
@@ -63,14 +64,12 @@ def get_path(encoded_path: str or bytes or None) -> str:
 
 def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
     """
-    A closure for instantiating the handler that maintains login process.
+    A closure for instantiating the handler that maintains main page.
     Must borrow a SqlAlchemy session creator for further usage.
-    :param lm: login manager
-    :param sess_cr: sqlalchemy.orm.sessionmaker object
-    :return Blueprint object
+
     """
 
-    app = Blueprint("login", __name__)
+    app = Blueprint("user", __name__)
 
     @lm.user_loader
     def load_user(user_id: int):
@@ -100,6 +99,35 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
         return jsonify(UserResponseJson(auth=False, user={}, path='/'))
 
+    @app.route("/do/register", methods=["POST"])
+    def register():
+        """ Handler for register """
+        form = RegisterForm()
+
+        if form.password.data != form.password_again.data:
+            return abort(make_response(
+                {'message': 'Passwords do not match'}, 401))
+
+        session = sess_cr()
+
+        if session.query(User).filter(
+                User.email == form.email.data).first():
+            return abort(make_response(
+                {'message': 'User with this email already exists'},
+                409))
+
+        # noinspection PyArgumentList
+        user = User(
+            email=form.email.data,
+            username=form.username.data
+        )
+
+        user.set_password(form.password.data)
+        session.add(user)
+        session.commit()
+
+        return {"status": True, "path": "/login"}
+
     @app.route("/do/login", methods=["POST"])
     def login():
         """ Handler for login """
@@ -126,12 +154,20 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         path = get_path(request.args.get("path", None))
 
         return jsonify(UserResponseJson(
-                auth=True,
-                user=UserJson(
-                    id=current_user.id,
-                    username=current_user.username,
-                    email=current_user.email
-                ),
-                path=path))
+            auth=True,
+            user=UserJson(
+                id=current_user.id,
+                username=current_user.username,
+                email=current_user.email
+            ),
+            path=path))
+
+    @app.route("/do/logout", methods=["POST"])
+    @login_required
+    def logout():
+        """ Handler for logging out """
+
+        logout_user()
+        return redirect("/")
 
     return app
