@@ -125,5 +125,5 @@ class RestrictMxForm(FlaskForm):
     """ WTForm for mixin restriction """
 
     subject = HiddenField("", validators=[DataRequired()])
-    chan = HiddenField("", validators=[DataRequired()])
+    channel = HiddenField("", validators=[DataRequired()])
     submit = SubmitField("Удалить")

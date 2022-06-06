@@ -18,7 +18,7 @@ from storage.key import Key
 from storage.user import User
 
 from .create_channel import confirm_form, FormMessage
-from .get_channels import get_json_channel
+from .get_channels import get_json_channel, get_base_json_channel
 
 
 def perm_formatter(k: Key) -> str:
@@ -135,11 +135,11 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             return abort(
                 make_response({"message": "already mixed"}, 400))
 
-        mixins.append(channel)
+        mixins.append(channel.id)
         src_channel.update_mixins(mixins)
 
         sess.commit()
 
-        return {"mixin": channel.id}
+        return {"mixin": get_base_json_channel(src_channel)}
 
     return app

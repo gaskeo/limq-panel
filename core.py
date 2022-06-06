@@ -9,8 +9,9 @@
 from flask import Flask
 from flask_login import LoginManager
 
-from handlers import index, register, login, create_channel, grant, helpdesk, settings, delete, user_settings, \
-    error_handlers, get_channels
+from handlers import index, register, login, create_channel, grant, \
+    helpdesk, settings, delete, user_settings, \
+    error_handlers, get_channels, get_mixin
 from storage.db_session import base_init
 
 # Flask init
@@ -30,6 +31,7 @@ app.register_blueprint(register.create_handler(SessObject))
 app.register_blueprint(login.create_handler(SessObject, login_manager))
 app.register_blueprint(get_channels.create_handler(SessObject))
 app.register_blueprint(create_channel.create_handler(SessObject))
+app.register_blueprint(get_mixin.create_handler(SessObject))
 app.register_blueprint(grant.create_handler(SessObject))
 app.register_blueprint(settings.create_handler(SessObject))
 app.register_blueprint(helpdesk.create_handler())
