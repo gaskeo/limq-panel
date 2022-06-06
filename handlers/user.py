@@ -15,7 +15,7 @@ from flask import Blueprint, redirect, abort, \
 from flask_login import login_required, logout_user, login_user, \
     current_user, LoginManager
 
-from forms import RegisterForm, LoginForm
+from forms import RegisterForm, LoginForm, ChangeUsernameForm
 from storage.user import User
 
 MIN_PATH_LENGTH = 2
@@ -36,6 +36,8 @@ class UserResponseJson(TypedDict):
 class FormMessage(Enum):
     Ok = ""
     EmailError = "Bad email"
+    UsernameError = "Bad username"
+    UsernameTooLongError = "Username too long"
     PasswordError = "Bad password"
     UserError = "Bad user"
 
@@ -50,6 +52,14 @@ def confirm_form(form: LoginForm) -> FormMessage:
     return FormMessage.Ok.value
 
 
+def confirm_username_form(form: ChangeUsernameForm) -> FormMessage:
+    if not form.new_username.data:
+        return FormMessage.UsernameError.value
+    if len(form.new_username.data) > 40:
+        return FormMessage.UsernameTooLongError.value
+    return FormMessage.Ok.value
+
+
 def get_path(encoded_path: str or bytes or None) -> str:
     if not encoded_path:
         return "/"
@@ -60,6 +70,14 @@ def get_path(encoded_path: str or bytes or None) -> str:
         return loc
     except (DecErr, UnicodeDecodeError):
         return "/"
+
+
+def get_user_json(user: User) -> UserJson:
+    return UserJson(
+        id=user.id,
+        username=user.username,
+        email=user.email
+    )
 
 
 def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
@@ -89,12 +107,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
     def get_user():
         if current_user.is_authenticated:
             return jsonify(UserResponseJson(
-                auth=True,
-                user=UserJson(
-                    id=current_user.id,
-                    username=current_user.username,
-                    email=current_user.email
-                ),
+                auth=True, user=get_user_json(current_user),
                 path='/'))
 
         return jsonify(UserResponseJson(auth=False, user={}, path='/'))
@@ -154,13 +167,28 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         path = get_path(request.args.get("path", None))
 
         return jsonify(UserResponseJson(
-            auth=True,
-            user=UserJson(
-                id=current_user.id,
-                username=current_user.username,
-                email=current_user.email
-            ),
+            auth=True, user=get_user_json(current_user),
             path=path))
+
+    @app.route("/do/change_username", methods=["POST"])
+    @login_required
+    def do_change_username():
+        form = ChangeUsernameForm()
+
+        error_message = confirm_username_form(form)
+        if error_message != FormMessage.Ok.value:
+            return abort(make_response({"message": error_message}, 401))
+        session = sess_cr()
+
+        user = session.query(User).filter(
+            User.id == current_user.id).first()
+        if not user:
+            return abort(make_response({"message": "Invalid user"}))
+
+        user.username = form.new_username.data
+        session.commit()
+        return jsonify(UserResponseJson(
+            auth=True, user=get_user_json(user), path=''))
 
     @app.route("/do/logout", methods=["POST"])
     @login_required

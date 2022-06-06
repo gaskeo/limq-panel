@@ -69,22 +69,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         return render_template("edit_profile.html", **param)
 
-    @app.route("/do/change_username", methods=("POST",))
-    @login_required
-    def do_change_username():
-        form = ChangeUsernameForm()
-        if not form.validate():
-            return redirect("/?error=bad_request")
 
-        sess = sess_cr()
-
-        user = sess.query(User).filter(User.id == current_user.id).first()
-        if not user:
-            return redirect("/?error=user_invalid")
-
-        user.username = form.new_username.data
-        sess.commit()
-        return redirect("/edit_profile")
 
     @app.route("/do/change_email", methods=("POST",))
     @login_required
