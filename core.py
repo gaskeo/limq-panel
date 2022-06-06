@@ -10,7 +10,7 @@ from flask import Flask
 from flask_login import LoginManager
 
 from handlers import index, grant, \
-    helpdesk, user_settings, \
+    helpdesk, \
     error_handlers, user, channel, mixin
 from storage.db_session import base_init
 
@@ -32,7 +32,6 @@ app.register_blueprint(user.create_handler(SessObject, login_manager))
 app.register_blueprint(mixin.create_handler(SessObject))
 app.register_blueprint(grant.create_handler(SessObject))
 app.register_blueprint(helpdesk.create_handler())
-app.register_blueprint(user_settings.create_handler(SessObject))
 app.register_error_handler(401, error_handlers.error_401)
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ from flask_login import login_required, logout_user, login_user, \
     current_user, LoginManager
 
 from forms import RegisterForm, LoginForm, ChangeUsernameForm, \
-    ChangeEmailForm
+    ChangeEmailForm, ChangePasswordForm
 from storage.user import User
 
 MIN_PATH_LENGTH = 2
@@ -220,6 +220,37 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         user.email = email
         session.commit()
 
+        return jsonify(UserResponseJson(auth=True,
+                                        user=get_user_json(user),
+                                        path=''))
+
+    @app.route("/do/change_password", methods=["POST"])
+    @login_required
+    def do_change_password():
+        """ Password changing handler. """
+
+        form = ChangePasswordForm()
+        old_password = form.old_password.data
+        password = form.password.data
+
+        session = sess_cr()
+
+        # User validation
+
+        user: User = session.query(User).filter(
+            User.id == current_user.id).first()
+
+        if not user:
+            return abort(make_response(
+                {"message": "Invalid user"}, 401))
+
+        if not user.check_password(old_password):
+            return abort(make_response(
+                {"message": "Invalid password"}, 401))
+
+        user.set_password(password)
+
+        session.commit()
         return jsonify(UserResponseJson(auth=True,
                                         user=get_user_json(user),
                                         path=''))
