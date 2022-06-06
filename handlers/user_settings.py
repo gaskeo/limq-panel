@@ -71,33 +71,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
 
 
-    @app.route("/do/change_email", methods=("POST",))
-    @login_required
-    def do_change_email():
-        """ E-mail changing handler. """
 
-        form = ChangeEmailForm()
-        email: str = form.new_email.data
-        password: str = form.password.data
-
-        sess = sess_cr()
-
-        # User validation
-
-        user: User = sess.query(User).filter(User.id == current_user.id).first()
-
-        if not user:
-            return redirect("/?error=user_invalid")
-        if not user.check_password(password):
-            return redirect("/edit_profile?error=wrong_password#list-email-change")
-
-        if sess.query(User).filter(User.email == email).first():
-            return redirect("/edit_profile?error=email_already_exists#list-email-change")
-
-        user.email = email
-        sess.commit()
-
-        return redirect("/edit_profile#list-email-change")
 
     @app.route("/do/change_password", methods=("POST",))
     @login_required

@@ -15,7 +15,8 @@ from flask import Blueprint, redirect, abort, \
 from flask_login import login_required, logout_user, login_user, \
     current_user, LoginManager
 
-from forms import RegisterForm, LoginForm, ChangeUsernameForm
+from forms import RegisterForm, LoginForm, ChangeUsernameForm, \
+    ChangeEmailForm
 from storage.user import User
 
 MIN_PATH_LENGTH = 2
@@ -189,6 +190,39 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         session.commit()
         return jsonify(UserResponseJson(
             auth=True, user=get_user_json(user), path=''))
+
+    @app.route("/do/change_email", methods=["POST"])
+    @login_required
+    def do_change_email():
+        """ E-mail changing handler. """
+        form = ChangeEmailForm()
+        email = form.new_email.data
+        password = form.password.data
+
+        session = sess_cr()
+
+        # User validation
+
+        user = session.query(User).filter(
+            User.id == current_user.id).first()
+        if not user:
+            return abort(make_response(
+                {"message": "Invalid user"}, 401))
+
+        if not user.check_password(password):
+            return abort(make_response(
+                {"message": "Invalid password"}, 401))
+
+        if session.query(User).filter(User.email == email).first():
+            return abort(make_response(
+                {"message": "Email already exist"}, 401))
+
+        user.email = email
+        session.commit()
+
+        return jsonify(UserResponseJson(auth=True,
+                                        user=get_user_json(user),
+                                        path=''))
 
     @app.route("/do/logout", methods=["POST"])
     @login_required
