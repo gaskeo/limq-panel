@@ -14,11 +14,18 @@ from flask import Blueprint, request, abort, \
     make_response, jsonify
 from flask_login import current_user, login_required
 
-from forms import CreateKeyForm, ToggleKeyActiveForm
-from handlers.settings import confirm_channel, ChannelMessage
+from forms import CreateKeyForm, ToggleKeyActiveForm, DeleteKeyForm
+from handlers.channel import ChannelMessage, confirm_channel
 from storage.channel import Channel
 from storage.key import Key
 from storage.keygen import generate_key
+
+
+class KeyMessage(Enum):
+    Ok = ""
+    KeyError = "Invalid key"
+    MixinError = "Mixin with same channel"
+    WrongPermissionError = "Wrong permission"
 
 
 class FormMessage(Enum):
@@ -26,18 +33,6 @@ class FormMessage(Enum):
     NameError = "Bad key name"
     LongNameError = "Key name too long"
     PermissionsError = "Wrong permissions"
-
-
-def confirm_form(form: CreateKeyForm) -> FormMessage:
-    if not form.name.data:
-        return FormMessage.NameError.value
-    if len(form.name.data) > 50:
-        return FormMessage.LongNameError.value
-
-    if form.permissions.data not in "01":
-        return FormMessage.PermissionsError.value
-
-    return FormMessage.Ok.value
 
 
 class KeyJson(TypedDict):
@@ -54,6 +49,18 @@ class KeyJson(TypedDict):
 class KeyPermission(NamedTuple):
     can_read: int = 0
     can_write: int = 1
+
+
+def confirm_form(form: CreateKeyForm) -> FormMessage:
+    if not form.name.data:
+        return FormMessage.NameError.value
+    if len(form.name.data) > 50:
+        return FormMessage.LongNameError.value
+
+    if form.permissions.data not in "01":
+        return FormMessage.PermissionsError.value
+
+    return FormMessage.Ok.value
 
 
 def get_permission(perm: Literal['0'] or Literal['1']) -> KeyPermission:
@@ -166,5 +173,30 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         session.commit()
         return jsonify(get_json_key(key))
+
+    @app.route("/do/delete_key", methods=["POST"])
+    @login_required
+    def delete_key():
+        """ Handler for deletion of keys """
+        form = DeleteKeyForm()
+        key_id = form.key.data
+
+        session = sess_cr()
+
+        key: Key = session.query(Key).filter(Key.key == key_id).first()
+
+        if key is None:
+            return abort(make_response({"message": "Bad key"}))
+
+        channel: Channel = session.query(Channel). \
+            filter(Channel.id == key.chan_id).first()
+
+        error_message = confirm_channel(channel, current_user)
+        if error_message != ChannelMessage.Ok.value:
+            return abort(make_response({"message": error_message}))
+
+        session.delete(key)
+        session.commit()
+        return {'key': key.key}
 
     return app
