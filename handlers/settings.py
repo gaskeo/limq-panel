@@ -36,12 +36,33 @@ class ChannelMessage(Enum):
     NotOwnerError = "No access to this channel"
 
 
-def confirm_channel(channel: Channel or None, user: User) -> ChannelMessage:
+class KeyMessage(Enum):
+    Ok = ""
+    KeyError = "Invalid key"
+    MixinError = "Mixin with same channel"
+    WrongPermissionError = "Wrong permission"
+
+
+def confirm_channel(channel: Channel or None,
+                    user: User) -> ChannelMessage:
     if not channel:
         return ChannelMessage.ChannelNotExistError.value
     if channel.owner_id != user.id:
         return ChannelMessage.NotOwnerError.value
     return ChannelMessage.Ok.value
+
+
+def confirm_key_on_mixin(key: Key, channel: Channel) -> KeyMessage:
+    if key is None or not key.active():
+        return KeyMessage.KeyError.value
+
+    if key.chan_id == channel.id:
+        return KeyMessage.MixinError.value
+
+    if not key.can_read():
+        return KeyMessage.WrongPermissionError.value
+
+    return KeyMessage.Ok.value
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
@@ -72,7 +93,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             filter(Channel.id == channel_id).first()
 
         error_message = confirm_channel(channel, current_user)
-        if error_message != ChannelMessage.Ok:
+        if error_message != ChannelMessage.Ok.value:
             return abort(make_response({'message': error_message}, 401))
 
         channel.name = form.name.data
@@ -92,33 +113,33 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         # Key and channel validation
 
-        chan: Channel = sess.query(Channel).filter(
+        channel: Channel = sess.query(Channel).filter(
             Channel.id == channel).first()
-        if chan is None or chan.owner_id != current_user.id:
-            return redirect("/?error=no_access_to_this_channel")
+
+        error_message = confirm_channel(channel, current_user)
+        if error_message != ChannelMessage.Ok.value:
+            return abort(make_response({"message": error_message}, 401))
 
         key: Key = sess.query(Key).filter(Key.key == mix_key).first()
-        if key is None or not key.active():
-            return redirect("/?error=channel_invalid")
+        error_message = confirm_key_on_mixin(key, channel)
 
-        if key.chan_id == chan.id:
-            return redirect("/?error=mixin_with_same_channel")
+        if error_message != KeyMessage.Ok.value:
+            return abort(make_response({"message": error_message}, 401))
 
-        if not key.can_read():
-            return redirect("/?error=wrong_permissions")
-
-        # Resolve source
-        src_chan: Channel = sess.query(Channel).filter(
+        src_channel: Channel = sess.query(Channel).filter(
             Channel.id == key.chan_id).first()
 
-        mixins = list(src_chan.mixins())
-        if chan.id in mixins:
-            return redirect("/?error=already_mixed")
+        mixins = list(src_channel.mixins())
+
+        if channel.id in mixins:
+            return abort(
+                make_response({"message": "already mixed"}, 400))
+
         mixins.append(channel)
-        src_chan.update_mixins(mixins)
+        src_channel.update_mixins(mixins)
 
         sess.commit()
 
-        return redirect(f"/settings/{channel}#list-mixin-settings-open")
+        return {"mixin": channel.id}
 
     return app

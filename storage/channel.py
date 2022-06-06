@@ -32,7 +32,8 @@ class Channel(ModelBase):
             return ()
         ll = len(self.forwards)
 
-        return (self.forwards[i:i + CHAN_ID_LENGTH] for i in range(0, ll, CHAN_ID_LENGTH))
+        return (self.forwards[i:i + CHAN_ID_LENGTH]
+                for i in range(0, ll, CHAN_ID_LENGTH))
 
     def update_mixins(self, m: Iterable):
         srlzd = "".join(m)
