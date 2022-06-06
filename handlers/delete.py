@@ -8,10 +8,11 @@
 
 from typing import ClassVar
 
-from flask import Blueprint, redirect
+from flask import Blueprint, redirect, abort, make_response
 from flask_login import current_user, login_required
 
 from forms import DeleteKeyForm, RestrictMxForm, ToggleKeyForm
+from handlers.settings import confirm_channel, ChannelMessage
 from storage.channel import Channel
 from storage.key import Key
 
@@ -26,44 +27,39 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
     app = Blueprint("delete", __name__)
 
-    @app.route("/do/delete_key", methods=("POST",))
+    @app.route("/do/delete_key", methods=["POST"])
     @login_required
     def delete_key():
         """ Handler for deletion of keys """
         form = DeleteKeyForm()
-
-        if not form.validate():
-            return redirect("/?error=bad_request")
-
         key_id = form.key.data
 
-        sess = sess_cr()
+        session = sess_cr()
 
-        # Key and channel validations
-
-        key: Key = sess.query(Key).filter(Key.key == key_id).first()
+        key: Key = session.query(Key).filter(Key.key == key_id).first()
 
         if key is None:
-            return redirect("/?error=bad_request")
+            return abort(make_response({"message": "Bad key"}))
 
-        chan: Channel = sess.query(Channel).filter(Channel.id == key.chan_id).first()
+        channel: Channel = session.query(Channel).\
+            filter(Channel.id == key.chan_id).first()
 
-        if chan is None:
-            return redirect("/?error=bad_request")
+        error_message = confirm_channel(channel, current_user)
+        if error_message != ChannelMessage.Ok.value:
+            return abort(make_response({"message": error_message}))
 
-        if chan.owner_id != current_user.id:
-            return redirect("/?error=no_access_to_this_channel")
-
-        sess.delete(key)
-        sess.commit()
-        return redirect(f"/settings/{chan.id}#list-keys-open")
+        session.delete(key)
+        session.commit()
+        return {'key': key.key}
 
     @app.route("/do/restrict_in_mx", methods=("POST",))
     @login_required
     def restrict_in_mx():
         """ Handler for restriction of incoming mixin. """
 
-        # User treats that their chan_1 is scraping messages from chan_2. He wants to break that link
+        # User treats that their channel_1
+        # is scraping messages from channel_2.
+        # He wants to break that link
 
         form = RestrictMxForm()
 

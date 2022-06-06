@@ -10,11 +10,11 @@ from datetime import datetime
 from enum import Enum
 from typing import ClassVar, TypedDict, NamedTuple, Literal
 
-from flask import Blueprint, render_template, redirect, request, abort, \
+from flask import Blueprint, request, abort, \
     make_response, jsonify
 from flask_login import current_user, login_required
 
-from forms import CreateKeyForm, GetKeysForm
+from forms import CreateKeyForm, ToggleKeyActiveForm
 from handlers.settings import confirm_channel, ChannelMessage
 from storage.channel import Channel
 from storage.key import Key
@@ -43,8 +43,12 @@ def confirm_form(form: CreateKeyForm) -> FormMessage:
 class KeyJson(TypedDict):
     key: str
     name: str
-    perm: int
+    channel: str
+    read: int
+    write: int
     created: str
+    active: bool
+    info: bool
 
 
 class KeyPermission(NamedTuple):
@@ -61,32 +65,22 @@ def get_permission(perm: Literal['0'] or Literal['1']) -> KeyPermission:
 def get_json_key(key: Key) -> KeyJson:
     return KeyJson(key=key.key,
                    name=key.name,
-                   perm=key.perm,
-                   created=str(key.created.date()))
+                   read=key.can_read(),
+                   write=key.can_write(),
+                   created=str(key.created.date()),
+                   active=key.active(),
+                   info=key.info_allowed(),
+                   channel=key.chan_id)
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
     """
-    A closure for instantiating the handler that maintains keys creating processes.
+    A closure for instantiating the handler
+    that maintains keys creating processes.
     Must borrow a SqlAlchemy session creator for further usage.
-    :param sess_cr: sqlalchemy.orm.sessionmaker object
-    :return Blueprint object
     """
 
     app = Blueprint("grant", __name__)
-
-    @app.route("/grant")
-    @login_required
-    def grant():
-        f = CreateKeyForm()
-        uid = current_user.id
-        sess = sess_cr()
-
-        channels = sess.query(Channel).filter(
-            Channel.owner_id == uid).all()
-
-        return render_template("create_key.html", form=f,
-                               channels=channels)
 
     @app.route("/do/grant", methods=["POST"])
     @login_required
@@ -134,7 +128,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             filter(Channel.id == channel_id).first()
 
         error_message = confirm_channel(channel, current_user)
-        if error_message != ChannelMessage.Ok:
+        if error_message != ChannelMessage.Ok.value:
             return abort(make_response({'message': error_message}, 401))
 
         keys = session.query(Key). \
@@ -145,5 +139,32 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             keys_json.append(get_json_key(key))
 
         return jsonify(keys_json)
+
+    @app.route("/do/toggle_key_active", methods=["POST"])
+    @login_required
+    def do_toggle_key():
+        form = ToggleKeyActiveForm(request.form)
+
+        session = sess_cr()
+
+        key = session.query(Key)\
+            .filter(Key.key == form.key.data).first()
+
+        if not key:
+            return abort(make_response({'message': 'Bad key'}, 401))
+
+        channel = session.query(Channel).\
+            filter(Channel.id == key.chan_id).first()
+
+        error_message = confirm_channel(channel, current_user)
+
+        if error_message != ChannelMessage.Ok.value:
+            return abort(
+                make_response({'message': error_message.value}, 400))
+
+        key.toggle_active()
+
+        session.commit()
+        return jsonify(get_json_key(key))
 
     return app

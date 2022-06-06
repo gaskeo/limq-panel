@@ -41,7 +41,7 @@ def confirm_channel(channel: Channel or None, user: User) -> ChannelMessage:
         return ChannelMessage.ChannelNotExistError.value
     if channel.owner_id != user.id:
         return ChannelMessage.NotOwnerError.value
-    return ChannelMessage.Ok
+    return ChannelMessage.Ok.value
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:

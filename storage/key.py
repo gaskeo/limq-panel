@@ -36,9 +36,6 @@ class Key(ModelBase):
     def can_write(self) -> bool:
         return self.perm & self.WRITE != 0
 
-    def bidirectional(self) -> bool:
-        return self.perm & self.WRITE & self.READ != 0
-
     def active(self) -> bool:
         return self.perm & self.PAUSED == 0
 

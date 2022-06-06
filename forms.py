@@ -7,7 +7,8 @@
 
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, RadioField
+from wtforms import StringField, PasswordField, BooleanField, \
+    SubmitField, HiddenField, RadioField
 from wtforms.validators import DataRequired, Length, Email
 
 
@@ -26,7 +27,8 @@ class RegisterForm(FlaskForm):
     email = StringField("Электропочта", validators=[Email()])
     username = StringField("Ваше имя", validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
-    password_again = PasswordField("Еще раз пароль", validators=[DataRequired()])
+    password_again = PasswordField("Еще раз пароль",
+                                   validators=[DataRequired()])
 
     submit = SubmitField("Зарегистрироваться")
 
@@ -55,22 +57,24 @@ class CreateKeyForm(FlaskForm):
     id = HiddenField("", validators=[DataRequired()])
     name = StringField("Название", validators=[DataRequired(), Length(
         min=1, max=20, message="Не больше 20 символов")])
-    permissions = RadioField("", choices=[('0', 'Прием'), ('1', 'Отправка')], default='1')
+    permissions = RadioField("", choices=[('0', 'Прием'),
+                                          ('1', 'Отправка')],
+                             default='1')
     info_allowed = BooleanField("Разрешить info", false_values=["0"])
     submit = SubmitField("Создать ключ")
 
 
-class GetKeysForm(FlaskForm):
-    channel_id = HiddenField("", validators=[DataRequired()])
+class ToggleKeyActiveForm(FlaskForm):
+    key = HiddenField("", validators=[DataRequired()])
 
 
 class CreateMixinForm(FlaskForm):
     """ WTForm for mixin creation """
 
     channel = HiddenField("", validators=[DataRequired()])
-    key = StringField("Ключ на чтение", validators=[DataRequired()], render_kw={
-        "placeholder": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    })
+    key = StringField("Ключ на чтение",
+                      validators=[DataRequired()],
+                      render_kw={"placeholder": "X" * 32})
     submit = SubmitField("Создать миксин")
 
 
@@ -98,7 +102,8 @@ class ChangeUsernameForm(FlaskForm):
 class ChangeEmailForm(FlaskForm):
     """ WTForm for e-mail changing """
 
-    new_email = StringField("Новая электропочта", validators=[DataRequired()])
+    new_email = StringField("Новая электропочта",
+                            validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
     submit = SubmitField("Изменить")
 
@@ -106,9 +111,12 @@ class ChangeEmailForm(FlaskForm):
 class ChangePasswordForm(FlaskForm):
     """ WTForm for password changing """
 
-    old_password = PasswordField("Старый пароль", validators=[DataRequired()])
-    password = PasswordField("Новый пароль", validators=[DataRequired()])
-    password_again = PasswordField("Новый пароль еще раз", validators=[DataRequired()])
+    old_password = PasswordField("Старый пароль",
+                                 validators=[DataRequired()])
+    password = PasswordField("Новый пароль",
+                             validators=[DataRequired()])
+    password_again = PasswordField("Новый пароль еще раз",
+                                   validators=[DataRequired()])
 
     submit = SubmitField("Изменить")
 
