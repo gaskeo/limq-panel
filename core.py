@@ -5,6 +5,7 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
+import os
 
 from flask import Flask
 from flask_login import LoginManager
@@ -12,6 +13,7 @@ from flask_login import LoginManager
 from handlers import index, grant, \
     helpdesk, \
     error_handlers, user, channel, mixin
+
 from storage.db_session import base_init
 
 # Flask init
@@ -20,13 +22,13 @@ app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-app.config["SECRET_KEY"] = "lithium_secret_key"
+app.config["SECRET_KEY"] = os.getenv('secret_key')
 
 # Database init
 SessObject = base_init()
 
 # Blueprints registration
-app.register_blueprint(index.create_handler(SessObject))
+app.register_blueprint(index.create_handler())
 app.register_blueprint(channel.create_handler(SessObject))
 app.register_blueprint(user.create_handler(SessObject, login_manager))
 app.register_blueprint(mixin.create_handler(SessObject))

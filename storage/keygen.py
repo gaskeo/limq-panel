@@ -8,20 +8,27 @@
 
 # Token generation stub
 
-import random
+import string
+from secrets import choice
+from typing import Iterable
 
 LENGTH = 32
-CHAN_ID_LENGTH = 16
+CHANNEL_ID_LENGTH = 16
 
-CHARS = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
+CHARS = string.ascii_letters + string.digits
+HEX = string.digits + "abcdef"
+
+
+def get_random_string(chars: Iterable, k: int = 1) -> str:
+    return "".join(choice(chars) for _ in range(k))
 
 
 # Token length is 32 A-Za-z0-9 symbols.
 def generate_key() -> str:
-    return str(random.getrandbits(3)) + "".join(random.choices(CHARS, k=LENGTH - 1))
+    return get_random_string(CHARS, k=LENGTH)
 
 
 # Generates channel's identifier
-def chan_identifier() -> str:
-    return f"{random.getrandbits(64):x}"
+def channel_identifier() -> str:
+    return get_random_string(HEX, k=CHANNEL_ID_LENGTH)
 

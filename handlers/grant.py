@@ -5,20 +5,24 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
-
 from datetime import datetime
 from enum import Enum
 from typing import ClassVar, TypedDict, NamedTuple, Literal
 
-from flask import Blueprint, request, abort, \
-    make_response, jsonify
+from flask import Blueprint, request, jsonify
 from flask_login import current_user, login_required
+from http import HTTPStatus
 
 from forms import CreateKeyForm, ToggleKeyActiveForm, DeleteKeyForm
-from handlers.channel import ChannelMessage, confirm_channel
+
 from storage.channel import Channel
 from storage.key import Key
 from storage.keygen import generate_key
+
+from . import make_abort
+from handlers.channel import ChannelMessage, confirm_channel
+
+MAX_KEY_NAME_LENGTH = 50
 
 
 class KeyMessage(Enum):
@@ -47,14 +51,14 @@ class KeyJson(TypedDict):
 
 
 class KeyPermission(NamedTuple):
-    can_read: int = 0
-    can_write: int = 1
+    can_read: bool
+    can_write: bool
 
 
 def confirm_form(form: CreateKeyForm) -> FormMessage:
     if not form.name.data:
         return FormMessage.NameError.value
-    if len(form.name.data) > 50:
+    if len(form.name.data) > MAX_KEY_NAME_LENGTH:
         return FormMessage.LongNameError.value
 
     if form.permissions.data not in "01":
@@ -63,10 +67,11 @@ def confirm_form(form: CreateKeyForm) -> FormMessage:
     return FormMessage.Ok.value
 
 
-def get_permission(perm: Literal['0'] or Literal['1']) -> KeyPermission:
+def get_permission_from_form(
+        perm: Literal['0'] or Literal['1']) -> KeyPermission:
     read = perm == "0"
     write = read ^ 1
-    return KeyPermission(can_read=read, can_write=write)
+    return KeyPermission(can_read=read, can_write=bool(write))
 
 
 def get_json_key(key: Key) -> KeyJson:
@@ -80,10 +85,14 @@ def get_json_key(key: Key) -> KeyJson:
                    channel=key.chan_id)
 
 
+def create_perm(info: bool, read: bool, write: bool):
+    return info << 2 | write << 1 | read
+
+
 def create_handler(sess_cr: ClassVar) -> Blueprint:
     """
     A closure for instantiating the handler
-    that maintains keys creating processes.
+    that maintains keys processes.
     Must borrow a SqlAlchemy session creator for further usage.
     """
 
@@ -96,30 +105,29 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         error_message = confirm_form(form)
         if error_message != FormMessage.Ok.value:
-            return abort(make_response({'message': error_message}, 400))
+            return make_abort(error_message,
+                              HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
 
-        channel_id = form_channel_id = form.id.data
+        channel_id = form.id.data
 
         channel: Channel = session.query(Channel). \
             filter(Channel.id == channel_id).first()
 
         error_message = confirm_channel(channel, current_user)
         if error_message != ChannelMessage.Ok:
-            return abort(make_response({'message': error_message}, 401))
+            return make_abort(error_message, HTTPStatus.FORBIDDEN)
 
         key_id = generate_key()
-        key = Key(key=key_id, chan_id=form_channel_id,
+        key = Key(key=key_id, chan_id=channel_id,
                   name=form.name.data, created=datetime.now())
 
-        perm = get_permission(form.permissions.data)
-
+        perm = get_permission_from_form(form.permissions.data)
         info = form.info_allowed.data
+        key.perm = create_perm(info, perm.can_read, perm.can_write)
 
-        key.perm = info << 2 | perm.can_write << 1 | perm.can_read
         session.add(key)
-
         session.commit()
 
         return jsonify(get_json_key(key))
@@ -127,7 +135,10 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @app.route("/do/get_keys", methods=["GET"])
     @login_required
     def do_get_keys():
-        channel_id = request.args.get('channel_id', None)
+        channel_id = request.args.get('channel_id', '')
+        if not channel_id:
+            return make_abort(ChannelMessage.ChannelNotExistError,
+                              HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
 
@@ -136,14 +147,11 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         error_message = confirm_channel(channel, current_user)
         if error_message != ChannelMessage.Ok.value:
-            return abort(make_response({'message': error_message}, 401))
+            return make_abort(error_message, HTTPStatus.FORBIDDEN)
 
         keys = session.query(Key). \
             filter(Key.chan_id == channel_id).all()
-
-        keys_json = []
-        for key in keys:
-            keys_json.append(get_json_key(key))
+        keys_json = [get_json_key(key) for key in keys]
 
         return jsonify(keys_json)
 
@@ -154,20 +162,19 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         session = sess_cr()
 
-        key = session.query(Key)\
+        key = session.query(Key) \
             .filter(Key.key == form.key.data).first()
 
         if not key:
-            return abort(make_response({'message': 'Bad key'}, 401))
+            return make_abort(KeyMessage.KeyError,
+                              HTTPStatus.UNPROCESSABLE_ENTITY)
 
-        channel = session.query(Channel).\
+        channel = session.query(Channel). \
             filter(Channel.id == key.chan_id).first()
 
         error_message = confirm_channel(channel, current_user)
-
         if error_message != ChannelMessage.Ok.value:
-            return abort(
-                make_response({'message': error_message.value}, 400))
+            return make_abort(error_message, HTTPStatus.FORBIDDEN)
 
         key.toggle_active()
 
@@ -186,14 +193,15 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         key: Key = session.query(Key).filter(Key.key == key_id).first()
 
         if key is None:
-            return abort(make_response({"message": "Bad key"}))
+            return make_abort(KeyMessage.KeyError,
+                              HTTPStatus.UNPROCESSABLE_ENTITY)
 
         channel: Channel = session.query(Channel). \
             filter(Channel.id == key.chan_id).first()
 
         error_message = confirm_channel(channel, current_user)
         if error_message != ChannelMessage.Ok.value:
-            return abort(make_response({"message": error_message}))
+            return make_abort(error_message, HTTPStatus.FORBIDDEN)
 
         session.delete(key)
         session.commit()

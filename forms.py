@@ -126,4 +126,6 @@ class RestrictMxForm(FlaskForm):
 
     subject = HiddenField("", validators=[DataRequired()])
     channel = HiddenField("", validators=[DataRequired()])
+    mixin_type = HiddenField("", validators=[DataRequired()])
+
     submit = SubmitField("Удалить")

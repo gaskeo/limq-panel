@@ -21,11 +21,18 @@ class User(ModelBase, UserMixin):
     __tablename__ = 'users'
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
-                           primary_key=True, autoincrement=True)
+                           primary_key=True,
+                           autoincrement=True)
 
-    username = sqlalchemy.Column(sqlalchemy.String(length=32), nullable=True)
-    email = sqlalchemy.Column(sqlalchemy.String(length=64), nullable=True, unique=True)
-    hashed_password = sqlalchemy.Column(sqlalchemy.String(length=128), nullable=True)
+    username = sqlalchemy.Column(sqlalchemy.String(length=32),
+                                 nullable=True)
+
+    email = sqlalchemy.Column(sqlalchemy.String(length=64),
+                              nullable=True,
+                              unique=True)
+
+    hashed_password = sqlalchemy.Column(sqlalchemy.String(length=128),
+                                        nullable=True)
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)

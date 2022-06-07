@@ -10,16 +10,20 @@ from binascii import Error as DecErr
 
 from typing import ClassVar, TypedDict
 
-from flask import Blueprint, redirect, abort, \
-    make_response, request, jsonify, Response
+from flask import Blueprint, request, jsonify, Response
 from flask_login import login_required, logout_user, login_user, \
     current_user, LoginManager
+from http import HTTPStatus
 
 from forms import RegisterForm, LoginForm, ChangeUsernameForm, \
     ChangeEmailForm, ChangePasswordForm
+
 from storage.user import User
 
+from . import make_abort
+
 MIN_PATH_LENGTH = 2
+MAX_USERNAME_LENGTH = 32
 
 
 class UserJson(TypedDict):
@@ -39,8 +43,13 @@ class FormMessage(Enum):
     EmailError = "Bad email"
     UsernameError = "Bad username"
     UsernameTooLongError = "Username too long"
-    PasswordError = "Bad password"
-    UserError = "Bad user"
+
+
+class UserMessage(Enum):
+    Ok = ""
+    EmailExistError = "User with this email already exists"
+    BadUserError = "Bad user"
+    BadPasswordError = "Bad password"
 
 
 def confirm_form(form: LoginForm) -> FormMessage:
@@ -56,9 +65,21 @@ def confirm_form(form: LoginForm) -> FormMessage:
 def confirm_username_form(form: ChangeUsernameForm) -> FormMessage:
     if not form.new_username.data:
         return FormMessage.UsernameError.value
-    if len(form.new_username.data) > 40:
+
+    if len(form.new_username.data) > MAX_USERNAME_LENGTH:
         return FormMessage.UsernameTooLongError.value
+
     return FormMessage.Ok.value
+
+
+def confirm_user(user: User, password: str) -> UserMessage:
+    if not user:
+        return UserMessage.BadUserError.value
+
+    if not user.check_password(password):
+        return UserMessage.BadPasswordError.value
+
+    return UserMessage.Ok.value
 
 
 def get_path(encoded_path: str or bytes or None) -> str:
@@ -83,7 +104,8 @@ def get_user_json(user: User) -> UserJson:
 
 def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
     """
-    A closure for instantiating the handler that maintains main page.
+    A closure for instantiating the handler
+    that maintains user processes.
     Must borrow a SqlAlchemy session creator for further usage.
 
     """
@@ -118,17 +140,12 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         """ Handler for register """
         form = RegisterForm()
 
-        if form.password.data != form.password_again.data:
-            return abort(make_response(
-                {'message': 'Passwords do not match'}, 401))
-
         session = sess_cr()
 
         if session.query(User).filter(
                 User.email == form.email.data).first():
-            return abort(make_response(
-                {'message': 'User with this email already exists'},
-                409))
+            return make_abort(UserMessage.EmailExistError.value,
+                              HTTPStatus.CONFLICT)
 
         # noinspection PyArgumentList
         user = User(
@@ -148,24 +165,19 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         form = LoginForm()
         error_message = confirm_form(form)
         if error_message != FormMessage.Ok.value:
-            return abort(make_response({'message': error_message}, 400))
+            return make_abort(error_message,
+                              HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
         user = session.query(
             User).filter(User.email == form.email.data).first()
 
-        # TODO Сделать ошибки информативными
-        if not user:
-            return abort(make_response(
-                {'message': FormMessage.UserError.value}, 403))
-
-        if not user.check_password(form.password.data):
-            return abort(make_response(
-                {'message': FormMessage.PasswordError.value}, 403))
+        error_message = confirm_user(user, form.password.data)
+        if error_message != UserMessage.Ok.value:
+            return make_abort(error_message, HTTPStatus.FORBIDDEN)
 
         login_user(user)
-
-        path = get_path(request.args.get("path", None))
+        path = get_path(request.args.get("path", ''))
 
         return jsonify(UserResponseJson(
             auth=True, user=get_user_json(current_user),
@@ -178,13 +190,15 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
         error_message = confirm_username_form(form)
         if error_message != FormMessage.Ok.value:
-            return abort(make_response({"message": error_message}, 401))
+            return make_abort(error_message,
+                              HTTPStatus.UNPROCESSABLE_ENTITY)
+
         session = sess_cr()
 
         user = session.query(User).filter(
             User.id == current_user.id).first()
         if not user:
-            return abort(make_response({"message": "Invalid user"}))
+            return make_abort(UserMessage.BadUserError.value)
 
         user.username = form.new_username.data
         session.commit()
@@ -205,17 +219,14 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
         user = session.query(User).filter(
             User.id == current_user.id).first()
-        if not user:
-            return abort(make_response(
-                {"message": "Invalid user"}, 401))
-
-        if not user.check_password(password):
-            return abort(make_response(
-                {"message": "Invalid password"}, 401))
+        error_message = confirm_user(user, password)
+        if error_message != UserMessage.Ok.value:
+            return make_abort(error_message,
+                              HTTPStatus.FORBIDDEN)
 
         if session.query(User).filter(User.email == email).first():
-            return abort(make_response(
-                {"message": "Email already exist"}, 401))
+            return make_abort(UserMessage.EmailExistError,
+                              HTTPStatus.CONFLICT)
 
         user.email = email
         session.commit()
@@ -237,16 +248,12 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
         # User validation
 
-        user: User = session.query(User).filter(
+        user = session.query(User).filter(
             User.id == current_user.id).first()
 
-        if not user:
-            return abort(make_response(
-                {"message": "Invalid user"}, 401))
-
-        if not user.check_password(old_password):
-            return abort(make_response(
-                {"message": "Invalid password"}, 401))
+        error_message = confirm_user(user, old_password)
+        if error_message != UserMessage.Ok.value:
+            return make_abort(error_message, HTTPStatus.FORBIDDEN)
 
         user.set_password(password)
 
@@ -261,6 +268,6 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         """ Handler for logging out """
 
         logout_user()
-        return redirect("/")
+        return {'auth': False}
 
     return app

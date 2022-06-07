@@ -8,31 +8,26 @@
 from enum import Enum
 from typing import ClassVar, TypedDict, NamedTuple, Iterable
 
-from flask import Blueprint, abort, make_response, jsonify
+from flask import Blueprint, jsonify
 from flask_login import current_user, login_required
+from http import HTTPStatus
 
 from forms import RegisterChannelForm, RenameChannelForm
+
 from storage.channel import Channel
 from storage.key import Key
-from storage.keygen import chan_identifier
+from storage.keygen import channel_identifier
 from storage.user import User
+
+from . import make_abort
+
+MAX_CHANNEL_NAME_LENGTH = 50
 
 
 class FormMessage(Enum):
     Ok = ""
     NameError = "Bad channel name"
     LongNameError = "Channel name too long"
-
-
-def confirm_form(form: RegisterChannelForm or RenameChannelForm) -> \
-        FormMessage:
-    if not form.name.data:
-        return FormMessage.NameError.value
-
-    if len(form.name.data) > 50:
-        return FormMessage.LongNameError.value
-
-    return FormMessage.Ok.value
 
 
 class KeysTypesCount(TypedDict):
@@ -58,17 +53,26 @@ class ChannelMessage(Enum):
     NotOwnerError = "No access to this channel"
 
 
+def confirm_channel_form(
+        form: RegisterChannelForm or RenameChannelForm) -> FormMessage:
+    if not form.name.data:
+        return FormMessage.NameError.value
+
+    if len(form.name.data) > MAX_CHANNEL_NAME_LENGTH:
+        return FormMessage.LongNameError.value
+
+    return FormMessage.Ok.value
+
+
 def get_keys_count(keys: Iterable[Key]) -> KeysCount:
     can_write = can_read = write_active = read_active = 0
     for key in keys:
         if key.can_write():
             can_write += 1
-            if key.active():
-                write_active += 1
+            write_active += key.active()
         if key.can_read():
             can_read += 1
-            if key.active():
-                read_active += 1
+            read_active += key.active()
 
     return KeysCount(
         can_read=KeysTypesCount(active=read_active,
@@ -87,6 +91,7 @@ def get_base_json_channel(channel: Channel) -> ChannelJson:
 def get_json_channel(channel: Channel, session: ClassVar) -> \
         ChannelJson:
     json_channel = get_base_json_channel(channel)
+
     keys = session.query(Key).filter(
         Key.chan_id == channel.id).all()
 
@@ -100,15 +105,17 @@ def confirm_channel(channel: Channel or None,
                     user: User) -> ChannelMessage:
     if not channel:
         return ChannelMessage.ChannelNotExistError.value
+
     if channel.owner_id != user.id:
         return ChannelMessage.NotOwnerError.value
+
     return ChannelMessage.Ok.value
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
     """
     A closure for instantiating the handler
-    that maintains channel creating processes.
+    that maintains channel processes.
     Must borrow a SqlAlchemy session creator for further usage.
 
     """
@@ -120,14 +127,15 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     def do_create_channel():
         form = RegisterChannelForm()
 
-        error_message = confirm_form(form)
+        error_message = confirm_channel_form(form)
         if error_message != FormMessage.Ok.value:
-            return abort(make_response({'message': error_message}, 400))
+            return make_abort(error_message,
+                              HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
         channel = Channel(
             name=form.name.data,
-            id=chan_identifier(),
+            id=channel_identifier(),
             owner_id=current_user.id
         )
 
@@ -144,12 +152,9 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         if not channels:
             return jsonify([])
 
-        json_channels = []
+        json_channels = [get_json_channel(channel, session)
+                         for channel in channels]
 
-        for channel in channels:
-            json_channel = get_json_channel(channel, session)
-
-            json_channels.append(json_channel)
         return jsonify(json_channels)
 
     @app.route("/do/edit_channel", methods=["POST"])
@@ -158,9 +163,10 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         """ Handler for settings changing page. """
 
         form = RenameChannelForm()
-        error_message = confirm_form(form)
+        error_message = confirm_channel_form(form)
         if error_message != FormMessage.Ok.value:
-            return abort(make_response({'message': error_message}, 400))
+            return make_abort(error_message,
+                              HTTPStatus.UNPROCESSABLE_ENTITY)
 
         channel_id = form.id.data
         session = sess_cr()
@@ -171,7 +177,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         error_message = confirm_channel(channel, current_user)
         if error_message != ChannelMessage.Ok.value:
-            return abort(make_response({'message': error_message}, 401))
+            return make_abort(error_message, HTTPStatus.FORBIDDEN)
 
         channel.name = form.name.data
         session.commit()
