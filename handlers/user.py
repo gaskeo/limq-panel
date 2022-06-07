@@ -114,7 +114,9 @@ def get_valid_email(email: str or None) -> str:
 def get_valid_username(username: str or None) -> str:
     if not username:
         return ''
-    if len(username) > MAX_USERNAME_LENGTH:
+
+    username = username.strip()
+    if len(username) > MAX_USERNAME_LENGTH or not len(username):
         return ''
     return username
 
@@ -122,7 +124,8 @@ def get_valid_username(username: str or None) -> str:
 def get_valid_password(password: str or None) -> str:
     if not password:
         return ''
-    if len(password) < MIN_PASSWORD_LENGTH:
+    password = password.strip()
+    if len(password) < MIN_PASSWORD_LENGTH or not len(password):
         return ''
     return password
 

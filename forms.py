@@ -18,8 +18,6 @@ class LoginForm(FlaskForm):
     password = PasswordField("Пароль", validators=[DataRequired()])
     remember_me = BooleanField("Запомнить меня")
 
-    submit = SubmitField("Войти")
-
 
 class RegisterForm(FlaskForm):
     """ WTForm for registration """
@@ -27,18 +25,12 @@ class RegisterForm(FlaskForm):
     email = StringField("Электропочта", validators=[Email()])
     username = StringField("Ваше имя", validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
-    password_again = PasswordField("Еще раз пароль",
-                                   validators=[DataRequired()])
-
-    submit = SubmitField("Зарегистрироваться")
 
 
 class RegisterChannelForm(FlaskForm):
     """ WTForm for channel creation """
 
     name = StringField("Название", validators=[DataRequired()])
-
-    submit = SubmitField("Создать канал")
 
 
 class RenameChannelForm(FlaskForm):
@@ -47,8 +39,6 @@ class RenameChannelForm(FlaskForm):
     id = HiddenField("", validators=[DataRequired()])
     name = StringField("Название", validators=[DataRequired(), Length(
         min=1, max=20, message="Не больше 20 символов")])
-
-    submit = SubmitField("Сохранить изменения")
 
 
 class CreateKeyForm(FlaskForm):
@@ -61,7 +51,6 @@ class CreateKeyForm(FlaskForm):
                                           ('1', 'Отправка')],
                              default='1')
     info_allowed = BooleanField("Разрешить info", false_values=["0"])
-    submit = SubmitField("Создать ключ")
 
 
 class ToggleKeyActiveForm(FlaskForm):
@@ -75,28 +64,24 @@ class CreateMixinForm(FlaskForm):
     key = StringField("Ключ на чтение",
                       validators=[DataRequired()],
                       render_kw={"placeholder": "X" * 32})
-    submit = SubmitField("Создать миксин")
 
 
 class DeleteKeyForm(FlaskForm):
     """ WTForm for key deletion """
 
     key = HiddenField("", validators=[DataRequired()])
-    submit = SubmitField("Удалить")
 
 
 class ToggleKeyForm(FlaskForm):
     """ WTForm for key toggling """
 
     key = HiddenField("", validators=[DataRequired()])
-    submit = SubmitField("Сменить состояние")
 
 
 class ChangeUsernameForm(FlaskForm):
     """ WTForm for username changing """
 
     new_username = StringField("Новое имя", validators=[DataRequired()])
-    submit = SubmitField("Изменить")
 
 
 class ChangeEmailForm(FlaskForm):
@@ -105,7 +90,6 @@ class ChangeEmailForm(FlaskForm):
     new_email = StringField("Новая электропочта",
                             validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
-    submit = SubmitField("Изменить")
 
 
 class ChangePasswordForm(FlaskForm):
@@ -115,10 +99,6 @@ class ChangePasswordForm(FlaskForm):
                                  validators=[DataRequired()])
     password = PasswordField("Новый пароль",
                              validators=[DataRequired()])
-    password_again = PasswordField("Новый пароль еще раз",
-                                   validators=[DataRequired()])
-
-    submit = SubmitField("Изменить")
 
 
 class RestrictMxForm(FlaskForm):
@@ -127,5 +107,3 @@ class RestrictMxForm(FlaskForm):
     subject = HiddenField("", validators=[DataRequired()])
     channel = HiddenField("", validators=[DataRequired()])
     mixin_type = HiddenField("", validators=[DataRequired()])
-
-    submit = SubmitField("Удалить")

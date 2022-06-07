@@ -53,17 +53,6 @@ class ChannelMessage(Enum):
     NotOwnerError = "No access to this channel"
 
 
-def confirm_channel_form(
-        form: RegisterChannelForm or RenameChannelForm) -> FormMessage:
-    if not form.name.data:
-        return FormMessage.NameError.value
-
-    if len(form.name.data) > MAX_CHANNEL_NAME_LENGTH:
-        return FormMessage.LongNameError.value
-
-    return FormMessage.Ok.value
-
-
 def get_keys_count(keys: Iterable[Key]) -> KeysCount:
     can_write = can_read = write_active = read_active = 0
     for key in keys:
@@ -101,6 +90,16 @@ def get_json_channel(channel: Channel, session: ClassVar) -> \
     return json_channel
 
 
+def get_valid_channel_name(channel_name: str or None) -> str:
+    if not channel_name:
+        return ''
+    channel_name = channel_name.strip()
+    if len(channel_name) > MAX_CHANNEL_NAME_LENGTH or \
+            not len(channel_name):
+        return ''
+    return channel_name
+
+
 def confirm_channel(channel: Channel or None,
                     user: User) -> ChannelMessage:
     if not channel:
@@ -110,6 +109,35 @@ def confirm_channel(channel: Channel or None,
         return ChannelMessage.NotOwnerError.value
 
     return ChannelMessage.Ok.value
+
+
+class CreateChannelTuple(NamedTuple):
+    channel_name: str
+
+
+class RenameChannelTuple(NamedTuple):
+    channel_id: str
+    channel_name: str
+
+
+def confirm_create_channel_form(
+        form: RegisterChannelForm) -> (CreateChannelTuple, FormMessage):
+    valid_channel_name = get_valid_channel_name(form.name.data)
+    if not valid_channel_name:
+        return CreateChannelTuple(''), FormMessage.LongNameError.value
+
+    return CreateChannelTuple(valid_channel_name), FormMessage.Ok.value
+
+
+def confirm_edit_channel_form(form: RenameChannelForm
+                              ) -> (RenameChannelTuple, FormMessage):
+    valid_channel_name = get_valid_channel_name(form.name.data)
+    if not valid_channel_name:
+        return RenameChannelTuple('', ''), \
+               FormMessage.LongNameError.value
+
+    return RenameChannelTuple(form.id.data,
+                              valid_channel_name), FormMessage.Ok.value
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
@@ -127,14 +155,14 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     def do_create_channel():
         form = RegisterChannelForm()
 
-        error_message = confirm_channel_form(form)
-        if error_message != FormMessage.Ok.value:
-            return make_abort(error_message,
+        channel_name, message = confirm_create_channel_form(form)
+        if message != FormMessage.Ok.value:
+            return make_abort(message,
                               HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
         channel = Channel(
-            name=form.name.data,
+            name=channel_name,
             id=channel_identifier(),
             owner_id=current_user.id
         )
@@ -163,23 +191,23 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         """ Handler for settings changing page. """
 
         form = RenameChannelForm()
-        error_message = confirm_channel_form(form)
-        if error_message != FormMessage.Ok.value:
-            return make_abort(error_message,
+        (channel_id, channel_name), message = \
+            confirm_edit_channel_form(form)
+        if message != FormMessage.Ok.value:
+            return make_abort(message,
                               HTTPStatus.UNPROCESSABLE_ENTITY)
 
-        channel_id = form.id.data
         session = sess_cr()
 
         # Channel validation.
         channel = session.query(Channel). \
             filter(Channel.id == channel_id).first()
 
-        error_message = confirm_channel(channel, current_user)
-        if error_message != ChannelMessage.Ok.value:
-            return make_abort(error_message, HTTPStatus.FORBIDDEN)
+        message = confirm_channel(channel, current_user)
+        if message != ChannelMessage.Ok.value:
+            return make_abort(message, HTTPStatus.FORBIDDEN)
 
-        channel.name = form.name.data
+        channel.name = channel_name
         session.commit()
 
         return jsonify(get_json_channel(channel, sess_cr()))
