@@ -112,11 +112,11 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         channel_id = form.id.data
 
-        channel: Channel = session.query(Channel). \
+        channel = session.query(Channel). \
             filter(Channel.id == channel_id).first()
 
         error_message = confirm_channel(channel, current_user)
-        if error_message != ChannelMessage.Ok:
+        if error_message != ChannelMessage.Ok.value:
             return make_abort(error_message, HTTPStatus.FORBIDDEN)
 
         key_id = generate_key()

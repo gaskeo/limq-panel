@@ -8,7 +8,7 @@ from base64 import b64decode
 from enum import Enum
 from binascii import Error as DecErr
 
-from typing import ClassVar, TypedDict
+from typing import ClassVar, TypedDict, NamedTuple
 
 from flask import Blueprint, request, jsonify, Response
 from flask_login import login_required, logout_user, login_user, \
@@ -20,10 +20,11 @@ from forms import RegisterForm, LoginForm, ChangeUsernameForm, \
 
 from storage.user import User
 
-from . import make_abort
+from . import make_abort, confirm_email
 
 MIN_PATH_LENGTH = 2
 MAX_USERNAME_LENGTH = 32
+MIN_PASSWORD_LENGTH = 8
 
 
 class UserJson(TypedDict):
@@ -43,6 +44,7 @@ class FormMessage(Enum):
     EmailError = "Bad email"
     UsernameError = "Bad username"
     UsernameTooLongError = "Username too long"
+    PasswordError = "Password too short"
 
 
 class UserMessage(Enum):
@@ -52,34 +54,25 @@ class UserMessage(Enum):
     BadPasswordError = "Bad password"
 
 
-def confirm_form(form: LoginForm) -> FormMessage:
-    if not form.email.data:
-        return FormMessage.EmailError.value
-
-    if not form.password.data:
-        return FormMessage.PasswordError.value
-
-    return FormMessage.Ok.value
+class RegisterTuple(NamedTuple):
+    email: str
+    username: str
+    password: str
 
 
-def confirm_username_form(form: ChangeUsernameForm) -> FormMessage:
-    if not form.new_username.data:
-        return FormMessage.UsernameError.value
-
-    if len(form.new_username.data) > MAX_USERNAME_LENGTH:
-        return FormMessage.UsernameTooLongError.value
-
-    return FormMessage.Ok.value
+class LoginTuple(NamedTuple):
+    email: str
+    password: str
 
 
-def confirm_user(user: User, password: str) -> UserMessage:
-    if not user:
-        return UserMessage.BadUserError.value
+class ChangeEmailTuple(NamedTuple):
+    new_email: str
+    password: str
 
-    if not user.check_password(password):
-        return UserMessage.BadPasswordError.value
 
-    return UserMessage.Ok.value
+class ChangePasswordTuple(NamedTuple):
+    old_password: str
+    new_password: str
 
 
 def get_path(encoded_path: str or bytes or None) -> str:
@@ -100,6 +93,107 @@ def get_user_json(user: User) -> UserJson:
         username=user.username,
         email=user.email
     )
+
+
+def confirm_user(user: User, password: str) -> UserMessage:
+    if not user:
+        return UserMessage.BadUserError.value
+
+    if not user.check_password(password):
+        return UserMessage.BadPasswordError.value
+
+    return UserMessage.Ok.value
+
+
+def get_valid_email(email: str or None) -> str:
+    if not email:
+        return ''
+    return confirm_email(email)
+
+
+def get_valid_username(username: str or None) -> str:
+    if not username:
+        return ''
+    if len(username) > MAX_USERNAME_LENGTH:
+        return ''
+    return username
+
+
+def get_valid_password(password: str or None) -> str:
+    if not password:
+        return ''
+    if len(password) < MIN_PASSWORD_LENGTH:
+        return ''
+    return password
+
+
+def confirm_register_form(form: RegisterForm) -> \
+        (RegisterTuple, FormMessage):
+    valid_email = get_valid_email(form.email.data)
+    if not valid_email:
+        return RegisterTuple('', '', ''), FormMessage.EmailError.value
+
+    valid_username = get_valid_username(form.username.data)
+    if not valid_username:
+        return RegisterTuple('', '', ''), \
+               FormMessage.UsernameError.value
+
+    valid_password = get_valid_password(form.password.data)
+    if not valid_password:
+        return RegisterTuple('', '', ''), \
+               FormMessage.PasswordError.value
+
+    return RegisterTuple(
+        email=valid_email,
+        username=valid_username,
+        password=valid_password), FormMessage.Ok.value
+
+
+def confirm_login_form(form: LoginForm) -> (LoginTuple, FormMessage):
+    valid_email = get_valid_email(form.email.data)
+    if not valid_email:
+        return LoginTuple('', ''), FormMessage.EmailError.value
+
+    valid_password = get_valid_password(form.password.data)
+    if not valid_password:
+        return LoginTuple('', ''), \
+               FormMessage.PasswordError.value
+
+    return LoginTuple(
+        email=valid_email,
+        password=valid_password), FormMessage.Ok.value
+
+
+def confirm_change_email_form(form: ChangeEmailForm) -> \
+        (ChangeEmailTuple, FormMessage):
+    valid_email = get_valid_email(form.new_email.data)
+    if not valid_email:
+        return ChangeEmailTuple('', ''), FormMessage.EmailError.value
+
+    valid_password = get_valid_password(form.password.data)
+    if not valid_password:
+        return ChangeEmailTuple('', ''), \
+               FormMessage.PasswordError.value
+
+    return ChangeEmailTuple(
+        new_email=valid_email,
+        password=valid_password), FormMessage.Ok.value
+
+
+def confirm_change_password_form(form: ChangePasswordForm) -> \
+        (ChangePasswordTuple, FormMessage):
+    valid_old_password = get_valid_password(form.old_password.data)
+    if not valid_old_password:
+        return ChangePasswordTuple('', ''), \
+               FormMessage.PasswordError.value
+
+    valid_new_password = get_valid_password(form.password.data)
+    if not valid_new_password:
+        return ChangePasswordTuple('', ''), \
+               FormMessage.PasswordError.value
+    return ChangePasswordTuple(
+        old_password=valid_old_password,
+        new_password=valid_new_password), FormMessage.Ok.value
 
 
 def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
@@ -141,19 +235,24 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         form = RegisterForm()
 
         session = sess_cr()
+        (email, username, password), message = \
+            confirm_register_form(form)
+
+        if message != FormMessage.Ok.value:
+            return make_abort(message, HTTPStatus.UNPROCESSABLE_ENTITY)
 
         if session.query(User).filter(
-                User.email == form.email.data).first():
+                User.email == email).first():
             return make_abort(UserMessage.EmailExistError.value,
                               HTTPStatus.CONFLICT)
 
         # noinspection PyArgumentList
         user = User(
-            email=form.email.data,
-            username=form.username.data
+            email=email,
+            username=username
         )
 
-        user.set_password(form.password.data)
+        user.set_password(password)
         session.add(user)
         session.commit()
 
@@ -163,18 +262,19 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
     def login():
         """ Handler for login """
         form = LoginForm()
-        error_message = confirm_form(form)
-        if error_message != FormMessage.Ok.value:
-            return make_abort(error_message,
+
+        (email, password), message = confirm_login_form(form)
+        if message != FormMessage.Ok.value:
+            return make_abort(message,
                               HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
         user = session.query(
-            User).filter(User.email == form.email.data).first()
+            User).filter(User.email == email).first()
 
-        error_message = confirm_user(user, form.password.data)
-        if error_message != UserMessage.Ok.value:
-            return make_abort(error_message, HTTPStatus.FORBIDDEN)
+        message = confirm_user(user, password)
+        if message != UserMessage.Ok.value:
+            return make_abort(message, HTTPStatus.FORBIDDEN)
 
         login_user(user)
         path = get_path(request.args.get("path", ''))
@@ -188,9 +288,9 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
     def do_change_username():
         form = ChangeUsernameForm()
 
-        error_message = confirm_username_form(form)
-        if error_message != FormMessage.Ok.value:
-            return make_abort(error_message,
+        username = get_valid_username(form.new_username.data)
+        if not username:
+            return make_abort(FormMessage.UsernameError.value,
                               HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
@@ -200,7 +300,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         if not user:
             return make_abort(UserMessage.BadUserError.value)
 
-        user.username = form.new_username.data
+        user.username = username
         session.commit()
         return jsonify(UserResponseJson(
             auth=True, user=get_user_json(user), path=''))
@@ -210,25 +310,26 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
     def do_change_email():
         """ E-mail changing handler. """
         form = ChangeEmailForm()
-        email = form.new_email.data
-        password = form.password.data
+
+        (new_email, password), message = confirm_change_email_form(form)
+        if message != FormMessage.Ok.value:
+            return make_abort(message, HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
 
-        # User validation
-
         user = session.query(User).filter(
             User.id == current_user.id).first()
-        error_message = confirm_user(user, password)
-        if error_message != UserMessage.Ok.value:
-            return make_abort(error_message,
+
+        message = confirm_user(user, password)
+        if message != UserMessage.Ok.value:
+            return make_abort(message,
                               HTTPStatus.FORBIDDEN)
 
-        if session.query(User).filter(User.email == email).first():
-            return make_abort(UserMessage.EmailExistError,
+        if session.query(User).filter(User.email == new_email).first():
+            return make_abort(UserMessage.EmailExistError.value,
                               HTTPStatus.CONFLICT)
 
-        user.email = email
+        user.email = new_email
         session.commit()
 
         return jsonify(UserResponseJson(auth=True,
@@ -241,8 +342,9 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         """ Password changing handler. """
 
         form = ChangePasswordForm()
-        old_password = form.old_password.data
-        password = form.password.data
+
+        (old_password, new_password), message = \
+            confirm_change_password_form(form)
 
         session = sess_cr()
 
@@ -251,11 +353,11 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         user = session.query(User).filter(
             User.id == current_user.id).first()
 
-        error_message = confirm_user(user, old_password)
-        if error_message != UserMessage.Ok.value:
-            return make_abort(error_message, HTTPStatus.FORBIDDEN)
+        message = confirm_user(user, old_password)
+        if message != UserMessage.Ok.value:
+            return make_abort(message, HTTPStatus.FORBIDDEN)
 
-        user.set_password(password)
+        user.set_password(new_password)
 
         session.commit()
         return jsonify(UserResponseJson(auth=True,
