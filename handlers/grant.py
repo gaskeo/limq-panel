@@ -35,8 +35,9 @@ class KeyMessage(Enum):
 class FormMessage(Enum):
     Ok = ""
     NameError = "Bad key name"
-    LongNameError = "Key name too long"
+    LongKeyNameError = "Key name too long"
     PermissionsError = "Wrong permissions"
+    BadChannelId = "Bad channel id"
 
 
 class KeyJson(TypedDict):
@@ -55,20 +56,23 @@ class KeyPermission(NamedTuple):
     can_write: bool
 
 
-def confirm_form(form: CreateKeyForm) -> FormMessage:
-    if not form.name.data:
-        return FormMessage.NameError.value
-    if len(form.name.data) > MAX_KEY_NAME_LENGTH:
-        return FormMessage.LongNameError.value
+class CreateKeyTuple(NamedTuple):
+    channel_id: str
+    name: str
+    perm: int
 
-    if form.permissions.data not in "01":
-        return FormMessage.PermissionsError.value
 
-    return FormMessage.Ok.value
+def get_valid_key_name(key_name: str or None) -> str:
+    key_name = key_name.strip() if key_name else ''
+    if len(key_name) > MAX_KEY_NAME_LENGTH or not len(key_name):
+        return ''
+    return key_name
 
 
 def get_permission_from_form(
         perm: Literal['0'] or Literal['1']) -> KeyPermission:
+    if perm not in "01":
+        return KeyPermission(can_read=True, can_write=False)
     read = perm == "0"
     write = read ^ 1
     return KeyPermission(can_read=read, can_write=bool(write))
@@ -89,6 +93,28 @@ def create_perm(info: bool, read: bool, write: bool):
     return info << 2 | write << 1 | read
 
 
+def confirm_create_key_form(form: CreateKeyForm
+                            ) -> (CreateKeyTuple, FormMessage):
+    valid_channel_id = form.id.data or ''
+    if not valid_channel_id:
+        return CreateKeyTuple('', '', 0), \
+               FormMessage.BadChannelId.value
+    valid_key_name = get_valid_key_name(form.name.data)
+    if not valid_key_name:
+        return CreateKeyTuple('', '', 0), \
+               FormMessage.LongKeyNameError.value
+
+    perm = get_permission_from_form(form.permissions.data)
+    info = form.info_allowed.data or False
+    valid_perm = create_perm(info, perm.can_read, perm.can_write)
+
+    return CreateKeyTuple(
+        channel_id=valid_channel_id,
+        name=valid_key_name,
+        perm=valid_perm
+    ), FormMessage.Ok.value
+
+
 def create_handler(sess_cr: ClassVar) -> Blueprint:
     """
     A closure for instantiating the handler
@@ -103,29 +129,26 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     def do_grant():
         form = CreateKeyForm(request.form)
 
-        error_message = confirm_form(form)
-        if error_message != FormMessage.Ok.value:
-            return make_abort(error_message,
+        (channel_id, name, perm, info_allowed), message = \
+            confirm_create_key_form(form)
+
+        if message != FormMessage.Ok.value:
+            return make_abort(message,
                               HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
 
-        channel_id = form.id.data
-
         channel = session.query(Channel). \
             filter(Channel.id == channel_id).first()
 
-        error_message = confirm_channel(channel, current_user)
-        if error_message != ChannelMessage.Ok.value:
-            return make_abort(error_message, HTTPStatus.FORBIDDEN)
+        message = confirm_channel(channel, current_user)
+        if message != ChannelMessage.Ok.value:
+            return make_abort(message, HTTPStatus.FORBIDDEN)
 
         key_id = generate_key()
         key = Key(key=key_id, chan_id=channel_id,
-                  name=form.name.data, created=datetime.now())
-
-        perm = get_permission_from_form(form.permissions.data)
-        info = form.info_allowed.data
-        key.perm = create_perm(info, perm.can_read, perm.can_write)
+                  name=name, created=datetime.now(),
+                  perm=perm)
 
         session.add(key)
         session.commit()
@@ -136,6 +159,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     @login_required
     def do_get_keys():
         channel_id = request.args.get('channel_id', '')
+
         if not channel_id:
             return make_abort(ChannelMessage.ChannelNotExistError,
                               HTTPStatus.UNPROCESSABLE_ENTITY)
@@ -155,15 +179,16 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         return jsonify(keys_json)
 
-    @app.route("/do/toggle_key_active", methods=["POST"])
+    @app.route("/do/toggle_key", methods=["POST"])
     @login_required
     def do_toggle_key():
         form = ToggleKeyActiveForm(request.form)
+        key_id = form.key.data
 
         session = sess_cr()
 
         key = session.query(Key) \
-            .filter(Key.key == form.key.data).first()
+            .filter(Key.key == key_id).first()
 
         if not key:
             return make_abort(KeyMessage.KeyError,
@@ -190,13 +215,13 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         session = sess_cr()
 
-        key: Key = session.query(Key).filter(Key.key == key_id).first()
+        key = session.query(Key).filter(Key.key == key_id).first()
 
         if key is None:
             return make_abort(KeyMessage.KeyError,
                               HTTPStatus.UNPROCESSABLE_ENTITY)
 
-        channel: Channel = session.query(Channel). \
+        channel = session.query(Channel). \
             filter(Channel.id == key.chan_id).first()
 
         error_message = confirm_channel(channel, current_user)

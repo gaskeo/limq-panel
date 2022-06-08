@@ -286,7 +286,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
             auth=True, user=get_user_json(current_user),
             path=path))
 
-    @app.route("/do/change_username", methods=["POST"])
+    @app.route("/do/rename_user", methods=["POST"])
     @login_required
     def do_change_username():
         form = ChangeUsernameForm()

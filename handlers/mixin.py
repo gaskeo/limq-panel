@@ -111,11 +111,10 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         """ Handler for mixin creating. """
 
         form = CreateMixinForm()
-        channel = form.channel.data
-        mix_key = form.key.data
-        session = sess_cr()
+        channel = form.channel.data or ''
+        mix_key = form.key.data or ''
 
-        # Key and channel validation
+        session = sess_cr()
 
         channel = session.query(Channel).filter(
             Channel.id == channel).first()
@@ -146,13 +145,10 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         return {"mixin": get_base_json_channel(src_channel)}
 
-    @app.route("/do/restrict_mx", methods=["POST"])
+    @app.route("/do/restrict_mixin", methods=["POST"])
     @login_required
     def restrict_out_mx():
-        """ Handler for restriction of outgoing mixin. """
-
-        # User treats that channel_2 is scraping user's channel_1.
-        # User wants to break that link
+        """ Handler for restriction of  mixin. """
 
         form = RestrictMxForm()
 

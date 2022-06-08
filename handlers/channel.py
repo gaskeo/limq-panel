@@ -53,6 +53,15 @@ class ChannelMessage(Enum):
     NotOwnerError = "No access to this channel"
 
 
+class CreateChannelTuple(NamedTuple):
+    channel_name: str
+
+
+class RenameChannelTuple(NamedTuple):
+    channel_id: str
+    channel_name: str
+
+
 def get_keys_count(keys: Iterable[Key]) -> KeysCount:
     can_write = can_read = write_active = read_active = 0
     for key in keys:
@@ -109,15 +118,6 @@ def confirm_channel(channel: Channel or None,
         return ChannelMessage.NotOwnerError.value
 
     return ChannelMessage.Ok.value
-
-
-class CreateChannelTuple(NamedTuple):
-    channel_name: str
-
-
-class RenameChannelTuple(NamedTuple):
-    channel_id: str
-    channel_name: str
 
 
 def confirm_create_channel_form(
@@ -185,7 +185,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         return jsonify(json_channels)
 
-    @app.route("/do/edit_channel", methods=["POST"])
+    @app.route("/do/rename_channel", methods=["POST"])
     @login_required
     def do_edit_channel():
         """ Handler for settings changing page. """
