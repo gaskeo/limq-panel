@@ -19,7 +19,7 @@ from storage.channel import Channel
 from storage.key import Key
 from storage.keygen import generate_key
 
-from . import make_abort
+from . import make_abort, ApiRoutes, RequestMethods
 from handlers.channel import ChannelMessage, confirm_channel
 
 MAX_KEY_NAME_LENGTH = 50
@@ -124,7 +124,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
     app = Blueprint("grant", __name__)
 
-    @app.route("/do/grant", methods=["POST"])
+    @app.route(ApiRoutes.Grant, methods=[RequestMethods.POST])
     @login_required
     def do_grant():
         form = CreateKeyForm(request.form)
@@ -155,7 +155,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         return jsonify(get_json_key(key))
 
-    @app.route("/do/get_keys", methods=["GET"])
+    @app.route(ApiRoutes.GetKeys, methods=[RequestMethods.GET])
     @login_required
     def do_get_keys():
         channel_id = request.args.get('channel_id', '')
@@ -179,7 +179,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         return jsonify(keys_json)
 
-    @app.route("/do/toggle_key", methods=["POST"])
+    @app.route(ApiRoutes.ToggleKey, methods=[RequestMethods.PUT])
     @login_required
     def do_toggle_key():
         form = ToggleKeyActiveForm(request.form)
@@ -206,7 +206,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         session.commit()
         return jsonify(get_json_key(key))
 
-    @app.route("/do/delete_key", methods=["POST"])
+    @app.route(ApiRoutes.DeleteKey, methods=[RequestMethods.POST])
     @login_required
     def delete_key():
         """ Handler for deletion of keys """

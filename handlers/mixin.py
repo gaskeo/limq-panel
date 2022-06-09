@@ -17,7 +17,7 @@ from storage.channel import Channel
 from storage.key import Key
 from storage.user import User
 
-from . import make_abort
+from . import make_abort, ApiRoutes, RequestMethods
 from handlers.channel import confirm_channel, \
     ChannelMessage, get_base_json_channel
 from handlers.grant import KeyMessage
@@ -71,7 +71,7 @@ def confirm_restrict_mixin_form(form: RestrictMxForm) -> MixinMessage:
 def create_handler(sess_cr: ClassVar) -> Blueprint:
     app = Blueprint("mixin", __name__)
 
-    @app.route("/do/get_mixins", methods=["GET"])
+    @app.route(ApiRoutes.GetMixins, methods=[RequestMethods.GET])
     @login_required
     def do_get_mixins():
         channel_id = request.args.get('channel_id', '')
@@ -105,7 +105,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         return jsonify({'in': mixin_in_json, 'out': mixin_out_json})
 
-    @app.route("/do/create_mixin", methods=["POST"])
+    @app.route(ApiRoutes.CreateMixin, methods=[RequestMethods.POST])
     @login_required
     def do_create_mixin():
         """ Handler for mixin creating. """
@@ -145,7 +145,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         return {"mixin": get_base_json_channel(src_channel)}
 
-    @app.route("/do/restrict_mixin", methods=["POST"])
+    @app.route(ApiRoutes.RestrictMixin, methods=[RequestMethods.POST])
     @login_required
     def restrict_out_mx():
         """ Handler for restriction of  mixin. """

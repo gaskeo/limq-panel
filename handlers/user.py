@@ -20,7 +20,7 @@ from forms import RegisterForm, LoginForm, ChangeUsernameForm, \
 
 from storage.user import User
 
-from . import make_abort, confirm_email
+from . import make_abort, confirm_email, ApiRoutes, RequestMethods
 
 MIN_PATH_LENGTH = 2
 MAX_USERNAME_LENGTH = 32
@@ -223,7 +223,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         response.headers['Access-Control-Allow-Origin'] = '*'
         return response
 
-    @app.route("/do/get_user", methods=["GET"])
+    @app.route(ApiRoutes.GetUser, methods=[RequestMethods.GET])
     def get_user():
         if current_user.is_authenticated:
             return jsonify(UserResponseJson(
@@ -232,7 +232,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
         return jsonify(UserResponseJson(auth=False, user={}, path='/'))
 
-    @app.route("/do/register", methods=["POST"])
+    @app.route(ApiRoutes.Register, methods=[RequestMethods.POST])
     def register():
         """ Handler for register """
         form = RegisterForm()
@@ -261,7 +261,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
         return {"status": True, "path": "/login"}
 
-    @app.route("/do/login", methods=["POST"])
+    @app.route(ApiRoutes.Login, methods=[RequestMethods.POST])
     def login():
         """ Handler for login """
         form = LoginForm()
@@ -286,7 +286,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
             auth=True, user=get_user_json(current_user),
             path=path))
 
-    @app.route("/do/rename_user", methods=["POST"])
+    @app.route(ApiRoutes.RenameUser, methods=[RequestMethods.PUT])
     @login_required
     def do_change_username():
         form = ChangeUsernameForm()
@@ -308,7 +308,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         return jsonify(UserResponseJson(
             auth=True, user=get_user_json(user), path=''))
 
-    @app.route("/do/change_email", methods=["POST"])
+    @app.route(ApiRoutes.ChangeEmail, methods=[RequestMethods.PUT])
     @login_required
     def do_change_email():
         """ E-mail changing handler. """
@@ -339,7 +339,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
                                         user=get_user_json(user),
                                         path=''))
 
-    @app.route("/do/change_password", methods=["POST"])
+    @app.route(ApiRoutes.ChangePassword, methods=[RequestMethods.PUT])
     @login_required
     def do_change_password():
         """ Password changing handler. """
@@ -367,7 +367,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
                                         user=get_user_json(user),
                                         path=''))
 
-    @app.route("/do/logout", methods=["POST"])
+    @app.route(ApiRoutes.Logout, methods=[RequestMethods.POST])
     @login_required
     def logout():
         """ Handler for logging out """

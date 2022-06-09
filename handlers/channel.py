@@ -19,7 +19,7 @@ from storage.key import Key
 from storage.keygen import channel_identifier
 from storage.user import User
 
-from . import make_abort
+from . import make_abort, ApiRoutes, RequestMethods
 
 MAX_CHANNEL_NAME_LENGTH = 50
 
@@ -150,7 +150,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
     app = Blueprint("channel", __name__)
 
-    @app.route("/do/create_channel", methods=["POST"])
+    @app.route(ApiRoutes.CreateChannel, methods=[RequestMethods.POST])
     @login_required
     def do_create_channel():
         form = RegisterChannelForm()
@@ -171,7 +171,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         session.commit()
         return jsonify(get_base_json_channel(channel))
 
-    @app.route("/do/get_channels", methods=["GET"])
+    @app.route(ApiRoutes.GetChannels, methods=[RequestMethods.GET])
     @login_required
     def do_get_channel():
         session = sess_cr()
@@ -185,7 +185,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         return jsonify(json_channels)
 
-    @app.route("/do/rename_channel", methods=["POST"])
+    @app.route(ApiRoutes.RenameChannel, methods=[RequestMethods.PUT])
     @login_required
     def do_edit_channel():
         """ Handler for settings changing page. """
