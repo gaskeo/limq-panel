@@ -5,6 +5,7 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 import string
+from enum import Enum
 
 from flask import abort, make_response
 
@@ -13,6 +14,24 @@ class RequestMethods:
     GET = 'GET'
     POST = 'POST'
     PUT = 'PUT'
+
+
+class FormMessage(Enum):
+    Ok = ""
+
+    ChannelNameError = "Bad channel name"
+
+    KeyNameError = "Bad key name"
+    PermissionsError = "Wrong permissions"
+    BadChannelId = "Bad channel id"
+
+    AlreadyMixed = 'Already mixed'
+    BadThread = 'Bad thread'
+    BadType = 'Bad thread type'
+
+    EmailError = "Bad email"
+    UsernameError = "Bad username"
+    PasswordError = "Password too short"
 
 
 class ApiRoutes:

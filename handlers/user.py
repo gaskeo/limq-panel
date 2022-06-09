@@ -20,7 +20,8 @@ from forms import RegisterForm, LoginForm, ChangeUsernameForm, \
 
 from storage.user import User
 
-from . import make_abort, confirm_email, ApiRoutes, RequestMethods
+from . import make_abort, confirm_email, ApiRoutes, RequestMethods, \
+    FormMessage
 
 MIN_PATH_LENGTH = 2
 MAX_USERNAME_LENGTH = 32
@@ -37,14 +38,6 @@ class UserResponseJson(TypedDict):
     auth: bool
     user: UserJson
     path: str
-
-
-class FormMessage(Enum):
-    Ok = ""
-    EmailError = "Bad email"
-    UsernameError = "Bad username"
-    UsernameTooLongError = "Username too long"
-    PasswordError = "Password too short"
 
 
 class UserMessage(Enum):

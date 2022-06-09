@@ -19,15 +19,9 @@ from storage.key import Key
 from storage.keygen import channel_identifier
 from storage.user import User
 
-from . import make_abort, ApiRoutes, RequestMethods
+from . import make_abort, ApiRoutes, RequestMethods, FormMessage
 
 MAX_CHANNEL_NAME_LENGTH = 50
-
-
-class FormMessage(Enum):
-    Ok = ""
-    NameError = "Bad channel name"
-    LongNameError = "Channel name too long"
 
 
 class KeysTypesCount(TypedDict):
@@ -124,7 +118,7 @@ def confirm_create_channel_form(
         form: RegisterChannelForm) -> (CreateChannelTuple, FormMessage):
     valid_channel_name = get_valid_channel_name(form.name.data)
     if not valid_channel_name:
-        return CreateChannelTuple(''), FormMessage.LongNameError.value
+        return CreateChannelTuple(''), FormMessage.ChannelNameError.value
 
     return CreateChannelTuple(valid_channel_name), FormMessage.Ok.value
 
@@ -134,7 +128,7 @@ def confirm_edit_channel_form(form: RenameChannelForm
     valid_channel_name = get_valid_channel_name(form.name.data)
     if not valid_channel_name:
         return RenameChannelTuple('', ''), \
-               FormMessage.LongNameError.value
+               FormMessage.ChannelNameError.value
 
     return RenameChannelTuple(form.id.data,
                               valid_channel_name), FormMessage.Ok.value

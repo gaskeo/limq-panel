@@ -19,7 +19,7 @@ from storage.channel import Channel
 from storage.key import Key
 from storage.keygen import generate_key
 
-from . import make_abort, ApiRoutes, RequestMethods
+from . import make_abort, ApiRoutes, RequestMethods, FormMessage
 from handlers.channel import ChannelMessage, confirm_channel
 
 MAX_KEY_NAME_LENGTH = 50
@@ -30,14 +30,6 @@ class KeyMessage(Enum):
     KeyError = "Invalid key"
     MixinError = "Mixin with same channel"
     WrongPermissionError = "Wrong permission"
-
-
-class FormMessage(Enum):
-    Ok = ""
-    NameError = "Bad key name"
-    LongKeyNameError = "Key name too long"
-    PermissionsError = "Wrong permissions"
-    BadChannelId = "Bad channel id"
 
 
 class KeyJson(TypedDict):
@@ -102,7 +94,7 @@ def confirm_create_key_form(form: CreateKeyForm
     valid_key_name = get_valid_key_name(form.name.data)
     if not valid_key_name:
         return CreateKeyTuple('', '', 0), \
-               FormMessage.LongKeyNameError.value
+               FormMessage.KeyNameError.value
 
     perm = get_permission_from_form(form.permissions.data)
     info = form.info_allowed.data or False
