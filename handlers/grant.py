@@ -13,16 +13,21 @@ from flask import Blueprint, request, jsonify
 from flask_login import current_user, login_required
 from http import HTTPStatus
 
+from redis import Redis
+
 from forms import CreateKeyForm, ToggleKeyActiveForm, DeleteKeyForm
 
 from storage.channel import Channel
 from storage.key import Key
 from storage.keygen import generate_key
+from storage.mixin import Mixin
 
 from . import make_abort, ApiRoutes, RequestMethods, FormMessage
 from handlers.channel import ChannelMessage, confirm_channel
 
 MAX_KEY_NAME_LENGTH = 50
+
+REDIS_KEY_KEY = 'limq_isolate_{key}'
 
 
 class KeyMessage(Enum):
@@ -107,7 +112,7 @@ def confirm_create_key_form(form: CreateKeyForm
     ), FormMessage.Ok.value
 
 
-def create_handler(sess_cr: ClassVar, redis) -> Blueprint:
+def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
     """
     A closure for instantiating the handler
     that maintains keys processes.
@@ -144,6 +149,10 @@ def create_handler(sess_cr: ClassVar, redis) -> Blueprint:
 
         session.add(key)
         session.commit()
+        rds_sess.hset(REDIS_KEY_KEY.format(key=key.key),
+                      'permissions', perm)
+        rds_sess.hset(REDIS_KEY_KEY.format(key=key.key),
+                      'channel_id', channel_id)
 
         return jsonify(get_json_key(key))
 
@@ -194,8 +203,11 @@ def create_handler(sess_cr: ClassVar, redis) -> Blueprint:
             return make_abort(error_message, HTTPStatus.FORBIDDEN)
 
         key.toggle_active()
-
         session.commit()
+
+        rds_sess.hset(REDIS_KEY_KEY.format(key=key.key),
+                      'permissions', key.perm)
+
         return jsonify(get_json_key(key))
 
     @app.route(ApiRoutes.DeleteKey, methods=[RequestMethods.POST])
@@ -210,7 +222,7 @@ def create_handler(sess_cr: ClassVar, redis) -> Blueprint:
         key = session.query(Key).filter(Key.key == key_id).first()
 
         if key is None:
-            return make_abort(KeyMessage.KeyError,
+            return make_abort(KeyMessage.KeyError.value,
                               HTTPStatus.UNPROCESSABLE_ENTITY)
 
         channel = session.query(Channel). \
@@ -220,8 +232,14 @@ def create_handler(sess_cr: ClassVar, redis) -> Blueprint:
         if error_message != ChannelMessage.Ok.value:
             return make_abort(error_message, HTTPStatus.FORBIDDEN)
 
+        session.query(Mixin).filter(
+            Mixin.linked_by == key.key).delete()
+
         session.delete(key)
         session.commit()
+
+        rds_sess.delete(REDIS_KEY_KEY.format(key=key.key))
+
         return {'key': key.key}
 
     return app
