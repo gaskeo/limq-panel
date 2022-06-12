@@ -6,6 +6,7 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 from enum import Enum
 from typing import ClassVar
+from redis import Redis
 
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
@@ -15,6 +16,7 @@ from forms import CreateMixinForm, RestrictMxForm
 
 from storage.channel import Channel
 from storage.key import Key
+from storage.mixin import Mixin
 from storage.user import User
 
 from . import make_abort, ApiRoutes, RequestMethods
@@ -62,13 +64,13 @@ def confirm_restrict_mixin_form(form: RestrictMxForm) -> MixinMessage:
     if not form.channel or not form.subject:
         return MixinMessage.BadThread.value
 
-    if form.mixin_type not in ("in", "out"):
+    if form.mixin_type.data not in ("in", "out"):
         return MixinMessage.BadType.value
 
     return MixinMessage.Ok.value
 
 
-def create_handler(sess_cr: ClassVar) -> Blueprint:
+def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
     app = Blueprint("mixin", __name__)
 
     @app.route(ApiRoutes.GetMixins, methods=[RequestMethods.GET])
@@ -81,20 +83,22 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         session = sess_cr()
 
-        channel: Channel = session.query(Channel). \
+        channel = session.query(Channel). \
             filter(Channel.id == channel_id).first()
 
         error_message = confirm_channel(channel, current_user)
         if error_message != ChannelMessage.Ok.value:
             return make_abort(error_message, HTTPStatus.FORBIDDEN)
 
-        mixin_out = \
-            tuple(session.query(Channel)
-                  .filter(Channel.id == id_channel).first()
-                  for id_channel in channel.mixins())
+        mixin_out = (session.query(Channel).filter(
+            Channel.id == mixin.dest_channel).first() for mixin in
+                     session.query(Mixin).filter(
+                         Mixin.source_channel == channel.id).all())
 
-        mixin_in = tuple(session.query(Channel).filter(
-            Channel.forwards.like(f"%{channel.id}%")).all())
+        mixin_in = (session.query(Channel).filter(
+            Channel.id == mixin.source_channel).first() for mixin in
+                    session.query(Mixin).filter(
+                        Mixin.dest_channel == channel.id).all())
 
         mixin_out_json = [
             get_base_json_channel(channel) for channel in mixin_out]
@@ -132,15 +136,19 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         src_channel = session.query(Channel).filter(
             Channel.id == key.chan_id).first()
 
-        mixins = list(src_channel.mixins())
-
-        if channel.id in mixins:
+        mixin = session.query(Mixin).filter(
+            (Mixin.source_channel == src_channel.id) & (
+                    Mixin.dest_channel == channel.id)).first()
+        if mixin:
             return make_abort(MixinMessage.AlreadyMixed.value,
                               HTTPStatus.BAD_REQUEST)
 
-        mixins.append(channel.id)
-        src_channel.update_mixins(mixins)
+        new_mixin = Mixin(source_channel=src_channel.id,
+                          dest_channel=channel.id,
+                          linked_by=key.key)
 
+        # rds_sess.hset()
+        session.add(new_mixin)
         session.commit()
 
         return {"mixin": get_base_json_channel(src_channel)}
@@ -164,6 +172,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
 
         channel_1 = session.query(Channel) \
             .filter(Channel.id == subject).first()
+
         channel_2 = session.query(Channel) \
             .filter(Channel.id == channel_id).first()
 
@@ -173,24 +182,27 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
             return make_abort(error_message, code)
 
         if form.mixin_type == "out":
-            mx = list(channel_1.mixins())
-            if channel_2.id not in mx:
+            mixin = session.query(Mixin).filter(
+                (Mixin.source_channel == channel_2.id) & (
+                            Mixin.dest_channel == channel_1.id)).first()
+            print(mixin)
+            if not mixin:
                 return make_abort(MixinMessage.BadThread.value,
                                   HTTPStatus.BAD_REQUEST)
 
-            mx.remove(channel_2.id)
-            channel_1.update_mixins(mx)
+            session.delete(mixin)
             session.commit()
 
         else:
-            mx = list(channel_2.mixins())
+            mixin = session.query(Mixin).filter(
+                (Mixin.source_channel == channel_1.id) & (
+                        Mixin.dest_channel == channel_2.id)).first()
 
-            if channel_1.id not in mx:
+            if not mixin:
                 return make_abort(MixinMessage.BadThread.value,
                                   HTTPStatus.BAD_REQUEST)
 
-            mx.remove(channel_1.id)
-            channel_2.update_mixins(mx)
+            session.delete(mixin)
             session.commit()
 
         return {'mixin': channel_2.id}

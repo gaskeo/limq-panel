@@ -15,6 +15,7 @@ from handlers import index, grant, \
     error_handlers, user, channel, mixin
 
 from storage.db_session import base_init
+from redis_storage.redis_session import base_init as redis_base_init
 
 # Flask init
 app = Flask(__name__)
@@ -26,13 +27,16 @@ app.config["SECRET_KEY"] = os.getenv('secret_key')
 
 # Database init
 SessObject = base_init()
+RedisSessObject = redis_base_init()
 
 # Blueprints registration
 app.register_blueprint(index.create_handler())
 app.register_blueprint(channel.create_handler(SessObject))
 app.register_blueprint(user.create_handler(SessObject, login_manager))
-app.register_blueprint(mixin.create_handler(SessObject))
-app.register_blueprint(grant.create_handler(SessObject))
+app.register_blueprint(mixin.create_handler(
+    SessObject, RedisSessObject))
+app.register_blueprint(grant.create_handler(
+    SessObject, RedisSessObject))
 app.register_blueprint(helpdesk.create_handler())
 app.register_error_handler(401, error_handlers.error_401)
 

@@ -107,7 +107,7 @@ def confirm_create_key_form(form: CreateKeyForm
     ), FormMessage.Ok.value
 
 
-def create_handler(sess_cr: ClassVar) -> Blueprint:
+def create_handler(sess_cr: ClassVar, redis) -> Blueprint:
     """
     A closure for instantiating the handler
     that maintains keys processes.

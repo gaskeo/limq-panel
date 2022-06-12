@@ -1,6 +1,6 @@
-flask
-sqlalchemy
-wtforms
+flask~=2.1.2
+sqlalchemy~=1.4.37
+wtforms~=3.0.1
 flask_wtf
 email_validator
 mysqlclient
@@ -8,3 +8,5 @@ gunicorn
 gevent
 flask_login
 psycopg2
+Werkzeug~=2.1.2
+redis~=4.3.3

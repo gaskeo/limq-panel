@@ -118,7 +118,8 @@ def confirm_create_channel_form(
         form: RegisterChannelForm) -> (CreateChannelTuple, FormMessage):
     valid_channel_name = get_valid_channel_name(form.name.data)
     if not valid_channel_name:
-        return CreateChannelTuple(''), FormMessage.ChannelNameError.value
+        return (CreateChannelTuple(''),
+                FormMessage.ChannelNameError.value)
 
     return CreateChannelTuple(valid_channel_name), FormMessage.Ok.value
 
