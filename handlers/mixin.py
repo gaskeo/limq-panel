@@ -24,6 +24,8 @@ from handlers.channel import confirm_channel, \
     ChannelMessage, get_base_json_channel
 from handlers.grant import KeyMessage
 
+REDIS_MIXIN_KEY = 'limq_mixin_{channel_id}'
+
 
 class MixinMessage(Enum):
     Ok = ''
@@ -147,9 +149,9 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
                           dest_channel=channel.id,
                           linked_by=key.key)
 
-        # rds_sess.hset()
         session.add(new_mixin)
         session.commit()
+        rds_sess.rpush(REDIS_MIXIN_KEY.format(channel_id=src_channel.id), channel.id)
 
         return {"mixin": get_base_json_channel(src_channel)}
 
@@ -182,13 +184,15 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
             return make_abort(error_message, code)
 
         if form.mixin_type.data == "out":
-            mixin = session.query(Mixin).filter(
-                (Mixin.source_channel == channel_1.id) & (
-                        Mixin.dest_channel == channel_2.id)).first()
+            source_channel_id = channel_1.id
+            dest_channel_id = channel_2.id
         else:
-            mixin = session.query(Mixin).filter(
-                (Mixin.source_channel == channel_2.id) & (
-                        Mixin.dest_channel == channel_1.id)).first()
+            source_channel_id = channel_2.id
+            dest_channel_id = channel_1.id
+
+        mixin = session.query(Mixin).filter(
+            (Mixin.source_channel == source_channel_id) & (
+                    Mixin.dest_channel == dest_channel_id)).first()
 
         if not mixin:
             return make_abort(MixinMessage.BadThread.value,
@@ -196,6 +200,9 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
 
         session.delete(mixin)
         session.commit()
+        rds_sess.lrem(
+            REDIS_MIXIN_KEY.format(channel_id=source_channel_id), 1,
+            dest_channel_id)
 
         return {'mixin': channel_2.id}
 
