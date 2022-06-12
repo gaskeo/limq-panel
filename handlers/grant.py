@@ -121,7 +121,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     def do_grant():
         form = CreateKeyForm(request.form)
 
-        (channel_id, name, perm, info_allowed), message = \
+        (channel_id, name, perm), message = \
             confirm_create_key_form(form)
 
         if message != FormMessage.Ok.value:
