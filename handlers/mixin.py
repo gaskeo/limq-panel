@@ -180,12 +180,10 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
             confirm_channels(channel_1, channel_2, current_user)
         if error_message != ChannelMessage.Ok.value:
             return make_abort(error_message, code)
-
-        if form.mixin_type == "out":
+        if form.mixin_type.data == "out":
             mixin = session.query(Mixin).filter(
-                (Mixin.source_channel == channel_2.id) & (
-                            Mixin.dest_channel == channel_1.id)).first()
-            print(mixin)
+                (Mixin.source_channel == channel_1.id) & (
+                            Mixin.dest_channel == channel_2.id)).first()
             if not mixin:
                 return make_abort(MixinMessage.BadThread.value,
                                   HTTPStatus.BAD_REQUEST)
@@ -195,8 +193,8 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
 
         else:
             mixin = session.query(Mixin).filter(
-                (Mixin.source_channel == channel_1.id) & (
-                        Mixin.dest_channel == channel_2.id)).first()
+                (Mixin.source_channel == channel_2.id) & (
+                        Mixin.dest_channel == channel_1.id)).first()
 
             if not mixin:
                 return make_abort(MixinMessage.BadThread.value,
