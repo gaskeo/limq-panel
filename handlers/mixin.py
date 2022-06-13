@@ -191,9 +191,17 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
 
         session.add(new_mixin)
         session.commit()
-        rds_sess.rpush(
-            REDIS_MIXIN_KEY.format(channel_id=src_channel.id),
-            channel.id)
+
+        mixins = rds_sess.get(
+            REDIS_MIXIN_KEY.format(channel_id=src_channel.id)) or ''
+        if not mixins:
+            mixins = new_mixin
+        else:
+            mixins = mixins.split(',')
+            mixins.append(new_mixin)
+            mixins = ','.join(mixins)
+        rds_sess.set(
+            REDIS_MIXIN_KEY.format(channel_id=src_channel.id), mixins)
 
         return {"mixin": get_base_json_channel(src_channel)}
 
@@ -242,9 +250,16 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
 
         session.delete(mixin)
         session.commit()
-        rds_sess.lrem(
-            REDIS_MIXIN_KEY.format(channel_id=source_channel_id), 1,
-            dest_channel_id)
+
+        mixins = rds_sess.get(
+            REDIS_MIXIN_KEY.format(channel_id=source_channel_id)) or ''
+        if mixins:
+            mixins = mixins.split(',')
+            mixins.remove(dest_channel_id)
+            mixins = ','.join(mixins)
+        rds_sess.set(
+            REDIS_MIXIN_KEY.format(channel_id=source_channel_id),
+            mixins)
 
         return {'mixin': channel_2.id}
 
