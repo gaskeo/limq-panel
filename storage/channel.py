@@ -26,6 +26,6 @@ class Channel(ModelBase):
                            primary_key=True,
                            unique=True)
 
-    owner_id = sqlalchemy.Column(sqlalchemy.Integer,
+    owner_id = sqlalchemy.Column(sqlalchemy.String,
                                  sqlalchemy.ForeignKey("users.id"),
                                  nullable=False)

@@ -16,7 +16,7 @@ from forms import RegisterChannelForm, RenameChannelForm
 
 from storage.channel import Channel
 from storage.key import Key
-from storage.keygen import channel_identifier
+from storage.keygen import generate_channel_id
 from storage.user import User
 
 from . import make_abort, ApiRoutes, RequestMethods, FormMessage
@@ -158,7 +158,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         session = sess_cr()
         channel = Channel(
             name=channel_name,
-            id=channel_identifier(),
+            id=generate_channel_id(),
             owner_id=current_user.id
         )
 

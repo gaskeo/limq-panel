@@ -5,8 +5,9 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 from enum import Enum
-from typing import ClassVar
+from typing import ClassVar, Iterable, List
 from redis import Redis
+from queue import Queue
 
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
@@ -27,11 +28,21 @@ from handlers.grant import KeyMessage
 REDIS_MIXIN_KEY = 'limq_mixin_{channel_id}'
 
 
+class ChannelIdQueue(Queue):
+    def __init__(self):
+        super().__init__()
+
+    def put_several(self, items: Iterable):
+        for item in items:
+            self.put(item)
+
+
 class MixinMessage(Enum):
     Ok = ''
     AlreadyMixed = 'Already mixed'
     BadThread = 'Bad thread'
     BadType = 'Bad thread type'
+    CircleError = 'You want to make a circle'
 
 
 def confirm_key_on_mixin(key: Key, channel: Channel) -> KeyMessage:
@@ -70,6 +81,31 @@ def confirm_restrict_mixin_form(form: RestrictMxForm) -> MixinMessage:
         return MixinMessage.BadType.value
 
     return MixinMessage.Ok.value
+
+
+def check_circle_mixin(session, source_id: str, dest_id: str) -> bool:
+    def get_dest_ids(mixins: Iterable[Mixin]) -> List[str]:
+        return [mixin.dest_channel for mixin in mixins]
+
+    mixins_out_dest = session.query(Mixin).filter(
+        Mixin.source_channel == dest_id).all()
+
+    if not mixins_out_dest:
+        return True
+    queue = ChannelIdQueue()
+    queue.put_several(get_dest_ids(mixins_out_dest))
+
+    while not queue.empty():
+        next_id = queue.get()
+        if next_id == source_id:
+            return False
+
+        mixins_out = session.query(Mixin).filter(
+            Mixin.source_channel == next_id).all()
+
+        if mixins_out:
+            queue.put_several(get_dest_ids(mixins_out))
+    return True
 
 
 def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
@@ -145,13 +181,19 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
             return make_abort(MixinMessage.AlreadyMixed.value,
                               HTTPStatus.BAD_REQUEST)
 
+        if not check_circle_mixin(session, src_channel.id, channel.id):
+            return make_abort(MixinMessage.CircleError.value,
+                              HTTPStatus.BAD_REQUEST)
+
         new_mixin = Mixin(source_channel=src_channel.id,
                           dest_channel=channel.id,
                           linked_by=key.key)
 
         session.add(new_mixin)
         session.commit()
-        rds_sess.rpush(REDIS_MIXIN_KEY.format(channel_id=src_channel.id), channel.id)
+        rds_sess.rpush(
+            REDIS_MIXIN_KEY.format(channel_id=src_channel.id),
+            channel.id)
 
         return {"mixin": get_base_json_channel(src_channel)}
 

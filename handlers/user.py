@@ -17,6 +17,7 @@ from http import HTTPStatus
 
 from forms import RegisterForm, LoginForm, ChangeUsernameForm, \
     ChangeEmailForm, ChangePasswordForm
+from storage.keygen import generate_user_id
 
 from storage.user import User
 
@@ -29,7 +30,7 @@ MIN_PASSWORD_LENGTH = 8
 
 
 class UserJson(TypedDict):
-    id: int
+    id: str
     username: str
     email: str
 
@@ -244,6 +245,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
         # noinspection PyArgumentList
         user = User(
+            id=generate_user_id(),
             email=email,
             username=username
         )

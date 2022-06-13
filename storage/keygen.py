@@ -12,8 +12,11 @@ import string
 from secrets import choice
 from typing import Iterable
 
-LENGTH = 32
+USER_ID_LENGTH = 32
+KEY_ID_LENGTH = 32
 CHANNEL_ID_LENGTH = 16
+
+SALT_LENGTH = 8
 
 CHARS = string.ascii_letters + string.digits
 HEX = string.digits + "abcdef"
@@ -25,10 +28,17 @@ def get_random_string(chars: Iterable, k: int = 1) -> str:
 
 # Token length is 32 A-Za-z0-9 symbols.
 def generate_key() -> str:
-    return get_random_string(CHARS, k=LENGTH)
+    return get_random_string(CHARS, k=KEY_ID_LENGTH)
+
+
+def generate_user_id() -> str:
+    return get_random_string(CHARS, k=USER_ID_LENGTH)
+
+
+def generate_salt() -> str:
+    return get_random_string(CHARS, k=SALT_LENGTH)
 
 
 # Generates channel's identifier
-def channel_identifier() -> str:
+def generate_channel_id() -> str:
     return get_random_string(HEX, k=CHANNEL_ID_LENGTH)
-
