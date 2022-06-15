@@ -195,10 +195,10 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         mixins = rds_sess.get(
             REDIS_MIXIN_KEY.format(channel_id=src_channel.id)) or ''
         if not mixins:
-            mixins = new_mixin
+            mixins = new_mixin.dest_channel
         else:
             mixins = mixins.split(',')
-            mixins.append(new_mixin)
+            mixins.append(new_mixin.dest_channel)
             mixins = ','.join(mixins)
         rds_sess.set(
             REDIS_MIXIN_KEY.format(channel_id=src_channel.id), mixins)
