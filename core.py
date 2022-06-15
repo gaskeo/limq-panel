@@ -41,4 +41,4 @@ app.register_blueprint(helpdesk.create_handler())
 app.register_error_handler(401, error_handlers.error_401)
 
 if __name__ == "__main__":
-    app.run(port=8077, host="0.0.0.0")
+    app.run(port=5000, host="0.0.0.0")
