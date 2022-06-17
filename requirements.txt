@@ -3,7 +3,6 @@ sqlalchemy~=1.4.37
 wtforms~=3.0.1
 flask_wtf
 email_validator
-mysqlclient
 gunicorn
 gevent
 flask_login
