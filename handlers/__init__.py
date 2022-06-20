@@ -5,7 +5,6 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 import string
-from enum import Enum
 from typing import TypedDict
 
 from flask import abort, make_response
@@ -42,7 +41,7 @@ class ApiRoutes:
 
 class AbortResponse(TypedDict):
     ok: bool
-    error_code: int
+    code: int
     description: str
 
 

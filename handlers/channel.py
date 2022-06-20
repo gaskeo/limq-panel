@@ -149,7 +149,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         if error:
             return make_abort(
                 AbortResponse(ok=False,
-                              error_code=error.code,
+                              code=error.code,
                               description=error.description),
                 HTTPStatus.UNPROCESSABLE_ENTITY)
 
@@ -189,7 +189,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         if error:
             return make_abort(
                 AbortResponse(ok=False,
-                              error_code=error.code,
+                              code=error.code,
                               description=error.description),
                 HTTPStatus.UNPROCESSABLE_ENTITY)
 
@@ -203,7 +203,7 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), HTTPStatus.FORBIDDEN)
 

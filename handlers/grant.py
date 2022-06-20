@@ -126,7 +126,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if error:
             return make_abort(
                 AbortResponse(ok=False,
-                              error_code=error.code,
+                              code=error.code,
                               description=error.description),
                 HTTPStatus.UNPROCESSABLE_ENTITY)
 
@@ -139,7 +139,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if error:
             return make_abort(
                 AbortResponse(ok=False,
-                              error_code=error.code,
+                              code=error.code,
                               description=error.description),
                 HTTPStatus.FORBIDDEN)
 
@@ -166,7 +166,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
             return make_abort(
                 AbortResponse(
                     ok=False,
-                    error_code=ChannelNotExistError.code,
+                    code=ChannelNotExistError.code,
                     description=ChannelNotExistError.description),
                 HTTPStatus.UNPROCESSABLE_ENTITY)
 
@@ -179,7 +179,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), HTTPStatus.FORBIDDEN)
 
@@ -203,7 +203,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if not key:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=BadKeyError.code,
+                code=BadKeyError.code,
                 description=BadKeyError.description
             ),
                 HTTPStatus.UNPROCESSABLE_ENTITY)
@@ -215,7 +215,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), HTTPStatus.FORBIDDEN)
 
@@ -241,7 +241,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if key is None:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=BadKeyError.code,
+                code=BadKeyError.code,
                 description=BadKeyError.description
             ),
                 HTTPStatus.UNPROCESSABLE_ENTITY)
@@ -253,7 +253,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), HTTPStatus.FORBIDDEN)
 

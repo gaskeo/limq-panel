@@ -114,7 +114,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if not channel_id:
             make_abort(AbortResponse(
                 ok=False,
-                error_code=ChannelNotExistError.code,
+                code=ChannelNotExistError.code,
                 description=ChannelNotExistError.description
             ),
                 HTTPStatus.UNPROCESSABLE_ENTITY)
@@ -128,7 +128,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), HTTPStatus.FORBIDDEN)
 
@@ -169,7 +169,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), HTTPStatus.FORBIDDEN)
 
@@ -179,7 +179,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), HTTPStatus.FORBIDDEN)
 
@@ -192,7 +192,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if mixin:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=AlreadyMixedError.code,
+                code=AlreadyMixedError.code,
                 description=AlreadyMixedError.description
             ),
                 HTTPStatus.BAD_REQUEST)
@@ -200,7 +200,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if not check_circle_mixin(session, src_channel.id, channel.id):
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=CircleMixinError.code,
+                code=CircleMixinError.code,
                 description=CircleMixinError.description
             ),
                 HTTPStatus.BAD_REQUEST)
@@ -236,7 +236,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ),
                 HTTPStatus.UNPROCESSABLE_ENTITY)
@@ -257,7 +257,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), code)
 
@@ -275,7 +275,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         if not mixin:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=BadThreadError.code,
+                code=BadThreadError.code,
                 description=BadThreadError.description
             ),
                 HTTPStatus.BAD_REQUEST)

@@ -228,7 +228,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), HTTPStatus.UNPROCESSABLE_ENTITY)
 
@@ -236,7 +236,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
                 User.email == email).first():
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=EmailExistError.code,
+                code=EmailExistError.code,
                 description=EmailExistError.description
             ),
                 HTTPStatus.CONFLICT)
@@ -263,7 +263,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ),
                 HTTPStatus.UNPROCESSABLE_ENTITY)
@@ -276,7 +276,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), HTTPStatus.FORBIDDEN)
 
@@ -296,7 +296,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         if not username:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=UsernameError.code,
+                code=UsernameError.code,
                 description=UsernameError.description
             ),
                 HTTPStatus.UNPROCESSABLE_ENTITY)
@@ -308,7 +308,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         if not user:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=BadUserError.code,
+                code=BadUserError.code,
                 description=BadUserError.description
             ), HTTPStatus.UNPROCESSABLE_ENTITY)
 
@@ -327,7 +327,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), HTTPStatus.UNPROCESSABLE_ENTITY)
 
@@ -340,7 +340,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ),
                 HTTPStatus.FORBIDDEN)
@@ -348,7 +348,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         if session.query(User).filter(User.email == new_email).first():
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=EmailExistError.code,
+                code=EmailExistError.code,
                 description=EmailExistError.description
             ),
                 HTTPStatus.CONFLICT)
@@ -381,7 +381,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         if error:
             return make_abort(AbortResponse(
                 ok=False,
-                error_code=error.code,
+                code=error.code,
                 description=error.description
             ), HTTPStatus.FORBIDDEN)
 
