@@ -8,7 +8,6 @@
 
 import sqlalchemy
 
-from .channel import Channel
 from .db_session import ModelBase
 
 

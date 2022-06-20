@@ -8,7 +8,7 @@
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, \
-    SubmitField, HiddenField, RadioField
+    HiddenField, RadioField
 from wtforms.validators import DataRequired, Length, Email
 
 

@@ -4,8 +4,8 @@
 #  | |      | | | __| | "_ \  | | | | | | | "_ ` _ \  | |\/| | |  | |
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
+
 from base64 import b64decode
-from enum import Enum
 from binascii import Error as DecErr
 
 from typing import ClassVar, TypedDict, NamedTuple
@@ -22,7 +22,9 @@ from storage.keygen import generate_user_id
 from storage.user import User
 
 from . import make_abort, confirm_email, ApiRoutes, RequestMethods, \
-    FormMessage
+    AbortResponse
+from .errors import UserError, BadUserError, PasswordError,\
+    EmailError, UsernameError, EmailExistError
 
 MIN_PATH_LENGTH = 2
 MAX_USERNAME_LENGTH = 32
@@ -39,13 +41,6 @@ class UserResponseJson(TypedDict):
     auth: bool
     user: UserJson
     path: str
-
-
-class UserMessage(Enum):
-    Ok = ""
-    EmailExistError = "User with this email already exists"
-    BadUserError = "Bad user"
-    BadPasswordError = "Bad password"
 
 
 class RegisterTuple(NamedTuple):
@@ -89,14 +84,14 @@ def get_user_json(user: User) -> UserJson:
     )
 
 
-def confirm_user(user: User, password: str) -> UserMessage:
+def confirm_user(user: User, password: str) -> UserError or None:
     if not user:
-        return UserMessage.BadUserError.value
+        return BadUserError()
 
     if not user.check_password(password):
-        return UserMessage.BadPasswordError.value
+        return PasswordError()
 
-    return UserMessage.Ok.value
+    return
 
 
 def get_valid_email(email: str or None) -> str:
@@ -125,72 +120,67 @@ def get_valid_password(password: str or None) -> str:
 
 
 def confirm_register_form(form: RegisterForm) -> \
-        (RegisterTuple, FormMessage):
+        (RegisterTuple, UserError or None):
     valid_email = get_valid_email(form.email.data)
     if not valid_email:
-        return RegisterTuple('', '', ''), FormMessage.EmailError.value
+        return RegisterTuple('', '', ''), EmailError()
 
     valid_username = get_valid_username(form.username.data)
     if not valid_username:
-        return RegisterTuple('', '', ''), \
-               FormMessage.UsernameError.value
+        return RegisterTuple('', '', ''), UsernameError()
 
     valid_password = get_valid_password(form.password.data)
     if not valid_password:
-        return RegisterTuple('', '', ''), \
-               FormMessage.PasswordError.value
+        return RegisterTuple('', '', ''), PasswordError()
 
     return RegisterTuple(
         email=valid_email,
         username=valid_username,
-        password=valid_password), FormMessage.Ok.value
+        password=valid_password), None
 
 
-def confirm_login_form(form: LoginForm) -> (LoginTuple, FormMessage):
+def confirm_login_form(form: LoginForm) -> \
+        (LoginTuple, UserError or None):
     valid_email = get_valid_email(form.email.data)
     if not valid_email:
-        return LoginTuple('', ''), FormMessage.EmailError.value
+        return LoginTuple('', ''), EmailError()
 
     valid_password = get_valid_password(form.password.data)
     if not valid_password:
-        return LoginTuple('', ''), \
-               FormMessage.PasswordError.value
+        return LoginTuple('', ''), PasswordError()
 
     return LoginTuple(
         email=valid_email,
-        password=valid_password), FormMessage.Ok.value
+        password=valid_password), None
 
 
 def confirm_change_email_form(form: ChangeEmailForm) -> \
-        (ChangeEmailTuple, FormMessage):
+        (ChangeEmailTuple, UserError or None):
     valid_email = get_valid_email(form.new_email.data)
     if not valid_email:
-        return ChangeEmailTuple('', ''), FormMessage.EmailError.value
+        return ChangeEmailTuple('', ''), EmailError()
 
     valid_password = get_valid_password(form.password.data)
     if not valid_password:
-        return ChangeEmailTuple('', ''), \
-               FormMessage.PasswordError.value
+        return ChangeEmailTuple('', ''), PasswordError()
 
     return ChangeEmailTuple(
         new_email=valid_email,
-        password=valid_password), FormMessage.Ok.value
+        password=valid_password), None
 
 
 def confirm_change_password_form(form: ChangePasswordForm) -> \
-        (ChangePasswordTuple, FormMessage):
+        (ChangePasswordTuple, UserError or None):
     valid_old_password = get_valid_password(form.old_password.data)
     if not valid_old_password:
-        return ChangePasswordTuple('', ''), \
-               FormMessage.PasswordError.value
+        return ChangePasswordTuple('', ''), PasswordError()
 
     valid_new_password = get_valid_password(form.password.data)
     if not valid_new_password:
-        return ChangePasswordTuple('', ''), \
-               FormMessage.PasswordError.value
+        return ChangePasswordTuple('', ''), PasswordError()
     return ChangePasswordTuple(
         old_password=valid_old_password,
-        new_password=valid_new_password), FormMessage.Ok.value
+        new_password=valid_new_password), None
 
 
 def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
@@ -232,16 +222,24 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         form = RegisterForm()
 
         session = sess_cr()
-        (email, username, password), message = \
+        (email, username, password), error = \
             confirm_register_form(form)
 
-        if message != FormMessage.Ok.value:
-            return make_abort(message, HTTPStatus.UNPROCESSABLE_ENTITY)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), HTTPStatus.UNPROCESSABLE_ENTITY)
 
         if session.query(User).filter(
                 User.email == email).first():
-            return make_abort(UserMessage.EmailExistError.value,
-                              HTTPStatus.CONFLICT)
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=EmailExistError.code,
+                description=EmailExistError.description
+            ),
+                HTTPStatus.CONFLICT)
 
         # noinspection PyArgumentList
         user = User(
@@ -261,18 +259,26 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         """ Handler for login """
         form = LoginForm()
 
-        (email, password), message = confirm_login_form(form)
-        if message != FormMessage.Ok.value:
-            return make_abort(message,
-                              HTTPStatus.UNPROCESSABLE_ENTITY)
+        (email, password), error = confirm_login_form(form)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ),
+                HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
         user = session.query(
             User).filter(User.email == email).first()
 
-        message = confirm_user(user, password)
-        if message != UserMessage.Ok.value:
-            return make_abort(message, HTTPStatus.FORBIDDEN)
+        error = confirm_user(user, password)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), HTTPStatus.FORBIDDEN)
 
         login_user(user)
         path = get_path(request.args.get("path", ''))
@@ -288,15 +294,23 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
         username = get_valid_username(form.new_username.data)
         if not username:
-            return make_abort(FormMessage.UsernameError.value,
-                              HTTPStatus.UNPROCESSABLE_ENTITY)
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=UsernameError.code,
+                description=UsernameError.description
+            ),
+                HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
 
         user = session.query(User).filter(
             User.id == current_user.id).first()
         if not user:
-            return make_abort(UserMessage.BadUserError.value)
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=BadUserError.code,
+                description=BadUserError.description
+            ), HTTPStatus.UNPROCESSABLE_ENTITY)
 
         user.username = username
         session.commit()
@@ -309,23 +323,35 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         """ E-mail changing handler. """
         form = ChangeEmailForm()
 
-        (new_email, password), message = confirm_change_email_form(form)
-        if message != FormMessage.Ok.value:
-            return make_abort(message, HTTPStatus.UNPROCESSABLE_ENTITY)
+        (new_email, password), error = confirm_change_email_form(form)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
 
         user = session.query(User).filter(
             User.id == current_user.id).first()
 
-        message = confirm_user(user, password)
-        if message != UserMessage.Ok.value:
-            return make_abort(message,
-                              HTTPStatus.FORBIDDEN)
+        error = confirm_user(user, password)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ),
+                HTTPStatus.FORBIDDEN)
 
         if session.query(User).filter(User.email == new_email).first():
-            return make_abort(UserMessage.EmailExistError.value,
-                              HTTPStatus.CONFLICT)
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=EmailExistError.code,
+                description=EmailExistError.description
+            ),
+                HTTPStatus.CONFLICT)
 
         user.email = new_email
         session.commit()
@@ -351,9 +377,13 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         user = session.query(User).filter(
             User.id == current_user.id).first()
 
-        message = confirm_user(user, old_password)
-        if message != UserMessage.Ok.value:
-            return make_abort(message, HTTPStatus.FORBIDDEN)
+        error = confirm_user(user, old_password)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), HTTPStatus.FORBIDDEN)
 
         user.set_password(new_password)
 

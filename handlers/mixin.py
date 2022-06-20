@@ -4,7 +4,7 @@
 #  | |      | | | __| | "_ \  | | | | | | | "_ ` _ \  | |\/| | |  | |
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
-from enum import Enum
+
 from typing import ClassVar, Iterable, List
 from redis import Redis
 from queue import Queue
@@ -20,10 +20,12 @@ from storage.key import Key
 from storage.mixin import Mixin
 from storage.user import User
 
-from . import make_abort, ApiRoutes, RequestMethods
-from handlers.channel import confirm_channel, \
-    ChannelMessage, get_base_json_channel
-from handlers.grant import KeyMessage
+from . import make_abort, ApiRoutes, RequestMethods, AbortResponse
+from handlers.channel import confirm_channel, get_base_json_channel
+from .errors import MixinError, GrantError, BadKeyError, \
+    SelfMixinError, KeyPermissionsError, ChannelError, \
+    ChannelNotExistError, BadThreadError, BadKeyTypeError, \
+    AlreadyMixedError, CircleMixinError
 
 REDIS_MIXIN_KEY = 'limq_mixin_{channel_id}'
 
@@ -37,50 +39,44 @@ class ChannelIdQueue(Queue):
             self.put(item)
 
 
-class MixinMessage(Enum):
-    Ok = ''
-    AlreadyMixed = 'Already mixed'
-    BadThread = 'Bad thread'
-    BadType = 'Bad thread type'
-    CircleError = 'You want to make a circle'
-
-
-def confirm_key_on_mixin(key: Key, channel: Channel) -> KeyMessage:
+def confirm_key_on_mixin(key: Key, channel: Channel) -> \
+        MixinError or GrantError:
     if key is None or not key.active():
-        return KeyMessage.KeyError.value
+        return BadKeyError()
 
     if key.chan_id == channel.id:
-        return KeyMessage.MixinError.value
+        return SelfMixinError()
 
     if not key.can_read():
-        return KeyMessage.WrongPermissionError.value
+        return KeyPermissionsError()
 
-    return KeyMessage.Ok.value
+    return
 
 
 StatusCode = int
 
 
 def confirm_channels(channel_1: Channel, channel_2: Channel, user: User,
-                     ) -> (ChannelMessage, StatusCode):
-    error_message = confirm_channel(channel_1, user)
-    if error_message != ChannelMessage.Ok.value:
-        return error_message, HTTPStatus.FORBIDDEN
+                     ) -> (ChannelError or None, StatusCode):
+    error = confirm_channel(channel_1, user)
+    if error:
+        return error, HTTPStatus.FORBIDDEN
 
     if channel_2 is None:
-        return ChannelMessage.ChannelNotExistError.value, \
-               HTTPStatus.BAD_REQUEST
-    return ChannelMessage.Ok.value, 200
+        return ChannelNotExistError(), HTTPStatus.BAD_REQUEST
+
+    return None, 200
 
 
-def confirm_restrict_mixin_form(form: RestrictMxForm) -> MixinMessage:
+def confirm_restrict_mixin_form(form: RestrictMxForm) -> \
+        MixinError or None:
     if not form.channel or not form.subject:
-        return MixinMessage.BadThread.value
+        return BadThreadError()
 
     if form.mixin_type.data not in ("in", "out"):
-        return MixinMessage.BadType.value
+        return BadKeyTypeError()
 
-    return MixinMessage.Ok.value
+    return
 
 
 def check_circle_mixin(session, source_id: str, dest_id: str) -> bool:
@@ -116,17 +112,25 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
     def do_get_mixins():
         channel_id = request.args.get('channel_id', '')
         if not channel_id:
-            make_abort(ChannelMessage.ChannelNotExistError,
-                       HTTPStatus.UNPROCESSABLE_ENTITY)
+            make_abort(AbortResponse(
+                ok=False,
+                error_code=ChannelNotExistError.code,
+                description=ChannelNotExistError.description
+            ),
+                HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
 
         channel = session.query(Channel). \
             filter(Channel.id == channel_id).first()
 
-        error_message = confirm_channel(channel, current_user)
-        if error_message != ChannelMessage.Ok.value:
-            return make_abort(error_message, HTTPStatus.FORBIDDEN)
+        error = confirm_channel(channel, current_user)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), HTTPStatus.FORBIDDEN)
 
         mixin_out = (session.query(Channel).filter(
             Channel.id == mixin.dest_channel).first() for mixin in
@@ -161,15 +165,23 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         channel = session.query(Channel).filter(
             Channel.id == channel).first()
 
-        error_message = confirm_channel(channel, current_user)
-        if error_message != ChannelMessage.Ok.value:
-            return make_abort(error_message, HTTPStatus.FORBIDDEN)
+        error = confirm_channel(channel, current_user)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), HTTPStatus.FORBIDDEN)
 
         key = session.query(Key).filter(Key.key == mix_key).first()
-        error_message = confirm_key_on_mixin(key, channel)
+        error = confirm_key_on_mixin(key, channel)
 
-        if error_message != KeyMessage.Ok.value:
-            return make_abort(error_message, HTTPStatus.FORBIDDEN)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), HTTPStatus.FORBIDDEN)
 
         src_channel = session.query(Channel).filter(
             Channel.id == key.chan_id).first()
@@ -178,12 +190,20 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
             (Mixin.source_channel == src_channel.id) & (
                     Mixin.dest_channel == channel.id)).first()
         if mixin:
-            return make_abort(MixinMessage.AlreadyMixed.value,
-                              HTTPStatus.BAD_REQUEST)
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=AlreadyMixedError.code,
+                description=AlreadyMixedError.description
+            ),
+                HTTPStatus.BAD_REQUEST)
 
         if not check_circle_mixin(session, src_channel.id, channel.id):
-            return make_abort(MixinMessage.CircleError.value,
-                              HTTPStatus.BAD_REQUEST)
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=CircleMixinError.code,
+                description=CircleMixinError.description
+            ),
+                HTTPStatus.BAD_REQUEST)
 
         new_mixin = Mixin(source_channel=src_channel.id,
                           dest_channel=channel.id,
@@ -212,10 +232,14 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
 
         form = RestrictMxForm()
 
-        error_message = confirm_restrict_mixin_form(form)
-        if error_message != MixinMessage.Ok.value:
-            return make_abort(error_message,
-                              HTTPStatus.UNPROCESSABLE_ENTITY)
+        error = confirm_restrict_mixin_form(form)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ),
+                HTTPStatus.UNPROCESSABLE_ENTITY)
 
         subject = form.subject.data
         channel_id = form.channel.data
@@ -228,10 +252,14 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         channel_2 = session.query(Channel) \
             .filter(Channel.id == channel_id).first()
 
-        error_message, code = \
+        error, code = \
             confirm_channels(channel_1, channel_2, current_user)
-        if error_message != ChannelMessage.Ok.value:
-            return make_abort(error_message, code)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), code)
 
         if form.mixin_type.data == "out":
             source_channel_id = channel_1.id
@@ -245,8 +273,12 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
                     Mixin.dest_channel == dest_channel_id)).first()
 
         if not mixin:
-            return make_abort(MixinMessage.BadThread.value,
-                              HTTPStatus.BAD_REQUEST)
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=BadThreadError.code,
+                description=BadThreadError.description
+            ),
+                HTTPStatus.BAD_REQUEST)
 
         session.delete(mixin)
         session.commit()

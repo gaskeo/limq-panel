@@ -5,7 +5,6 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
-from enum import Enum
 from typing import ClassVar, TypedDict, NamedTuple, Iterable
 
 from flask import Blueprint, jsonify
@@ -19,7 +18,9 @@ from storage.key import Key
 from storage.keygen import generate_channel_id
 from storage.user import User
 
-from . import make_abort, ApiRoutes, RequestMethods, FormMessage
+from . import make_abort, ApiRoutes, RequestMethods, AbortResponse
+from .errors import ChannelError, ChannelNotExistError, \
+    NotChannelOwnerError, ChannelNameError
 
 MAX_CHANNEL_NAME_LENGTH = 50
 
@@ -39,12 +40,6 @@ class ChannelJson(TypedDict):
     channel_name: str
     read_keys: KeysTypesCount
     write_keys: KeysTypesCount
-
-
-class ChannelMessage(Enum):
-    Ok = ""
-    ChannelNotExistError = "Channel doesn't exist"
-    NotOwnerError = "No access to this channel"
 
 
 class CreateChannelTuple(NamedTuple):
@@ -104,35 +99,35 @@ def get_valid_channel_name(channel_name: str or None) -> str:
 
 
 def confirm_channel(channel: Channel or None,
-                    user: User) -> ChannelMessage:
+                    user: User) -> ChannelError or None:
     if not channel:
-        return ChannelMessage.ChannelNotExistError.value
+        return ChannelNotExistError()
 
     if channel.owner_id != user.id:
-        return ChannelMessage.NotOwnerError.value
+        return NotChannelOwnerError()
 
-    return ChannelMessage.Ok.value
+    return
 
 
 def confirm_create_channel_form(
-        form: RegisterChannelForm) -> (CreateChannelTuple, FormMessage):
+        form: RegisterChannelForm) -> (
+        CreateChannelTuple, ChannelError or None):
     valid_channel_name = get_valid_channel_name(form.name.data)
     if not valid_channel_name:
-        return (CreateChannelTuple(''),
-                FormMessage.ChannelNameError.value)
+        return CreateChannelTuple(''), ChannelNameError()
 
-    return CreateChannelTuple(valid_channel_name), FormMessage.Ok.value
+    return CreateChannelTuple(valid_channel_name), None
 
 
-def confirm_edit_channel_form(form: RenameChannelForm
-                              ) -> (RenameChannelTuple, FormMessage):
+def confirm_edit_channel_form(
+        form: RenameChannelForm) -> (
+        RenameChannelTuple, ChannelError or None):
     valid_channel_name = get_valid_channel_name(form.name.data)
     if not valid_channel_name:
-        return RenameChannelTuple('', ''), \
-               FormMessage.ChannelNameError.value
+        return RenameChannelTuple('', ''), ChannelNameError()
 
     return RenameChannelTuple(form.id.data,
-                              valid_channel_name), FormMessage.Ok.value
+                              valid_channel_name), None
 
 
 def create_handler(sess_cr: ClassVar) -> Blueprint:
@@ -150,10 +145,13 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     def do_create_channel():
         form = RegisterChannelForm()
 
-        channel_name, message = confirm_create_channel_form(form)
-        if message != FormMessage.Ok.value:
-            return make_abort(message,
-                              HTTPStatus.UNPROCESSABLE_ENTITY)
+        channel_name, error = confirm_create_channel_form(form)
+        if error:
+            return make_abort(
+                AbortResponse(ok=False,
+                              error_code=error.code,
+                              description=error.description),
+                HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
         channel = Channel(
@@ -186,11 +184,14 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         """ Handler for settings changing page. """
 
         form = RenameChannelForm()
-        (channel_id, channel_name), message = \
+        (channel_id, channel_name), error = \
             confirm_edit_channel_form(form)
-        if message != FormMessage.Ok.value:
-            return make_abort(message,
-                              HTTPStatus.UNPROCESSABLE_ENTITY)
+        if error:
+            return make_abort(
+                AbortResponse(ok=False,
+                              error_code=error.code,
+                              description=error.description),
+                HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
 
@@ -198,9 +199,13 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
         channel = session.query(Channel). \
             filter(Channel.id == channel_id).first()
 
-        message = confirm_channel(channel, current_user)
-        if message != ChannelMessage.Ok.value:
-            return make_abort(message, HTTPStatus.FORBIDDEN)
+        error = confirm_channel(channel, current_user)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), HTTPStatus.FORBIDDEN)
 
         channel.name = channel_name
         session.commit()

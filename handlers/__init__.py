@@ -6,6 +6,7 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 import string
 from enum import Enum
+from typing import TypedDict
 
 from flask import abort, make_response
 
@@ -14,24 +15,6 @@ class RequestMethods:
     GET = 'GET'
     POST = 'POST'
     PUT = 'PUT'
-
-
-class FormMessage(Enum):
-    Ok = ""
-
-    ChannelNameError = "Bad channel name"
-
-    KeyNameError = "Bad key name"
-    PermissionsError = "Wrong permissions"
-    BadChannelId = "Bad channel id"
-
-    AlreadyMixed = 'Already mixed'
-    BadThread = 'Bad thread'
-    BadType = 'Bad thread type'
-
-    EmailError = "Bad email"
-    UsernameError = "Bad username"
-    PasswordError = "Password too short"
 
 
 class ApiRoutes:
@@ -57,8 +40,14 @@ class ApiRoutes:
     RestrictMixin = '/do/restrict_mixin'
 
 
-def make_abort(message='', code=400) -> abort:
-    return abort(make_response({"message": message}, code))
+class AbortResponse(TypedDict):
+    ok: bool
+    error_code: int
+    description: str
+
+
+def make_abort(response: AbortResponse, status_code: int) -> abort:
+    return abort(make_response(response, status_code))
 
 
 VALID_NAME_CHARS = string.digits + string.ascii_letters + '-._'

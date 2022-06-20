@@ -6,7 +6,6 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
 from datetime import datetime
-from enum import Enum
 from typing import ClassVar, TypedDict, NamedTuple, Literal
 
 from flask import Blueprint, request, jsonify
@@ -22,19 +21,14 @@ from storage.key import Key
 from storage.keygen import generate_key
 from storage.mixin import Mixin
 
-from . import make_abort, ApiRoutes, RequestMethods, FormMessage
-from handlers.channel import ChannelMessage, confirm_channel
+from . import make_abort, ApiRoutes, RequestMethods, AbortResponse
+from handlers.channel import confirm_channel
+from .errors import GrantError, BadChannelIdError, BadKeyError, \
+    ChannelNotExistError
 
 MAX_KEY_NAME_LENGTH = 50
 
 REDIS_KEY_KEY = 'limq_isolate_{key}'
-
-
-class KeyMessage(Enum):
-    Ok = ""
-    KeyError = "Invalid key"
-    MixinError = "Mixin with same channel"
-    WrongPermissionError = "Wrong permission"
 
 
 class KeyJson(TypedDict):
@@ -91,15 +85,15 @@ def create_perm(info: bool, read: bool, write: bool):
 
 
 def confirm_create_key_form(form: CreateKeyForm
-                            ) -> (CreateKeyTuple, FormMessage):
+                            ) -> (CreateKeyTuple, GrantError):
     valid_channel_id = form.id.data or ''
     if not valid_channel_id:
         return CreateKeyTuple('', '', 0), \
-               FormMessage.BadChannelId.value
+               BadChannelIdError()
     valid_key_name = get_valid_key_name(form.name.data)
     if not valid_key_name:
         return CreateKeyTuple('', '', 0), \
-               FormMessage.KeyNameError.value
+               BadKeyError()
 
     perm = get_permission_from_form(form.permissions.data)
     info = form.info_allowed.data or False
@@ -109,7 +103,7 @@ def confirm_create_key_form(form: CreateKeyForm
         channel_id=valid_channel_id,
         name=valid_key_name,
         perm=valid_perm
-    ), FormMessage.Ok.value
+    ), None
 
 
 def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
@@ -126,21 +120,28 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
     def do_grant():
         form = CreateKeyForm(request.form)
 
-        (channel_id, name, perm), message = \
+        (channel_id, name, perm), error = \
             confirm_create_key_form(form)
 
-        if message != FormMessage.Ok.value:
-            return make_abort(message,
-                              HTTPStatus.UNPROCESSABLE_ENTITY)
+        if error:
+            return make_abort(
+                AbortResponse(ok=False,
+                              error_code=error.code,
+                              description=error.description),
+                HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
 
         channel = session.query(Channel). \
             filter(Channel.id == channel_id).first()
 
-        message = confirm_channel(channel, current_user)
-        if message != ChannelMessage.Ok.value:
-            return make_abort(message, HTTPStatus.FORBIDDEN)
+        error = confirm_channel(channel, current_user)
+        if error:
+            return make_abort(
+                AbortResponse(ok=False,
+                              error_code=error.code,
+                              description=error.description),
+                HTTPStatus.FORBIDDEN)
 
         key_id = generate_key()
         key = Key(key=key_id, chan_id=channel_id,
@@ -162,17 +163,25 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         channel_id = request.args.get('channel_id', '')
 
         if not channel_id:
-            return make_abort(ChannelMessage.ChannelNotExistError,
-                              HTTPStatus.UNPROCESSABLE_ENTITY)
+            return make_abort(
+                AbortResponse(
+                    ok=False,
+                    error_code=ChannelNotExistError.code,
+                    description=ChannelNotExistError.description),
+                HTTPStatus.UNPROCESSABLE_ENTITY)
 
         session = sess_cr()
 
         channel: Channel = session.query(Channel). \
             filter(Channel.id == channel_id).first()
 
-        error_message = confirm_channel(channel, current_user)
-        if error_message != ChannelMessage.Ok.value:
-            return make_abort(error_message, HTTPStatus.FORBIDDEN)
+        error = confirm_channel(channel, current_user)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), HTTPStatus.FORBIDDEN)
 
         keys = session.query(Key). \
             filter(Key.chan_id == channel_id).all()
@@ -192,15 +201,23 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
             .filter(Key.key == key_id).first()
 
         if not key:
-            return make_abort(KeyMessage.KeyError,
-                              HTTPStatus.UNPROCESSABLE_ENTITY)
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=BadKeyError.code,
+                description=BadKeyError.description
+            ),
+                HTTPStatus.UNPROCESSABLE_ENTITY)
 
         channel = session.query(Channel). \
             filter(Channel.id == key.chan_id).first()
 
-        error_message = confirm_channel(channel, current_user)
-        if error_message != ChannelMessage.Ok.value:
-            return make_abort(error_message, HTTPStatus.FORBIDDEN)
+        error = confirm_channel(channel, current_user)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), HTTPStatus.FORBIDDEN)
 
         key.toggle_active()
         session.commit()
@@ -222,15 +239,23 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         key = session.query(Key).filter(Key.key == key_id).first()
 
         if key is None:
-            return make_abort(KeyMessage.KeyError.value,
-                              HTTPStatus.UNPROCESSABLE_ENTITY)
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=BadKeyError.code,
+                description=BadKeyError.description
+            ),
+                HTTPStatus.UNPROCESSABLE_ENTITY)
 
         channel = session.query(Channel). \
             filter(Channel.id == key.chan_id).first()
 
-        error_message = confirm_channel(channel, current_user)
-        if error_message != ChannelMessage.Ok.value:
-            return make_abort(error_message, HTTPStatus.FORBIDDEN)
+        error = confirm_channel(channel, current_user)
+        if error:
+            return make_abort(AbortResponse(
+                ok=False,
+                error_code=error.code,
+                description=error.description
+            ), HTTPStatus.FORBIDDEN)
 
         session.query(Mixin).filter(
             Mixin.linked_by == key.key).delete()
