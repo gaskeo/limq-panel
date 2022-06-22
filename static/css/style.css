@@ -1,204 +1,243 @@
-.card-link {
-	color: black;
-	text-decoration: none;
+@import url('https://fonts.googleapis.com/css2?family=Lato&family=Manrope:wght@600&family=Noto+Sans+Mono:wght@500&family=Nunito:wght@300&family=Roboto:wght@300&family=Rubik:wght@500&display=swap');
+
+body {
+    font-family: var(--main-font-family);
+    margin: 0;
+    transition: all .2s;
+    --header-font-family: 'Manrope', sans-serif;
+    --main-font-family: 'Nunito', sans-serif;
+    --code-font-family: 'Noto Sans Mono', monospace;;
+    background-color: var(--main-color);
 }
 
-.data-container {
-	max-width: 1200px;
-	width: 80%;
-	margin-left: 10%;
-	margin-right: 10%;
-	padding-top: 20px;
-	margin: auto;
+:root {
+    --main-color: #f8f0fb; /* background color */
+    --second-color: black; /* text color */
+    --third-color: #90ceff; /* element's border color and hover */
+    --fourth-color: #00eeff; /* element's background color */
+    --fifth-color: #21587e;
+    --sixth-color: #348ccc;
+    --seventh-color: white;
+    --error-color: #e83f36;
+    --error-text-color: white;
+
+    --error-color-2: #dc3545;
+    --warning-color: #ffc107;
+    --warning-color-2: #cca324;
+
+    --box-shadow: 0 0 4px 2px var(--fourth-color);
 }
 
-.header {
-	max-width: 84%;
-	margin-left: 8%;
+[data-theme="dark"] {
+    --main-color: #000C14;
+    --second-color: #F6FFF8;
+    --third-color: #032531;
+    --fourth-color: #001a2c;
+    --fifth-color: #bfc0c0;
+    --sixth-color: #003D66;
+    --seventh-color: #210124;
+
+    --error-color: #ff5f3a;
+    --error-text-color: #F6FFF8;
+    --error-color-2: #dc3545;
+    --warning-color: #ffc107;
+    --warning-color-2: #cca324;
+
+    --box-shadow: 0 0 4px 2px var(--third-color);
+
 }
+
+.app-header {
+    padding-left: 8%;
+    padding-right: 8%;
+    min-height: 50px;
+    max-height: 70px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--fourth-color);
+    justify-content: space-between;
+}
+
+.lithium-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    min-height: 50px;
+    max-height: 70px;
+    height: 100%;
+    width: 50px;
+}
+
 
 .lithium-label {
+    color: var(--second-color);
     display: inline-block;
-    width: 69px;
-    height: 27px;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 20px;
+    height: 2.75vh;
+    line-height: 2.75vh;
 }
 
 .lithium-label:hover {
-    color: black;
     text-decoration: none;
 }
 
 span.mq-label {
+    margin-left: 3px;
     background-color: red;
     color: white;
-    width: 40px;
-    padding-left: 0%;
     border-radius: 3px;
-    height: 30px;
-    padding-left: 4px;
-    padding-right: 38px;
+    line-height: 3.2vh;
+    height: 3.2vh;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
 span.mq-label:hover {
+    text-decoration: none;
     color: white;
-    text-decoration: none;
 }
 
-.nohover {
-	color: black;
-	text-decoration: none;
+.button-container {
+    position: relative;
 }
 
-.nohover:hover {
-    text-decoration: none;
-    color: #000;
+.user-icon {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    transition: fill .2s;
+    fill: var(--second-color)
 }
 
-.card-container {
-    margin-top: 10px;
-}
-
-.card-use {
-    font-size: 11px;
-    margin-top: 0px;
-    margin-bottom: 0px;
-}
-
-.nomb {
-    margin-bottom: 0px;
-}
-
-.card-usage-block {
-	padding-top: 0px;
-	margin-top: 0px;
-	margin-left: -8.5px;
-}
-
-.channel-id {
-    font-size: 12px;
-}
-
-.no-va {
-    vertical-align: top;
-    margin-top: 2px;
-}
-
-.activity-status {
-    height: 30px;
-}
-
-span.card-ic {
-    height: 36px;
-    width: 36px;
-}
-
-.fas-card {
-    font-size: 12px;
-    margin-top: 12px;
-    margin-left: 10px;
-}
-
-span.card-val {
-    width: 100px;
-    font-size: 12px;
-    padding-top: 6.5px;
-}
-
-.plan {
-    margin-top: 20px;
-}
-
-.mb30 {
-    margin-bottom: 30px;
-}
-
-.badge-key {
-    background-color: #eee;
-    color: #000;
-    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-    padding: 15px;
-}
-
-.helpdesk-container {
-    max-width: 1000px;
-    width: 90%;
-	margin-left: 5%;
-	margin-right: 5%;
-	padding-top: 20px;
-	margin: auto;
-}
-
-.text-nologin {
-    font-size: 50px;
-}
-
-@media(max-width: 640px) {
-    .btn-user {
-        font-size: 10px;
-    }
-
-    .header {
-        max-width: 100%;
-        width: 100%;
-        margin-left: 0;
-    }
-
-    .helpdesk-container {
-        margin-left: 15px;
-        margin-right: 15px;
-    }
-
-
-    .text-nologin {
-        font-size: 25px;
-    }
-}
-
-.list-mixin {
-    max-width: 300px;
-    margin: auto;
-    content-align: center;
-}
-
-.mixin-tab-link {
-    text-align: center;
-}
-
-#allow-info, #selected-info {
+.dropdown {
+    z-index: 120;
     display: none;
+    position: absolute;
 }
 
-#allow-info {
-    margin-bottom: 1rem;
+.show {
+    display: block;
+    width: 100%;
 }
 
-.subselect {
-    font-size: 12px;
-    margin-bottom: 20px !important;
+.dropdown-button {
+    overflow-x: hidden;
 }
 
-.no-keys, .no-mixin {
-    text-align: center;
-    font-size: 80%;
-    color: #aaa;
-}
-
-.helpdesk-links {
-    line-height: 30%;
-    margin-left: 3%;
-    margin-top: 2%;
-}
-
-.card-container {
-    display: inline-block
+.header-element {
+    display: flex;
+    align-items: center;
+    padding-left: .8rem;
+    padding-right: .8rem;
+    min-height: 50px;
+    height: 100%;
+    max-height: 70px;
 }
 
 
-@media screen and (max-width: 576px) {
-    .register-label {
-        margin-top: 15px;
+.header-element:hover {
+    background-color: var(--third-color);
+}
+
+.header-element-hover {
+    background-color: var(--sixth-color);
+}
+
+.header-element-hover:hover {
+    background-color: var(--sixth-color);
+}
+
+.dropdown-item {
+    float: right;
+    border-radius: 0;
+    display: block;
+    border-bottom: none;
+    min-width: 10rem;
+}
+
+.dropdown-item:last-child {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-bottom: 1px solid var(--third-color);
+}
+
+.no-hover {
+    cursor: default;
+}
+
+.no-hover:hover {
+    background: var(--fourth-color);
+}
+
+.button-opened {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+}
+
+.settings-icon {
+    width: 20px;
+    height: 20px;
+    fill: var(--second-color);
+    transition: fill .2s, all .5s;
+}
+
+
+.app-body {
+    padding-top: 1rem;
+    margin-left: 8vw;
+    margin-right: 8vw;
+}
+
+h1 {
+    line-height: 1em;
+    margin-top: 0;
+    font-size: xx-large;
+    font-family: var(--header-font-family);
+    color: var(--second-color);
+}
+
+h2 {
+    margin-top: 0;
+    line-height: 1.2em;
+    font-size: x-large;
+    font-family: var(--header-font-family);
+    color: var(--second-color)
+}
+
+h3 {
+    margin-top: 0;
+
+    line-height: 1.2em;
+    font-size: large;
+    font-family: var(--header-font-family);
+    color: var(--second-color)
+}
+
+p {
+    font-family: var(--main-font-family);
+    color: var(--second-color)
+}
+
+@media screen and (max-width: 600px) {
+    .app-body {
+        width: 84vw;
     }
 }
 
+@media screen and (min-width: 601px) and (max-width: 800px) {
+    .app-body {
+        margin-left: 15vw;
+        margin-right: 15vw;
+        width: 70vw;
+    }
+}
+
+@media screen and (min-width: 801px) {
+    .app-body {
+        margin-left: 20vw;
+        margin-right: 20vw;
+        width: 60vw;
+        max-width: 800px;
+    }
+}
