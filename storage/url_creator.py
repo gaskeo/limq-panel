@@ -7,11 +7,11 @@
 
 from os import getenv
 
-PSQL_USER = getenv('psql_user')
+PSQL_USER = getenv('psql_user') or 'limq_front'
 PSQL_PASSWORD = getenv('psql_password')
-PSQL_ADDRESS = getenv('psql_host')
-PSQL_PORT = getenv('psql_port')
-PSQL_DB = getenv('psql_db')
+PSQL_ADDRESS = getenv('psql_host') or 'localhost'
+PSQL_PORT = getenv('psql_port') or '5432'
+PSQL_DB = getenv('psql_db') or 'limq'
 
 
 def create_url():

@@ -1,8 +1,8 @@
-# [LiMQ](https://github.com/emmitrin/limq) panel
+# Панель [LiMQ](https://github.com/emmitrin/limq)
 
-[Версия на русском](README.ru.md)
+[Read this in english](README.md)
 
-LiMQ is powerful message broker.
+LiMQ - эффективный облачный брокер сообщений.
 
 ![channels](assets/channels.jpg)
 
@@ -13,7 +13,6 @@ LiMQ is powerful message broker.
 * Управлять миксинами
 
 ![keys](assets/keys.jpg)
-
 ## Установка
 Для работы панели необходимо: 
 1. Установить все зависимости из [`requeriments.txt`](requirements.txt)
