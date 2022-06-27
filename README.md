@@ -1,41 +1,48 @@
 # [LiMQ](https://github.com/emmitrin/limq) panel
 
+This is a **user account control panel**.
+
+Another assets for LiMQ are: `/*todo*/`
+
 [Версия на русском](README.ru.md)
 
-LiMQ is powerful message broker.
+LiMQ is a powerful and lightweight SaaS (cloud) message broker.
 
 ![channels](assets/channels.jpg)
 
-С помощью данной панели можно осуществлять следующие действия:
-* Регистрироваться в системе
-* Управлять каналами
-* Создавать ключи
-* Управлять миксинами
+Users can
+- register
+- manage channels
+- manage channels' access keys
+- manage mix-ins
+
+via this panel.
 
 ![keys](assets/keys.jpg)
 
-## Установка
-Для работы панели необходимо: 
-1. Установить все зависимости из [`requeriments.txt`](requirements.txt)
-2. Запустить скрипт [`get_front.py`](get_front.py), который соберет все данные с [react сервера](https://github.com/tikovka72/limq-front)
-3. Установить [Redis](https://redis.io/) 
-4. Установить [PostgreSQL](https://www.postgresql.org/)
-5. Выполнить команды из файла [`init.sql`](storage/init.sql) 
-   внутри [терминала](https://www.postgresql.org/docs/current/app-psql.html) PostgreSQL
-6. Настроить переменные окружения:
+## Prerequisites
+To set up the panel server:
 
-| Название | Описание | Значение по умолчанию |
+0. Create *venv* (optional)
+1. Install all deps from [`requirements.txt`](requirements.txt)
+2. Actualize and merge the [frontend repo](https://github.com/tikovka72/limq-front) (optional) by `python get_front.py`
+3. Install and set up [Redis](https://redis.io/) 
+4. Install and set up [PostgreSQL](https://www.postgresql.org/) _v14 or newer_
+5. Log into `postgres` root account and run commands from [`init.sql`](storage/init.sql)
+6. Set up the environment variables:
+
+| Key | Description | Default value |
 |----------|----------|-----------------------|
 | `secret_key` | Flask [secret key](https://flask.palletsprojects.com/en/2.1.x/config/#SECRET_KEY) | |
-| `psql_user` | Имя пользователя PostgreSQL | `limq_front` | 
-| `psql_password` | Пароль пользователя PostgreSQL |  |
-| `psql_host` | Адрес сервера PostgreSQL | `localhost` | 
-| `psql_port` |  Порт сервера PostgreSQL | `5432` |
-| `psql_db` | Название базы данных PostgreSQL | `limq` |
-| `redis_host` | Адрес сервера redis | `localhost` |
-| `redis_port` | Порт сервера redis | `6379` | 
-| `redis_db` | id базы данных redis | `3` | 
-| `redis_password` | Пароль redis | | 
+| `psql_user` | DB username | `limq_front` | 
+| `psql_password` | DB password |  |
+| `psql_host` | PostgreSQL host | `localhost` | 
+| `psql_port` |  PostgreSQL port | `5432` |
+| `psql_db` | PostgreSQL database name | `limq` |
+| `redis_host` | Redis host | `localhost` |
+| `redis_port` | Redis port | `6379` | 
+| `redis_db` | Redis database number | `3` | 
+| `redis_password` | Redis access password |  | 
 
-6. Запустить [`core.py`](core.py), сервер будет использовать `5000` порт
+6. Finally, start the service by executing `python core.py`. Default server address is `localhost:5000`
 
