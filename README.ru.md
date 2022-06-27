@@ -1,8 +1,8 @@
 # Панель [LiMQ](https://github.com/emmitrin/limq)
 
-[Read this in english](README.md)
+[English version](README.md)
 
-LiMQ - эффективный облачный брокер сообщений.
+LiMQ - эффективный облачный брокер сообщений (SaaS).
 
 ![channels](assets/channels.jpg)
 
@@ -15,7 +15,7 @@ LiMQ - эффективный облачный брокер сообщений.
 ![keys](assets/keys.jpg)
 ## Установка
 Для работы панели необходимо: 
-1. Установить все зависимости из [`requeriments.txt`](requirements.txt)
+1. Установить все зависимости из [`requirements.txt`](requirements.txt)
 2. Запустить скрипт [`get_front.py`](get_front.py), который соберет все данные с [react сервера](https://github.com/tikovka72/limq-front)
 3. Установить [Redis](https://redis.io/) 
 4. Установить [PostgreSQL](https://www.postgresql.org/)
