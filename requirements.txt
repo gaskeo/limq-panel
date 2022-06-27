@@ -9,3 +9,4 @@ flask_login
 psycopg2
 Werkzeug~=2.1.2
 redis~=4.3.3
+requests>=2.28.0

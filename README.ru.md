@@ -16,11 +16,12 @@ LiMQ - эффективный облачный брокер сообщений.
 ## Установка
 Для работы панели необходимо: 
 1. Установить все зависимости из [`requeriments.txt`](requirements.txt)
-2. Установить [Redis](https://redis.io/) 
-3. Установить [PostgreSQL](https://www.postgresql.org/)
-4. Выполнить команды из файла [`init.sql`](storage/init.sql) 
+2. Запустить скрипт [`get_front.py`](get_front.py), который соберет все данные с [react сервера](https://github.com/tikovka72/limq-front)
+3. Установить [Redis](https://redis.io/) 
+4. Установить [PostgreSQL](https://www.postgresql.org/)
+5. Выполнить команды из файла [`init.sql`](storage/init.sql) 
    внутри [терминала](https://www.postgresql.org/docs/current/app-psql.html) PostgreSQL
-5. Настроить переменные окружения:
+6. Настроить переменные окружения:
 
 | Название | Описание | Значение по умолчанию |
 |----------|----------|-----------------------|
