@@ -36,5 +36,5 @@ LiMQ is powerful message broker.
 | `redis_db` | id базы данных redis | `3` | 
 | `redis_password` | Пароль redis | | 
 
-6. Запустить `core.py`, сервер будет использовать `5000` порт
+6. Запустить [`core.py`](core.py), сервер будет использовать `5000` порт
 
