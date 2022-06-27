@@ -6,6 +6,7 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
 from flask import Blueprint, render_template
+from . import RequestMethods
 
 
 def create_handler() -> Blueprint:
@@ -17,9 +18,9 @@ def create_handler() -> Blueprint:
 
     app = Blueprint("index", __name__)
 
-    @app.route("/", methods=["GET", "POST"])
+    @app.route("/", methods=[RequestMethods.GET])
     def index():
         """ Handler for main page """
-        return render_template("mainpage.html")
+        return render_template("index.html")
 
     return app
