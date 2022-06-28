@@ -2,7 +2,7 @@
 
 This is a **user account control panel**.
 
-Another assets for LiMQ are: `/*todo*/`
+Another assets for LiMQ are: [LiMQ core api](https://github.com/emmitrin/limq), [LiMQ react panel](https://github.com/tikovka72/limq-front)
 
 [Версия на русском](README.ru.md)
 

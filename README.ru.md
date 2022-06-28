@@ -1,5 +1,7 @@
 # Панель [LiMQ](https://github.com/emmitrin/limq)
 
+Другие ресурсы LiMQ: [LiMQ core api](https://github.com/emmitrin/limq), [LiMQ react panel](https://github.com/tikovka72/limq-panel)
+
 [English version](README.md)
 
 LiMQ - эффективный облачный брокер сообщений (SaaS).
