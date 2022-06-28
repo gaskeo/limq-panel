@@ -1,8 +1,8 @@
 from zipfile import ZipFile
 from requests import get
 
-version = 'v1.0.0'
-zip_name = 'limq-front@v1.0.0.zip'
+version = 'v1.0.1'
+zip_name = 'limq-front@v1.0.1.zip'
 
 extract_config = {
     'templates': ['index.html'],
