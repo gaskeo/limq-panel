@@ -12,7 +12,7 @@ from flask_login import LoginManager
 
 from handlers import index, grant, \
     helpdesk, \
-    error_handlers, user, channel, mixin
+    error_handlers, user, channel, mixin, service
 
 from storage.db_session import base_init
 from redis_storage.redis_session import base_init as redis_base_init
@@ -39,6 +39,7 @@ app.register_blueprint(grant.create_handler(
     SessObject, RedisSessObject))
 app.register_blueprint(helpdesk.create_handler())
 app.register_error_handler(401, error_handlers.error_401)
+app.register_blueprint(service.create_handler())
 
 if __name__ == "__main__":
     app.run(port=5000, host="0.0.0.0")

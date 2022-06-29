@@ -1,15 +1,42 @@
 from zipfile import ZipFile
 from requests import get
 
-version = 'v1.0.1'
-zip_name = 'limq-front@v1.0.1.zip'
+
+class ReleaseNotFound(Exception):
+    ...
+
+
+class AssetsNotFound(Exception):
+    ...
+
+
+class BadAssetError(Exception):
+    ...
+
 
 extract_config = {
     'templates': ['index.html'],
 }
 
-file = get(f'https://github.com/tikovka72/limq-front'
-           f'/releases/download/{version}/{zip_name}').content
+releases_content = get('https://api.github.com/repos/'
+                       'tikovka72/limq-front/releases/latest')
+
+if releases_content.status_code != 200:
+    raise ReleaseNotFound("can't find release in limq-front")
+latest_release = releases_content.json()
+
+assets = latest_release.get('assets')
+if not assets:
+    raise AssetsNotFound("can't find assets in limq-front")
+
+first_asset = assets[0]
+asset_url = first_asset.get('browser_download_url')
+zip_name = first_asset.get('name')
+
+if not asset_url or not zip_name:
+    raise BadAssetError("can't find url in asset")
+
+file = get(asset_url).content
 
 with open(zip_name, 'wb') as zip_file:
     zip_file.write(file)
