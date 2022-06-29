@@ -17,7 +17,7 @@ def get_root_path(app: Blueprint):
 def create_handler() -> Blueprint:
     """
     A closure for instantiating the handler
-    that maintains mainpage.
+    that maintains favicon, manifest and other.
     Must borrow a SqlAlchemy session creator for further usage.
     """
 
