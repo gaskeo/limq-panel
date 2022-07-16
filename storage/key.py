@@ -22,6 +22,7 @@ class Key(ModelBase):
     READ = 1 << 0
     WRITE = 1 << 1
     INFO_ENABLED = 1 << 2
+    MIXIN_DISABLED = 1 << 3
     PAUSED = 1 << 8
 
     key = sqlalchemy.Column(sqlalchemy.String(length=32),
@@ -60,3 +61,6 @@ class Key(ModelBase):
 
     def info_allowed(self) -> bool:
         return self.perm & self.INFO_ENABLED != 0
+    
+    def mixin_allowed(self) -> bool:
+        return self.perm & self.MIXIN_DISABLED == 0
