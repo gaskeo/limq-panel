@@ -51,6 +51,8 @@ class CreateKeyForm(FlaskForm):
                                           ('1', 'Отправка')],
                              default='1')
     info_allowed = BooleanField("Разрешить info", false_values=["0"])
+    disallow_mixins = BooleanField("Запретить миксины",
+                                   false_values=["0"])
 
 
 class ToggleKeyActiveForm(FlaskForm):

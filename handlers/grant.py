@@ -80,8 +80,9 @@ def get_json_key(key: Key) -> KeyJson:
                    channel=key.chan_id)
 
 
-def create_perm(info: bool, read: bool, write: bool):
-    return info << 2 | write << 1 | read
+def create_perm(info: bool, read: bool, write: bool,
+                disallow_mixins: bool):
+    return disallow_mixins << 3 | info << 2 | write << 1 | read
 
 
 def confirm_create_key_form(form: CreateKeyForm
@@ -97,7 +98,9 @@ def confirm_create_key_form(form: CreateKeyForm
 
     perm = get_permission_from_form(form.permissions.data)
     info = form.info_allowed.data or False
-    valid_perm = create_perm(info, perm.can_read, perm.can_write)
+    disallow_mixins = form.disallow_mixins.data or False
+    valid_perm = create_perm(info, perm.can_read, perm.can_write,
+                             disallow_mixins)
 
     return CreateKeyTuple(
         channel_id=valid_channel_id,
