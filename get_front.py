@@ -74,6 +74,8 @@ def delete_old_front(rules: dict):
                 ...
             except PermissionError:
                 print(f"\tCan't delete: {file}")
+            except IsADirectoryError:
+                print(f"\tDirectory: {file}")
 
 
 def unzip_files(name: str, rules: dict) -> list:
