@@ -62,6 +62,8 @@ def delete_old_front(rules: dict):
                         ...
                     except PermissionError:
                         print(f"\tCan't delete: {file}")
+                    except IsADirectoryError:
+                        print(f"\tDirectory: {file}")
 
         for old_file in old_files:
             file = old_file.replace('\n', '')
