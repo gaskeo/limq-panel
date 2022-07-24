@@ -50,6 +50,9 @@ def confirm_key_on_mixin(key: Key, channel: Channel) -> \
     if not key.can_read():
         return KeyPermissionsError()
 
+    if not key.mixin_allowed():
+        return KeyPermissionsError()
+
     return
 
 
