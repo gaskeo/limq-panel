@@ -4,18 +4,20 @@
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
     <link rel="stylesheet" href="/static/css/style.css">
+    <script type="text/javascript" src="/static/js/theme.js"></script>
+    <script type="text/javascript" src="/static/js/logo.js"></script>
     {% block title %}
         <title>{{ title }}</title>
     {% endblock %}
 </head>
 <body>
 <div class="app-header">
-    <a href="/" class="lithium-container">
-        <img src="../static/images/limq.svg" alt="LiMQ"/>
+    <a href="/" class="lithium-container" id="lithium-container">
+
     </a>
     <a href="/#/settings" class="header-element">
         <div class="settings-icon">
-            <svg class=""
+            <svg
                  xmlns="http://www.w3.org/2000/svg"
                  viewBox="0 0 512 512">
                 <path d="M495.9 166.6C499.2 175.2 496.4 184.9 489.6 191.2L446.3 230.6C447.4
