@@ -1,0 +1,138 @@
+.card {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: var(--card-color);
+    border: 2px solid var(--card-border-color);
+    border-radius: 5px;
+    padding: 15px 20px 20px;
+    overflow: hidden;
+    min-height: 120px;
+    max-width: 500px;
+
+}
+
+.card-header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-header {
+    font-family: var(--header-font-family);
+    color: var(--text-color);
+    margin-top: 0;
+    font-size: 1.3em;
+    line-height: 1.3em;
+    margin-bottom: 8px;
+    max-width: calc(100% - 20px);
+    overflow-x: hidden;
+}
+
+.card-icon-near-header {
+    fill: var(--icon-color);
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    margin-bottom: 8px;
+    transition: fill .2s;
+}
+
+.card-icon-near-header:hover {
+    fill: var(--icon-hover-color);
+}
+
+.card-info-container {
+    font-family: var(--main-font-family);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    bottom: 0;
+    gap: 4px;
+}
+
+.card-code {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    color: var(--code-color);
+    font-family: var(--code-font-family);
+}
+
+.code-container {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: 16px;
+}
+
+.card-icon-and-text-container {
+    color: var(--text-color);
+    display: flex;
+    justify-content: left;
+    gap: 7px;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.channel-card-keys-container {
+    color: var(--text-color);
+    max-width: 100px;
+    display: flex;
+    gap: 4px;
+    justify-content: space-between;
+}
+
+.channel-card-key-icon {
+    fill: var(--icon-color);
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.card-background-text {
+    background-color: var(--code-background-color);
+    width: max-content;
+    padding: 10px;
+    border-radius: 5px;
+    color: var(--code-color);
+    transition: .2s background-color;
+}
+
+.card-background-text:hover, .card-background-text:focus {
+    background-color: var(--code-background-hover-color);
+}
+
+.card-text {
+    color: var(--text-color);
+    font-family: var(--main-font-family);
+    font-size: .9em;
+}
+
+.card-inline-block {
+    max-width: 100%;
+    display: flex;
+    gap: .5rem;
+}
+
+.dot-active {
+    fill: var(--success-color);
+}
+
+@media screen and (max-width: 600px) {
+    .card {
+        width: 84vw;
+    }
+
+}
+
+@media screen and (min-width: 601px) and (max-width: 800px) {
+    .card {
+        width: 40vw;
+    }
+}
+
+@media screen and (min-width: 801px) {
+    .card {
+        width: 26vw;
+    }
+}

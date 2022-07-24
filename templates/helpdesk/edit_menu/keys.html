@@ -1,0 +1,58 @@
+<div>
+
+    <form onSubmit={submit}>
+        <h2>Create key</h2>
+        <label class='input-container'>
+            <span class='input-label'>Name</span>
+            <input class='input' type=text value=''
+                   placeholder='Enter key name'/>
+        </label>
+        <p class='error-text'></p>
+        <div class='channel-settings-radio-container'
+             id="key-type-block">
+            <div>
+                <label class='radio-container' for='listen'>
+                    <input class='radio' id='listen' type='radio'
+                           name='key-type' checked/>
+                    <span class='input-label'>Listen the queue for a new messages</span>
+
+                </label>
+                <div class='small-gap'></div>
+                <div class='horizontal' id="checkboxes">
+                    <div class='horizontal-gap'></div>
+                    <div id="read-properties">
+                        <label class='checkbox-container'>
+                            <input type='checkbox'/>
+                            Allow info
+                        </label>
+                        <label class='checkbox-container'>
+                            <input type='checkbox' checked/>
+                            Allow mixins
+                        </label>
+                    </div>
+                </div>
+                <div class='small-gap'></div>
+            </div>
+            <label class='radio-container' for='post'>
+                <input class='radio' id='post' type='radio'
+                       name="key-type"/>
+                <span class='input-label'>Post messages to the queue</span>
+
+            </label>
+        </div>
+        <p class='error-text'></p>
+
+        <button type='submit' class='submit button center'>Create
+        </button>
+    </form>
+    <script>
+        document.getElementById('key-type-block').addEventListener('click',
+            () => {
+                if (document.getElementById('listen').checked) {
+                    document.getElementById('checkboxes').classList.remove('hidden')
+                } else {
+                    document.getElementById('checkboxes').classList.add('hidden')
+                }
+            })
+    </script>
+</div>

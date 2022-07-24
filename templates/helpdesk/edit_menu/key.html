@@ -1,0 +1,25 @@
+<div class='show-card' ref={myRef}>
+    <script>
+        function copyText(text) {
+            navigator.clipboard.writeText(text)
+        }
+    </script>
+    <div class='card card-100 horizontal-scroll'>
+        <div class='card-header-container'>
+            <h1 class='card-header'>key name</h1>
+        </div>
+        <div class='card-info-container'>
+            <p class='card-text grey-text'>Post messages to the queue,
+                2022-07-24</p>
+            <div class='code-container'>
+                <code class='card-code card-background-text'
+                      onClick='copyText("5WysdKtKU414RomY9nftWdDc8lxevwYU")'>5WysdKtKU414RomY9nftWdDc8lxevwYU</code>
+            </div>
+            <div class='card-inline-block'>
+                <button class='button mini-button warning-button'>Pause</button>
+                    <button class='button mini-button error-button'>Delete</button>
+            </div>
+        </div>
+    </div>
+    <div class='gap'></div>
+</div>

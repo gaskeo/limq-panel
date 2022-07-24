@@ -1,0 +1,20 @@
+<div class='settings-container'>
+    <h1>Channel settings</h1>
+    <div class='settings'>
+        <div class="menu">
+            <div class="menu-tab active">Main settings</div>
+            <div class="menu-tab">Keys</div>
+            <div class="menu-tab">Mixins</div>
+
+        </div>
+        <div class='settings-block'>
+            {% if tab == 'main' %}
+                {% include 'helpdesk/edit_menu/main.html' %}
+            {% elif tab == 'keys' %}
+                {% include 'helpdesk/edit_menu/keys.html' %}
+            {% elif tab == 'keys' %}
+                {% include 'helpdesk/edit_menu/mixins.html' %}
+            {% endif %}
+        </div>
+    </div>
+</div>
