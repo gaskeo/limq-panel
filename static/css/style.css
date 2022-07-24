@@ -101,6 +101,31 @@ body {
     --icon-hover-color: #bfc0c0;
 }
 
+body {
+    --success-color: #28a745;
+    --button-success-color: #28a745;
+    --button-success-color-hover: #2eb94e;
+    --button-success-text-color: #F6FFF8;
+    --button-success-text-color-hover: #F6FFF8;
+
+    --warning-color: #ffc107;
+    --button-warning-color: #ffc107;
+    --button-warning-color-hover: #cca324;
+    --button-warning-text-color: #000C14;
+    --button-warning-text-color-hover: #000C14;
+
+    --button-error-color: #ff5f3a;
+    --button-error-color-hover: #dc3545;
+    --button-error-text-color: #F6FFF8;
+    --button-error-text-color-hover: #F6FFF8;
+
+    transition: all .2s;
+    --header-font-family: 'Manrope', sans-serif;
+    --main-font-family: 'Nunito', sans-serif;
+    --code-font-family: 'Noto Sans Mono', monospace;;
+    background-color: var(--background-color);
+}
+
 .app-header {
     padding-left: 8%;
     padding-right: 8%;
@@ -196,6 +221,39 @@ body {
     background: var(--fourth-color);
 }
 
+.text, p, span, li, ul {
+    color: var(--text-color);
+    font-family: var(--main-font-family);
+}
+
+.frame {
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.horizontal-gap {
+    width: 2rem;
+}
+
+.horizontal {
+    display: flex;
+    align-items: center;
+}
+.gap {
+    display: block;
+    margin-bottom: 2rem;
+}
+
+.small-gap {
+    display: block;
+    margin-bottom: .5rem;
+}
+
 .button-opened {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
@@ -233,6 +291,69 @@ h3 {
     color: var(--text-color)
 }
 
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    border-radius: 5px;
+    line-height: 1em;
+    font-family: var(--main-font-family);
+    font-size: 1em;
+    background-color: var(--button-color);
+    color: var(--button-text-color);
+    padding: 6px;
+    transition: .2s all;
+    min-height: 3rem;
+}
+
+.button:hover, .button:focus {
+    background-color: var(--button-color-hover);
+    color: var(--button-text-color-hover)
+}
+
+.mini-button {
+    width: max-content;
+    padding: 8px 25px;
+    min-height: 2rem;
+    height: max-content;
+}
+
+.success-button {
+    background-color: var(--button-success-color) !important;
+    color: var(--button-success-text-color) !important;
+}
+
+.success-button:hover, .success-button:focus {
+    background-color: var(--button-success-color-hover) !important;
+    color: var(--button-success-text-color-hover) !important;
+}
+
+.warning-button {
+    background-color: var(--button-warning-color) !important;
+    color: var(--button-warning-text-color) !important;
+}
+
+.warning-button:hover, .warning-button:focus {
+    background-color: var(--button-warning-color-hover) !important;
+    color: var(--button-warning-text-color-hover) !important;
+}
+
+.error-button {
+    background-color: var(--button-error-color);
+    color: var(--button-error-text-color);
+}
+
+.error-button:hover, .error-button:focus {
+    background-color: var(--button-error-color-hover);
+    color: var(--button-error-text-color-hover);
+}
+
 p {
     font-family: var(--main-font-family);
     color: var(--text-color)
@@ -259,4 +380,12 @@ p {
         width: 60vw;
         max-width: 800px;
     }
+}
+
+a {
+    color: #007bfe;
+}
+
+a:visited {
+    color: #007bfe;
 }
