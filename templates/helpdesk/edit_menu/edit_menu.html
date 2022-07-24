@@ -2,9 +2,20 @@
     <h1>Channel settings</h1>
     <div class='settings'>
         <div class="menu">
-            <div class="menu-tab active">Main settings</div>
-            <div class="menu-tab">Keys</div>
-            <div class="menu-tab">Mixins</div>
+            {% if tab == 'main' %}
+                <div class="menu-tab active">Main settings</div>
+                <div class="menu-tab">Keys</div>
+                <div class="menu-tab">Mixins</div>
+            {% elif tab == 'keys' %}
+                <div class="menu-tab">Main settings</div>
+                <div class="menu-tab active">Keys</div>
+                <div class="menu-tab">Mixins</div>
+            {% elif tab == 'mixins' %}
+                <div class="menu-tab">Main settings</div>
+                <div class="menu-tab">Keys</div>
+                <div class="menu-tab active">Mixins</div>
+            {% endif %}
+
 
         </div>
         <div class='settings-block'>
@@ -12,7 +23,7 @@
                 {% include 'helpdesk/edit_menu/main.html' %}
             {% elif tab == 'keys' %}
                 {% include 'helpdesk/edit_menu/keys.html' %}
-            {% elif tab == 'keys' %}
+            {% elif tab == 'mixins' %}
                 {% include 'helpdesk/edit_menu/mixins.html' %}
             {% endif %}
         </div>

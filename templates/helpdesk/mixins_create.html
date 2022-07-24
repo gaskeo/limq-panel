@@ -1,0 +1,37 @@
+{% extends "helpdesk/hbase.html" %}
+{% block helpdesk_content %}
+    <h2>Создание миксинов</h2>
+
+    <ol>
+        <li><a href="/helpdesk/channels_edit">Пройдите в настройки</a>
+            нужного канала
+        </li>
+        <li>Перейдите в пункт меню «Миксины»</li>
+    </ol>
+    <p>
+        Страница настроек миксинов выглядит так: <br>
+    </p>
+    <div class="frame">
+        {% with tab='mixins' %}
+            {% include 'helpdesk/edit_menu/edit_menu.html' %}
+        {% endwith %}
+    </div>
+    <ol start="3">
+        <li><p>Введите ключ на чтение другого канала</p>
+            <span class="button error-button" style="text-align: left; width: 100%; max-width: max-content; padding-left: 16px; padding-right: 16px">
+                Ключ должен быть с другого канала. Канал нельзя подписать на самого себя
+            </span>
+        </li>
+        <li><p>При успешном создании миксин добавится в список под формой в меню «Входящие». В меню «Исходящие» миксины, которые подписаны на вас</p>
+        </li>
+    </ol>
+    <p>
+        Карточка миксина выглядит так:</p>
+    {% include 'helpdesk/edit_menu/mixin.html' %}
+    <p>На ней отображаются:</p>
+    <ul>
+        <li>Название канала, на который вы подписаны или который подписан на вас</li>
+        <li>ID канала, на который вы подписаны или который подписан на вас</li>
+        <li>Кнопка для удаления миксина</li>
+    </ul>
+{% endblock %}

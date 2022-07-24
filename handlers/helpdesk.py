@@ -54,4 +54,9 @@ def create_handler() -> Blueprint:
 
         return render_template("helpdesk/keys_revoke.html")
 
+    @app.route("/helpdesk/mixins_create")
+    def helpdesk_mixins_cr():
+        """ Helpdesk for revoke keys"""
+
+        return render_template("helpdesk/mixins_create.html")
     return app
