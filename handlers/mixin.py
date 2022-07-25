@@ -107,6 +107,33 @@ def check_circle_mixin(session, source_id: str, dest_id: str) -> bool:
     return True
 
 
+def add_mixin_redis(rds_sess: Redis, new_mixin: Mixin,
+                    src_channel: Channel):
+    mixins = str(rds_sess.get(
+        REDIS_MIXIN_KEY.format(channel_id=src_channel.id))) or ''
+    if not mixins:
+        mixins = new_mixin.dest_channel
+    else:
+        mixins = mixins.split(',')
+        mixins.append(new_mixin.dest_channel)
+        mixins = ','.join(mixins)
+    rds_sess.set(
+        REDIS_MIXIN_KEY.format(channel_id=src_channel.id), mixins)
+
+
+def delete_mixin_redis(rds_sess: Redis, source_channel_id: str,
+                       dest_channel_id: str):
+    mixins = str(rds_sess.get(
+        REDIS_MIXIN_KEY.format(channel_id=source_channel_id))) or ''
+    if mixins and dest_channel_id in mixins:
+        mixins = mixins.split(',')
+        mixins.remove(dest_channel_id)
+        mixins = ','.join(mixins)
+    rds_sess.set(
+        REDIS_MIXIN_KEY.format(channel_id=source_channel_id),
+        mixins)
+
+
 def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
     app = Blueprint("mixin", __name__)
 
@@ -215,16 +242,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         session.add(new_mixin)
         session.commit()
 
-        mixins = str(rds_sess.get(
-            REDIS_MIXIN_KEY.format(channel_id=src_channel.id))) or ''
-        if not mixins:
-            mixins = new_mixin.dest_channel
-        else:
-            mixins = mixins.split(',')
-            mixins.append(new_mixin.dest_channel)
-            mixins = ','.join(mixins)
-        rds_sess.set(
-            REDIS_MIXIN_KEY.format(channel_id=src_channel.id), mixins)
+        add_mixin_redis(rds_sess, new_mixin, src_channel)
 
         return {"mixin": get_base_json_channel(src_channel)}
 
@@ -286,15 +304,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         session.delete(mixin)
         session.commit()
 
-        mixins = str(rds_sess.get(
-            REDIS_MIXIN_KEY.format(channel_id=source_channel_id))) or ''
-        if mixins and dest_channel_id in mixins:
-            mixins = mixins.split(',')
-            mixins.remove(dest_channel_id)
-            mixins = ','.join(mixins)
-        rds_sess.set(
-            REDIS_MIXIN_KEY.format(channel_id=source_channel_id),
-            mixins)
+        delete_mixin_redis(rds_sess, source_channel_id, dest_channel_id)
 
         return {'mixin': channel_2.id}
 
