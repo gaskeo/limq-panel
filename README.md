@@ -2,7 +2,7 @@
 
 This is a **user account control panel**.
 
-Another assets for LiMQ are: [LiMQ core api](https://github.com/emmitrin/limq), [LiMQ react panel](https://github.com/tikovka72/limq-front)
+Another assets for LiMQ are: [LiMQ core api](https://github.com/emmitrin/limq), [LiMQ react panel](https://github.com/gaskeo/limq-front)
 
 [Версия на русском](README.ru.md)
 
@@ -25,7 +25,7 @@ To set up the panel server:
 
 0. Create *venv* (optional)
 1. Install all deps from [`requirements.txt`](requirements.txt)
-2. Actualize and merge the [frontend repo](https://github.com/tikovka72/limq-front) (optional) by `python get_front.py`
+2. Actualize and merge the [frontend repo](https://github.com/gaskeo/limq-front) (optional) by `python get_front.py`
 3. Install and set up [Redis](https://redis.io/) 
 4. Install and set up [PostgreSQL](https://www.postgresql.org/) _v14 or newer_
 5. Log into `postgres` root account and run commands from [`init.sql`](storage/init.sql)
