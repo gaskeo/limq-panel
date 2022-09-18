@@ -1,0 +1,11 @@
+[Unit]
+Description=LiMQ service
+After=network.target
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=~/limq-panel
+Environment="PATH=~/limq-panel/venv/bin"
+ExecStart=~/limq-panel/venv/bin/gunicorn --bind 0.0.0.0:5000 wsgi:app
+[Install]
+WantedBy=multi-user.target
