@@ -1,12 +1,12 @@
-flask~=2.1.2
-sqlalchemy~=1.4.37
-wtforms~=3.0.1
+flask>=2.1.2
+sqlalchemy>=1.4.37
+wtforms>=3.0.1
 flask_wtf
 email_validator
 gunicorn
 gevent
 flask_login
 psycopg2
-Werkzeug~=2.1.2
-redis~=4.3.3
+Werkzeug>=2.1.2
+redis>=4.3.3
 requests>=2.28.0
