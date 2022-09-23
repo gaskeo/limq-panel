@@ -52,6 +52,7 @@ class RegisterTuple(NamedTuple):
 class LoginTuple(NamedTuple):
     email: str
     password: str
+    remember: bool
 
 
 class ChangeEmailTuple(NamedTuple):
@@ -143,15 +144,16 @@ def confirm_login_form(form: LoginForm) -> \
         (LoginTuple, UserError or None):
     valid_email = get_valid_email(form.email.data)
     if not valid_email:
-        return LoginTuple('', ''), EmailError()
+        return LoginTuple('', '', False), EmailError()
 
     valid_password = get_valid_password(form.password.data)
     if not valid_password:
-        return LoginTuple('', ''), PasswordError()
+        return LoginTuple('', '', False), PasswordError()
 
     return LoginTuple(
         email=valid_email,
-        password=valid_password), None
+        password=valid_password,
+        remember=bool(form.remember_me.data)), None
 
 
 def confirm_change_email_form(form: ChangeEmailForm) -> \
@@ -259,7 +261,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         """ Handler for login """
         form = LoginForm()
 
-        (email, password), error = confirm_login_form(form)
+        (email, password, remember), error = confirm_login_form(form)
         if error:
             return make_abort(AbortResponse(
                 ok=False,
@@ -280,7 +282,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
                 description=error.description
             ), HTTPStatus.FORBIDDEN)
 
-        login_user(user)
+        login_user(user, remember=remember)
         path = get_path(request.args.get("path", ''))
 
         return jsonify(UserResponseJson(
