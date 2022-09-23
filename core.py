@@ -16,6 +16,9 @@ from handlers import index, grant, \
 
 from storage.db_session import base_init
 from redis_storage.redis_session import base_init as redis_base_init
+from version import version
+
+print(f'version: {version}')
 
 # Flask init
 app = Flask(__name__)
@@ -24,6 +27,13 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 app.config["SECRET_KEY"] = os.getenv('secret_key')
+
+
+@app.after_request
+def add_header(response):
+    response.headers['X-Powered-By'] = version
+    return response
+
 
 # Database init
 SessObject = base_init()
