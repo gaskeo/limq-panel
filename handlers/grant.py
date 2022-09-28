@@ -26,7 +26,7 @@ from handlers.channel import confirm_channel
 from .errors import GrantError, BadChannelIdError, BadKeyError, \
     ChannelNotExistError
 
-MAX_KEY_NAME_LENGTH = 50
+MAX_KEY_NAME_LENGTH = 20
 
 REDIS_KEY_KEY = 'limq_isolate_{key}'
 

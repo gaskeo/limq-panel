@@ -22,7 +22,7 @@ from . import make_abort, ApiRoutes, RequestMethods, AbortResponse
 from .errors import ChannelError, ChannelNotExistError, \
     NotChannelOwnerError, ChannelNameError
 
-MAX_CHANNEL_NAME_LENGTH = 50
+MAX_CHANNEL_NAME_LENGTH = 64
 
 
 class KeysTypesCount(TypedDict):
