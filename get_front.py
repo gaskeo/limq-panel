@@ -52,6 +52,12 @@ def delete_old_front(rules: dict):
     if path.exists('.old_front.txt'):
         with open('.old_front.txt', encoding='utf8') as f:
             old_files = f.readlines()
+        with open('.gitignore', 'r', encoding='utf8') as gr:
+            if (old_strings := '\n\n' + ''.join(old_files)) \
+                    in (gitignore := gr.read()):
+                with open('.gitignore', 'w', encoding='utf8') as gw:
+                    print(gitignore.replace(old_strings, ''))
+                    gw.write(gitignore.replace(old_strings, ''))
         for rule in rules.keys():
             for rule_file in rules[rule]:
                 if rule_file in ''.join(old_files):
@@ -95,6 +101,9 @@ def unzip_files(name: str, rules: dict) -> list:
 def write_current_files(all_files: list):
     with open('.old_front.txt', 'w', encoding='utf8') as f:
         f.write('\n'.join(all_files))
+
+    with open('.gitignore', 'a', encoding='utf8') as g:
+        g.write('\n\n' + '\n'.join(all_files))
 
 
 def remove_zip(zip_name: str):
