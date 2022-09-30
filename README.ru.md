@@ -37,6 +37,11 @@ LiMQ - эффективный облачный брокер сообщений (
 | `redis_port` | Порт сервера redis | `6379` | 
 | `redis_db` | id базы данных redis | `3` | 
 | `redis_password` | Пароль redis | | 
+| `redis_limit_host`| Адрес сервера redis для rate-лимитов | `localhost` |
+| `redis_limit_port` | Порт сервера redis для rate-лимитов | `6379` |
+| `redis_limit_db` | id базы данных redis для rate-лимитов| `4` |
+| `redis_limit_password` | Пароль сервера redis для rate-лимитов | |
+
 
 6. Запустить [`core.py`](core.py), сервер будет использовать `5000` порт
 

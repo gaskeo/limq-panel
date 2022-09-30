@@ -42,7 +42,12 @@ To set up the panel server:
 | `redis_host` | Redis host | `localhost` |
 | `redis_port` | Redis port | `6379` | 
 | `redis_db` | Redis database number | `3` | 
-| `redis_password` | Redis access password |  | 
+| `redis_password` | Redis access password |  |
+| `redis_limit_host`| Redis host for rate limits| `localhost` |
+| `redis_limit_port` | Redis port for rate limits | `6379` |
+| `redis_limit_db` | Redis database number for rate limits| `4` |
+| `redis_limit_password` | Redis access password for rate limits | |
+
 
 6. Finally, start the service by executing `python core.py`. Default server address is `localhost:5000`
 
