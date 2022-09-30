@@ -5,13 +5,15 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
-from typing import ClassVar, TypedDict, NamedTuple, Iterable
+from typing import ClassVar, TypedDict, NamedTuple, Iterable, Callable
 
 from flask import Blueprint, jsonify
 from flask_login import current_user, login_required
 from http import HTTPStatus
+from flask_limiter.extension import LimitDecorator
 
 from forms import RegisterChannelForm, RenameChannelForm
+from content_limits import LimitTypes, Limits
 
 from storage.channel import Channel
 from storage.key import Key
@@ -130,7 +132,8 @@ def confirm_edit_channel_form(
                               valid_channel_name), None
 
 
-def create_handler(sess_cr: ClassVar) -> Blueprint:
+def create_handler(sess_cr: ClassVar,
+                   limits: Callable[[int, LimitTypes], LimitDecorator]) -> Blueprint:
     """
     A closure for instantiating the handler
     that maintains channel processes.
@@ -141,6 +144,8 @@ def create_handler(sess_cr: ClassVar) -> Blueprint:
     app = Blueprint("channel", __name__)
 
     @app.route(ApiRoutes.CreateChannel, methods=[RequestMethods.POST])
+    @limits(Limits.ChannelCreate, LimitTypes.ip)
+    @limits(Limits.ChannelCreate, LimitTypes.user)
     @login_required
     def do_create_channel():
         form = RegisterChannelForm()

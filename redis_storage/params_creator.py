@@ -27,3 +27,18 @@ def get_params() -> Params:
     password = getenv('redis_password') or ''
 
     return Params(host=host, port=port, db=db, password=password)
+
+
+def get_limits_params() -> Params:
+    host = getenv('redis_limit_host') or 'localhost'
+    port = int(getenv('redis_limit_port')) if \
+        getenv('redis_limit_port') and \
+        getenv('redis_limit_port').isdigit() \
+        else 6379
+
+    db = int(getenv('redis_limit_db')) if \
+        getenv('redis_limit_db') and \
+        getenv('redis_limit_db').isdigit() else 4
+    password = getenv('redis_limit_password') or ''
+
+    return Params(host=host, port=port, db=db, password=password)
