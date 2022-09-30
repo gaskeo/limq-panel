@@ -11,7 +11,8 @@ from . import RequestMethods
 
 
 def get_root_path(app: Blueprint):
-    return app.root_path.replace('handlers', '').strip('/').strip('\\')
+    return app.root_path.replace('handlers', ''
+                                 ).rstrip('/').rstrip('\\')
 
 
 def create_handler() -> Blueprint:
