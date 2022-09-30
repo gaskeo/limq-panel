@@ -5,7 +5,6 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
-
 from base64 import b64encode
 
 from flask import redirect, Blueprint, request

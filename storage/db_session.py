@@ -5,7 +5,6 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
-
 import sqlalchemy
 import sqlalchemy.ext.declarative as dec
 import sqlalchemy.orm as orm

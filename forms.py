@@ -5,7 +5,6 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
-
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, \
     HiddenField, RadioField

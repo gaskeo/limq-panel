@@ -4,6 +4,7 @@
 #  | |      | | | __| | "_ \  | | | | | | | "_ ` _ \  | |\/| | |  | |
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
+
 from typing import Callable
 
 from flask import Blueprint, render_template

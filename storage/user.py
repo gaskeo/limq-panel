@@ -5,7 +5,6 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
-
 import sqlalchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, \

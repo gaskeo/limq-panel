@@ -1,8 +1,15 @@
+#   _        _   _     _       _                       __  __  ____
+#  | |      (_) | |   | |     (_)                     |  \/  |/ __ \
+#  | |       _  | |_  | |__    _   _   _   _ __ ___   | \  / | |  | |
+#  | |      | | | __| | "_ \  | | | | | | | "_ ` _ \  | |\/| | |  | |
+#  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
+#  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
+
 from flask import make_response, Flask
 from flask_limiter.extension import LimitDecorator
 from flask_login import current_user
 
-from flask_limiter import Limiter, RequestLimit
+from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from handlers import AbortResponse, errors
 
