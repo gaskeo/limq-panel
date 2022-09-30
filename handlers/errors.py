@@ -15,6 +15,10 @@ class MixinError(Error):
     ...
 
 
+class ServiceError(Error):
+    ...
+
+
 class UserError(Error):
     ...
 
@@ -102,3 +106,8 @@ class EmailExistError(UserError):
 class BadUserError(UserError):
     code = 1004
     description = "User not found"
+
+
+class TooManyRequestsError(ServiceError):
+    code = 1100
+    description = 'too many requests'

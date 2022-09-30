@@ -5,7 +5,9 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
-from typing import ClassVar, Iterable, List
+from typing import ClassVar, Iterable, List, Callable
+
+from flask_limiter.extension import LimitDecorator
 from redis import Redis
 from queue import Queue
 
@@ -13,6 +15,7 @@ from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 from http import HTTPStatus
 
+from content_limits import LimitTypes, Limits
 from forms import CreateMixinForm, RestrictMxForm
 
 from storage.channel import Channel
@@ -134,10 +137,14 @@ def delete_mixin_redis(rds_sess: Redis, source_channel_id: str,
         mixins)
 
 
-def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
+def create_handler(sess_cr: ClassVar, rds_sess: Redis,
+                   limits: Callable[[int, LimitTypes], LimitDecorator]
+                   ) -> Blueprint:
     app = Blueprint("mixin", __name__)
 
     @app.route(ApiRoutes.GetMixins, methods=[RequestMethods.GET])
+    @limits(Limits.GetMixins, LimitTypes.ip)
+    @limits(Limits.GetMixins, LimitTypes.user)
     @login_required
     def do_get_mixins():
         channel_id = request.args.get('channel_id', '')
@@ -182,6 +189,8 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         return jsonify({'in': mixin_in_json, 'out': mixin_out_json})
 
     @app.route(ApiRoutes.CreateMixin, methods=[RequestMethods.POST])
+    @limits(Limits.MixinCreate, LimitTypes.ip)
+    @limits(Limits.MixinCreate, LimitTypes.user)
     @login_required
     def do_create_mixin():
         """ Handler for mixin creating. """
@@ -247,6 +256,8 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         return {"mixin": get_base_json_channel(src_channel)}
 
     @app.route(ApiRoutes.RestrictMixin, methods=[RequestMethods.POST])
+    @limits(Limits.MixinDelete, LimitTypes.ip)
+    @limits(Limits.MixinDelete, LimitTypes.user)
     @login_required
     def restrict_out_mx():
         """ Handler for restriction of  mixin. """

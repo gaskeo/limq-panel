@@ -4,7 +4,7 @@ from flask_login import current_user
 
 from flask_limiter import Limiter, RequestLimit
 from flask_limiter.util import get_remote_address
-from handlers import AbortResponse
+from handlers import AbortResponse, errors
 
 from typing import Callable
 
@@ -12,12 +12,20 @@ from enum import Enum
 
 
 class Limits:
+    """
+    Rade limits on API methods: <count>/minute
+    """
+
     ChannelCreate = 2
+    GetChannels = 60
     ChannelRename = 3
     KeyCreate = 10
+    GetKeys = 60
     KeyToggle = 10
     KeyDelete = 10
     MixinCreate = 10
+    GetMixins = 60
+    MixinDelete = 10
 
 
 def get_user_id():
@@ -63,8 +71,7 @@ def init_limit(app: Flask, redis_uri: str, redis_params) -> \
     return create_limit
 
 
-def limit_response(request_limit: RequestLimit):
+def limit_response(r):
     return make_response(AbortResponse(
-        ok=False, code=1100,
-        description=f'too many requests. '
-                    f'Available {request_limit.limit}'), 429)
+        ok=False, code=errors.TooManyRequestsError.code,
+        description=errors.TooManyRequestsError.description), 429)

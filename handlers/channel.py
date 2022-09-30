@@ -133,7 +133,8 @@ def confirm_edit_channel_form(
 
 
 def create_handler(sess_cr: ClassVar,
-                   limits: Callable[[int, LimitTypes], LimitDecorator]) -> Blueprint:
+                   limits: Callable[[int, LimitTypes], LimitDecorator]
+                   ) -> Blueprint:
     """
     A closure for instantiating the handler
     that maintains channel processes.
@@ -170,6 +171,8 @@ def create_handler(sess_cr: ClassVar,
         return jsonify(get_base_json_channel(channel))
 
     @app.route(ApiRoutes.GetChannels, methods=[RequestMethods.GET])
+    @limits(Limits.GetChannels, LimitTypes.ip)
+    @limits(Limits.GetChannels, LimitTypes.user)
     @login_required
     def do_get_channel():
         session = sess_cr()
@@ -184,6 +187,8 @@ def create_handler(sess_cr: ClassVar,
         return jsonify(json_channels)
 
     @app.route(ApiRoutes.RenameChannel, methods=[RequestMethods.PUT])
+    @limits(Limits.ChannelRename, LimitTypes.ip)
+    @limits(Limits.ChannelRename, LimitTypes.user)
     @login_required
     def do_edit_channel():
         """ Handler for settings changing page. """

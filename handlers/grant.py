@@ -6,14 +6,16 @@
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
 from datetime import datetime
-from typing import ClassVar, TypedDict, NamedTuple, Literal
+from typing import ClassVar, TypedDict, NamedTuple, Literal, Callable
 
 from flask import Blueprint, request, jsonify
+from flask_limiter.extension import LimitDecorator
 from flask_login import current_user, login_required
 from http import HTTPStatus
 
 from redis import Redis
 
+from content_limits import LimitTypes, Limits
 from forms import CreateKeyForm, ToggleKeyActiveForm, DeleteKeyForm
 
 from storage.channel import Channel
@@ -109,7 +111,9 @@ def confirm_create_key_form(form: CreateKeyForm
     ), None
 
 
-def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
+def create_handler(sess_cr: ClassVar, rds_sess: Redis,
+                   limits: Callable[[int, LimitTypes], LimitDecorator]
+                   ) -> Blueprint:
     """
     A closure for instantiating the handler
     that maintains keys processes.
@@ -119,6 +123,8 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
     app = Blueprint("grant", __name__)
 
     @app.route(ApiRoutes.Grant, methods=[RequestMethods.POST])
+    @limits(Limits.KeyCreate, LimitTypes.ip)
+    @limits(Limits.KeyCreate, LimitTypes.user)
     @login_required
     def do_grant():
         form = CreateKeyForm(request.form)
@@ -161,6 +167,8 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         return jsonify(get_json_key(key))
 
     @app.route(ApiRoutes.GetKeys, methods=[RequestMethods.GET])
+    @limits(Limits.GetKeys, LimitTypes.ip)
+    @limits(Limits.GetKeys, LimitTypes.user)
     @login_required
     def do_get_keys():
         channel_id = request.args.get('channel_id', '')
@@ -193,6 +201,8 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         return jsonify(keys_json)
 
     @app.route(ApiRoutes.ToggleKey, methods=[RequestMethods.PUT])
+    @limits(Limits.KeyToggle, LimitTypes.ip)
+    @limits(Limits.KeyToggle, LimitTypes.user)
     @login_required
     def do_toggle_key():
         form = ToggleKeyActiveForm(request.form)
@@ -231,6 +241,8 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis) -> Blueprint:
         return jsonify(get_json_key(key))
 
     @app.route(ApiRoutes.DeleteKey, methods=[RequestMethods.POST])
+    @limits(Limits.KeyDelete, LimitTypes.ip)
+    @limits(Limits.KeyDelete, LimitTypes.user)
     @login_required
     def delete_key():
         """ Handler for deletion of keys """
