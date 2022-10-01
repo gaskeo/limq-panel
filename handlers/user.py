@@ -8,13 +8,15 @@
 from base64 import b64decode
 from binascii import Error as DecErr
 
-from typing import ClassVar, TypedDict, NamedTuple
+from typing import ClassVar, TypedDict, NamedTuple, Callable
 
 from flask import Blueprint, request, jsonify, Response
+from flask_limiter.extension import LimitDecorator
 from flask_login import login_required, logout_user, login_user, \
     current_user, LoginManager
 from http import HTTPStatus
 
+from content_limits import LimitTypes, Limits
 from forms import RegisterForm, LoginForm, ChangeUsernameForm, \
     ChangeEmailForm, ChangePasswordForm
 from storage.keygen import generate_user_id
@@ -185,7 +187,9 @@ def confirm_change_password_form(form: ChangePasswordForm) -> \
         new_password=valid_new_password), None
 
 
-def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
+def create_handler(sess_cr: ClassVar, lm: LoginManager,
+                   limits: Callable[[int, LimitTypes], LimitDecorator]
+                   ) -> Blueprint:
     """
     A closure for instantiating the handler
     that maintains user processes.
@@ -210,6 +214,8 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         return response
 
     @app.route(ApiRoutes.GetUser, methods=[RequestMethods.GET])
+    @limits(Limits.GetUser, LimitTypes.ip)
+    @limits(Limits.GetUser, LimitTypes.user)
     def get_user():
         if current_user.is_authenticated:
             return jsonify(UserResponseJson(
@@ -219,6 +225,8 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         return jsonify(UserResponseJson(auth=False, user={}, path='/'))
 
     @app.route(ApiRoutes.Register, methods=[RequestMethods.POST])
+    @limits(Limits.Register, LimitTypes.ip)
+    @limits(Limits.Register, LimitTypes.user)
     def register():
         """ Handler for register """
         form = RegisterForm()
@@ -257,6 +265,8 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
         return {"status": True, "path": "/login"}
 
     @app.route(ApiRoutes.Login, methods=[RequestMethods.POST])
+    @limits(Limits.Login, LimitTypes.ip)
+    @limits(Limits.Login, LimitTypes.user)
     def login():
         """ Handler for login """
         form = LoginForm()
@@ -291,6 +301,8 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
     @app.route(ApiRoutes.RenameUser, methods=[RequestMethods.PUT])
     @login_required
+    @limits(Limits.UserRename, LimitTypes.ip)
+    @limits(Limits.UserRename, LimitTypes.user)
     def do_change_username():
         form = ChangeUsernameForm()
 
@@ -321,6 +333,8 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
     @app.route(ApiRoutes.ChangeEmail, methods=[RequestMethods.PUT])
     @login_required
+    @limits(Limits.ChangeEmail, LimitTypes.ip)
+    @limits(Limits.ChangeEmail, LimitTypes.user)
     def do_change_email():
         """ E-mail changing handler. """
         form = ChangeEmailForm()
@@ -364,6 +378,8 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
     @app.route(ApiRoutes.ChangePassword, methods=[RequestMethods.PUT])
     @login_required
+    @limits(Limits.ChangePassword, LimitTypes.ip)
+    @limits(Limits.ChangePassword, LimitTypes.user)
     def do_change_password():
         """ Password changing handler. """
 
@@ -396,6 +412,8 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager) -> Blueprint:
 
     @app.route(ApiRoutes.Logout, methods=[RequestMethods.POST])
     @login_required
+    @limits(Limits.Logout, LimitTypes.ip)
+    @limits(Limits.Logout, LimitTypes.user)
     def logout():
         """ Handler for logging out """
 

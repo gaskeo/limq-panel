@@ -13,7 +13,7 @@ from wtforms.validators import DataRequired, Length, Email
 
 class LoginForm(FlaskForm):
     """ WTForm for logging in """
-    email = StringField("Электропочта", validators=[Email()])
+    email = StringField("Электронная почта", validators=[Email()])
     password = PasswordField("Пароль", validators=[DataRequired()])
     remember_me = BooleanField("Запомнить меня")
 
@@ -21,7 +21,7 @@ class LoginForm(FlaskForm):
 class RegisterForm(FlaskForm):
     """ WTForm for registration """
 
-    email = StringField("Электропочта", validators=[Email()])
+    email = StringField("Электронная почта", validators=[Email()])
     username = StringField("Ваше имя", validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
 
@@ -88,7 +88,7 @@ class ChangeUsernameForm(FlaskForm):
 class ChangeEmailForm(FlaskForm):
     """ WTForm for e-mail changing """
 
-    new_email = StringField("Новая электропочта",
+    new_email = StringField("Новая электронная почта",
                             validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
 

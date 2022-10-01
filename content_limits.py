@@ -20,7 +20,7 @@ from enum import Enum
 
 class Limits:
     """
-    Rade limits on API methods: <count>/minute
+    Rate limits on API methods: <count>/minute
     """
 
     ChannelCreate = 2
@@ -33,6 +33,13 @@ class Limits:
     MixinCreate = 10
     GetMixins = 60
     MixinDelete = 10
+    GetUser = 60
+    Register = 20
+    Login = 20
+    UserRename = 3
+    ChangeEmail = 5
+    ChangePassword = 3
+    Logout = 1
 
 
 def get_user_id():
@@ -78,7 +85,7 @@ def init_limit(app: Flask, redis_uri: str, redis_params) -> \
     return create_limit
 
 
-def limit_response(r):
+def limit_response(_):
     return make_response(AbortResponse(
         ok=False, code=errors.TooManyRequestsError.code,
         description=errors.TooManyRequestsError.description), 429)

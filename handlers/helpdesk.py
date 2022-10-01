@@ -10,7 +10,8 @@ from flask import Blueprint, render_template
 
 def create_handler() -> Blueprint:
     """
-    A closure for instantiating the handler that maintains helpdesk processes.
+    A closure for instantiating the handler
+    that maintains helpdesk processes.
     Must borrow a SqlAlchemy session creator for further usage.
     :return Blueprint object
     """

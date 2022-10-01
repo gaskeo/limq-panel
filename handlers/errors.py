@@ -10,6 +10,11 @@ class Error:
     description: str
 
 
+class Ok(Error):
+    code = 200
+    description = 'Ok'
+
+
 class ChannelError(Error):
     ...
 

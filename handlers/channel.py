@@ -132,6 +132,17 @@ def confirm_edit_channel_form(
                               valid_channel_name), None
 
 
+def get_user_channels(user: User, session: ClassVar):
+    channels = session.query(Channel) \
+            .filter(Channel.owner_id == user.id).all()
+    return [channel.id for channel in channels]
+
+
+def how_much_channels_available(user: User, channel_count: int):
+    # if user.
+    ...
+
+
 def create_handler(sess_cr: ClassVar,
                    limits: Callable[[int, LimitTypes], LimitDecorator]
                    ) -> Blueprint:
@@ -175,6 +186,8 @@ def create_handler(sess_cr: ClassVar,
     @limits(Limits.GetChannels, LimitTypes.user)
     @login_required
     def do_get_channel():
+        print(get_user_channels(current_user.id, sess_cr()))
+
         session = sess_cr()
         channels = session.query(Channel) \
             .filter(Channel.owner_id == current_user.id).all()

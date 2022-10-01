@@ -5,11 +5,10 @@
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
 
-from typing import ClassVar, Iterable, List, Callable
+from typing import ClassVar, Callable
 
 from flask_limiter.extension import LimitDecorator
 from redis import Redis
-from queue import Queue
 
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
@@ -23,23 +22,16 @@ from storage.key import Key
 from storage.mixin import Mixin
 from storage.user import User
 
+from redis_storage import mixin_not_create_loop, add_mixin, delete_mixin
+
 from . import make_abort, ApiRoutes, RequestMethods, AbortResponse
 from handlers.channel import confirm_channel, get_base_json_channel
 from .errors import MixinError, GrantError, BadKeyError, \
     SelfMixinError, KeyPermissionsError, ChannelError, \
     ChannelNotExistError, BadThreadError, BadKeyTypeError, \
-    AlreadyMixedError, CircleMixinError
+    AlreadyMixedError, CircleMixinError, Ok
 
-REDIS_MIXIN_KEY = 'limq_mixin_{channel_id}'
-
-
-class ChannelIdQueue(Queue):
-    def __init__(self):
-        super().__init__()
-
-    def put_several(self, items: Iterable):
-        for item in items:
-            self.put(item)
+StatusCode = int
 
 
 def confirm_key_on_mixin(key: Key, channel: Channel) -> \
@@ -56,10 +48,7 @@ def confirm_key_on_mixin(key: Key, channel: Channel) -> \
     if not key.mixin_allowed():
         return KeyPermissionsError()
 
-    return
-
-
-StatusCode = int
+    return Ok()
 
 
 def confirm_channels(channel_1: Channel, channel_2: Channel, user: User,
@@ -85,58 +74,6 @@ def confirm_restrict_mixin_form(form: RestrictMxForm) -> \
     return
 
 
-def check_circle_mixin(session, source_id: str, dest_id: str) -> bool:
-    def get_dest_ids(mixins: Iterable[Mixin]) -> List[str]:
-        return [mixin.dest_channel for mixin in mixins]
-
-    mixins_out_dest = session.query(Mixin).filter(
-        Mixin.source_channel == dest_id).all()
-
-    if not mixins_out_dest:
-        return True
-    queue = ChannelIdQueue()
-    queue.put_several(get_dest_ids(mixins_out_dest))
-
-    while not queue.empty():
-        next_id = queue.get()
-        if next_id == source_id:
-            return False
-
-        mixins_out = session.query(Mixin).filter(
-            Mixin.source_channel == next_id).all()
-
-        if mixins_out:
-            queue.put_several(get_dest_ids(mixins_out))
-    return True
-
-
-def add_mixin_redis(rds_sess: Redis, new_mixin: Mixin,
-                    src_channel: Channel):
-    mixins = str(rds_sess.get(
-        REDIS_MIXIN_KEY.format(channel_id=src_channel.id))) or ''
-    if not mixins:
-        mixins = new_mixin.dest_channel
-    else:
-        mixins = mixins.split(',')
-        mixins.append(new_mixin.dest_channel)
-        mixins = ','.join(mixins)
-    rds_sess.set(
-        REDIS_MIXIN_KEY.format(channel_id=src_channel.id), mixins)
-
-
-def delete_mixin_redis(rds_sess: Redis, source_channel_id: str,
-                       dest_channel_id: str):
-    mixins = str(rds_sess.get(
-        REDIS_MIXIN_KEY.format(channel_id=source_channel_id))) or ''
-    if mixins and dest_channel_id in mixins:
-        mixins = mixins.split(',')
-        mixins.remove(dest_channel_id)
-        mixins = ','.join(mixins)
-    rds_sess.set(
-        REDIS_MIXIN_KEY.format(channel_id=source_channel_id),
-        mixins)
-
-
 def create_handler(sess_cr: ClassVar, rds_sess: Redis,
                    limits: Callable[[int, LimitTypes], LimitDecorator]
                    ) -> Blueprint:
@@ -148,6 +85,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis,
     @login_required
     def do_get_mixins():
         channel_id = request.args.get('channel_id', '')
+
         if not channel_id:
             make_abort(AbortResponse(
                 ok=False,
@@ -215,7 +153,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis,
         key = session.query(Key).filter(Key.key == mix_key).first()
         error = confirm_key_on_mixin(key, channel)
 
-        if error:
+        if error.code != Ok.code:
             return make_abort(AbortResponse(
                 ok=False,
                 code=error.code,
@@ -236,7 +174,8 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis,
             ),
                 HTTPStatus.BAD_REQUEST)
 
-        if not check_circle_mixin(session, src_channel.id, channel.id):
+        if not mixin_not_create_loop(session, src_channel.id,
+                                     channel.id):
             return make_abort(AbortResponse(
                 ok=False,
                 code=CircleMixinError.code,
@@ -251,7 +190,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis,
         session.add(new_mixin)
         session.commit()
 
-        add_mixin_redis(rds_sess, new_mixin, src_channel)
+        add_mixin(rds_sess, src_channel.id, new_mixin.dest_channel)
 
         return {"mixin": get_base_json_channel(src_channel)}
 
@@ -315,8 +254,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis,
         session.delete(mixin)
         session.commit()
 
-        delete_mixin_redis(rds_sess, source_channel_id, dest_channel_id)
-
+        delete_mixin(rds_sess, source_channel_id, dest_channel_id)
         return {'mixin': channel_2.id}
 
     return app

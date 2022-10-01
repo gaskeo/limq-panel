@@ -22,6 +22,9 @@ from storage.channel import Channel
 from storage.key import Key
 from storage.keygen import generate_key
 from storage.mixin import Mixin
+from redis_storage import set_key_permissions, \
+    set_key_channel_id
+import redis_storage
 
 from . import make_abort, ApiRoutes, RequestMethods, AbortResponse
 from handlers.channel import confirm_channel
@@ -29,8 +32,6 @@ from .errors import GrantError, BadChannelIdError, BadKeyError, \
     ChannelNotExistError
 
 MAX_KEY_NAME_LENGTH = 20
-
-REDIS_KEY_KEY = 'limq_isolate_{key}'
 
 
 class KeyJson(TypedDict):
@@ -159,10 +160,9 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis,
 
         session.add(key)
         session.commit()
-        rds_sess.hset(REDIS_KEY_KEY.format(key=key.key),
-                      'permissions', perm)
-        rds_sess.hset(REDIS_KEY_KEY.format(key=key.key),
-                      'channel_id', channel_id)
+
+        set_key_permissions(rds_sess, key.key, perm)
+        set_key_channel_id(rds_sess, key.key, channel_id)
 
         return jsonify(get_json_key(key))
 
@@ -235,9 +235,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis,
         key.toggle_active()
         session.commit()
 
-        rds_sess.hset(REDIS_KEY_KEY.format(key=key.key),
-                      'permissions', key.perm)
-
+        set_key_permissions(rds_sess, key.key, key.perm)
         return jsonify(get_json_key(key))
 
     @app.route(ApiRoutes.DeleteKey, methods=[RequestMethods.POST])
@@ -278,7 +276,7 @@ def create_handler(sess_cr: ClassVar, rds_sess: Redis,
         session.delete(key)
         session.commit()
 
-        rds_sess.delete(REDIS_KEY_KEY.format(key=key.key))
+        redis_storage.delete_key(rds_sess, key.key)
 
         return {'key': key.key}
 

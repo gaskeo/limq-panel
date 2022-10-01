@@ -47,16 +47,16 @@ storage_uri = f"redis://{redis_params['host']}:" \
 limit_generator = init_limit(app, storage_uri, redis_params)
 
 # Blueprints registration
-app.register_blueprint(index.create_handler())
+app.register_blueprint(index.create_handler(limit_generator))
 app.register_blueprint(
     channel.create_handler(SessObject, limit_generator))
 
 app.register_blueprint(user.create_handler(SessObject, login_manager,
-                                           ))
+                                           limit_generator))
 app.register_blueprint(mixin.create_handler(
-    SessObject, RedisSessObject, ))
+    SessObject, RedisSessObject, limit_generator))
 app.register_blueprint(grant.create_handler(
-    SessObject, RedisSessObject, ))
+    SessObject, RedisSessObject, limit_generator))
 app.register_blueprint(helpdesk.create_handler())
 app.register_error_handler(401, error_handlers.error_401)
 app.register_blueprint(service.create_handler())
