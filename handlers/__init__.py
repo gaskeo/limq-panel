@@ -21,6 +21,7 @@ class ApiRoutes:
     Login = '/do/login'
     Register = '/do/register'
     GetUser = '/do/get_user'
+    GetQuotas = '/do/get_quotas'
     RenameUser = '/do/rename_user'
     ChangeEmail = '/do/change_email'
     ChangePassword = '/do/change_password'

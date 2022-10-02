@@ -10,6 +10,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, \
     check_password_hash
 
+from .user_type import UserType
 from .db_session import ModelBase
 from .keygen import generate_salt
 
@@ -23,6 +24,8 @@ class User(ModelBase, UserMixin):
 
     id = sqlalchemy.Column(sqlalchemy.String(length=32),
                            primary_key=True)
+
+    user_type = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(UserType.type_id))
 
     username = sqlalchemy.Column(sqlalchemy.String(length=32),
                                  nullable=True)

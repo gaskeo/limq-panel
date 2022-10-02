@@ -8,7 +8,7 @@
 from base64 import b64decode
 from binascii import Error as DecErr
 
-from typing import ClassVar, TypedDict, NamedTuple, Callable
+from typing import ClassVar, TypedDict, NamedTuple, Callable, List
 
 from flask import Blueprint, request, jsonify, Response
 from flask_limiter.extension import LimitDecorator
@@ -22,10 +22,11 @@ from forms import RegisterForm, LoginForm, ChangeUsernameForm, \
 from storage.keygen import generate_user_id
 
 from storage.user import User
+from storage.user_type import UserType
 
 from . import make_abort, confirm_email, ApiRoutes, RequestMethods, \
     AbortResponse
-from .errors import UserError, BadUserError, PasswordError,\
+from .errors import UserError, BadUserError, PasswordError, \
     EmailError, UsernameError, EmailExistError
 
 MIN_PATH_LENGTH = 2
@@ -39,9 +40,20 @@ class UserJson(TypedDict):
     email: str
 
 
+class QuotasJson(TypedDict):
+    name: str
+    max_channel_count: int              # pcs
+    max_message_size: int               # KB
+    bufferization: bool
+    max_bufferred_message_count: int    # pcs
+    buffered_data_persistency: int      # secs
+    end_to_end_data_encryption: bool
+
+
 class UserResponseJson(TypedDict):
     auth: bool
     user: UserJson
+    quotas: QuotasJson
     path: str
 
 
@@ -84,6 +96,19 @@ def get_user_json(user: User) -> UserJson:
         id=user.id,
         username=user.username,
         email=user.email
+    )
+
+
+def get_quotas_json(quotas: UserType) -> QuotasJson:
+    return QuotasJson(
+        name=quotas.name,
+        max_channel_count=quotas.max_channel_count,
+        max_message_size=quotas.max_message_size,
+        bufferization=quotas.bufferization,
+        max_bufferred_message_count=quotas.max_bufferred_message_count,
+        buffered_data_persistency=quotas.buffered_data_persistency,
+        end_to_end_data_encryption=quotas.end_to_end_data_encryption
+
     )
 
 
@@ -188,7 +213,8 @@ def confirm_change_password_form(form: ChangePasswordForm) -> \
 
 
 def create_handler(sess_cr: ClassVar, lm: LoginManager,
-                   limits: Callable[[int, LimitTypes], LimitDecorator]
+                   limits: Callable[
+                       [int, LimitTypes], LimitDecorator]
                    ) -> Blueprint:
     """
     A closure for instantiating the handler
@@ -218,11 +244,26 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager,
     @limits(Limits.GetUser, LimitTypes.user)
     def get_user():
         if current_user.is_authenticated:
+            session = sess_cr()
+            quotas: UserType = session.query(UserType).filter(
+                UserType.type_id == current_user.user_type).first()
+
             return jsonify(UserResponseJson(
                 auth=True, user=get_user_json(current_user),
-                path='/'))
+                path='/', quotas=get_quotas_json(quotas)))
 
-        return jsonify(UserResponseJson(auth=False, user={}, path='/'))
+        return jsonify(
+            UserResponseJson(auth=False, user={}, path='/', quotas={}))
+
+    @app.route(ApiRoutes.GetQuotas, methods=[RequestMethods.GET])
+    @limits(Limits.GetUser, LimitTypes.ip)
+    @limits(Limits.GetUser, LimitTypes.user)
+    def get_quotas():
+        session = sess_cr()
+        quotas: List[UserType] = list(session.query(UserType).all())
+
+        return jsonify({quota.name: get_quotas_json(quota)
+                        for quota in quotas})
 
     @app.route(ApiRoutes.Register, methods=[RequestMethods.POST])
     @limits(Limits.Register, LimitTypes.ip)
@@ -231,7 +272,6 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager,
         """ Handler for register """
         form = RegisterForm()
 
-        session = sess_cr()
         (email, username, password), error = \
             confirm_register_form(form)
 
@@ -242,6 +282,7 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager,
                 description=error.description
             ), HTTPStatus.UNPROCESSABLE_ENTITY)
 
+        session = sess_cr()
         if session.query(User).filter(
                 User.email == email).first():
             return make_abort(AbortResponse(
@@ -271,7 +312,8 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager,
         """ Handler for login """
         form = LoginForm()
 
-        (email, password, remember), error = confirm_login_form(form)
+        (email, password, remember), error = confirm_login_form(
+            form)
         if error:
             return make_abort(AbortResponse(
                 ok=False,
@@ -339,7 +381,8 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager,
         """ E-mail changing handler. """
         form = ChangeEmailForm()
 
-        (new_email, password), error = confirm_change_email_form(form)
+        (new_email, password), error = confirm_change_email_form(
+            form)
         if error:
             return make_abort(AbortResponse(
                 ok=False,
@@ -361,7 +404,8 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager,
             ),
                 HTTPStatus.FORBIDDEN)
 
-        if session.query(User).filter(User.email == new_email).first():
+        if session.query(User).filter(
+                User.email == new_email).first():
             return make_abort(AbortResponse(
                 ok=False,
                 code=EmailExistError.code,
@@ -376,7 +420,8 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager,
                                         user=get_user_json(user),
                                         path=''))
 
-    @app.route(ApiRoutes.ChangePassword, methods=[RequestMethods.PUT])
+    @app.route(ApiRoutes.ChangePassword,
+               methods=[RequestMethods.PUT])
     @login_required
     @limits(Limits.ChangePassword, LimitTypes.ip)
     @limits(Limits.ChangePassword, LimitTypes.user)
