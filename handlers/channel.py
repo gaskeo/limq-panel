@@ -19,10 +19,11 @@ from storage.channel import Channel
 from storage.key import Key
 from storage.keygen import generate_channel_id
 from storage.user import User
+from storage.user_type import UserType
 
 from . import make_abort, ApiRoutes, RequestMethods, AbortResponse
 from .errors import ChannelError, ChannelNotExistError, \
-    NotChannelOwnerError, ChannelNameError
+    NotChannelOwnerError, ChannelNameError, ChannelLimitOver
 
 MAX_CHANNEL_NAME_LENGTH = 64
 
@@ -160,6 +161,20 @@ def create_handler(sess_cr: ClassVar,
     @limits(Limits.ChannelCreate, LimitTypes.user)
     @login_required
     def do_create_channel():
+        session = sess_cr()
+
+        channel_count = len(
+            get_user_channels(current_user, session))
+        user_quota: UserType = session.query(UserType).filter(
+            UserType.type_id == current_user.user_type).first()
+
+        if channel_count >= user_quota.max_channel_count:
+            return make_abort(AbortResponse(
+                ok=False,
+                code=ChannelLimitOver.code,
+                description=ChannelLimitOver.description
+            ), HTTPStatus.LOCKED)
+
         form = RegisterChannelForm()
 
         channel_name, error = confirm_create_channel_form(form)
@@ -170,7 +185,6 @@ def create_handler(sess_cr: ClassVar,
                               description=error.description),
                 HTTPStatus.UNPROCESSABLE_ENTITY)
 
-        session = sess_cr()
         channel = Channel(
             name=channel_name,
             id=generate_channel_id(),
@@ -185,9 +199,7 @@ def create_handler(sess_cr: ClassVar,
     @limits(Limits.GetChannels, LimitTypes.ip)
     @limits(Limits.GetChannels, LimitTypes.user)
     @login_required
-    def do_get_channel():
-        print(get_user_channels(current_user.id, sess_cr()))
-
+    def do_get_channels():
         session = sess_cr()
         channels = session.query(Channel) \
             .filter(Channel.owner_id == current_user.id).all()

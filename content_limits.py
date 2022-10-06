@@ -7,7 +7,7 @@
 
 from flask import make_response, Flask
 from flask_limiter.extension import LimitDecorator
-from flask_login import current_user
+from flask_login import current_user, AnonymousUserMixin
 
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -43,7 +43,11 @@ class Limits:
 
 
 def get_user_id():
-    return current_user.id
+    if isinstance(current_user, AnonymousUserMixin):
+        user_id = get_remote_address() + LimitTypes.user.value
+    else:
+        user_id = current_user.id
+    return user_id
 
 
 class LimitTypes(Enum):

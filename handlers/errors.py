@@ -122,4 +122,9 @@ class BadUserError(UserError):
 
 class TooManyRequestsError(ServiceError):
     code = 1100
-    description = 'too many requests'
+    description = 'Too many requests'
+
+
+class ChannelLimitOver(ServiceError):
+    code = 1101
+    description = "You can't create channel because of limit"

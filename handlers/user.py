@@ -40,7 +40,7 @@ class UserJson(TypedDict):
     email: str
 
 
-class QuotasJson(TypedDict):
+class QuotaJson(TypedDict):
     name: str
     max_channel_count: int              # pcs
     max_message_size: int               # KB
@@ -53,7 +53,7 @@ class QuotasJson(TypedDict):
 class UserResponseJson(TypedDict):
     auth: bool
     user: UserJson
-    quotas: QuotasJson
+    quota: QuotaJson
     path: str
 
 
@@ -99,8 +99,8 @@ def get_user_json(user: User) -> UserJson:
     )
 
 
-def get_quotas_json(quotas: UserType) -> QuotasJson:
-    return QuotasJson(
+def get_quotas_json(quotas: UserType) -> QuotaJson:
+    return QuotaJson(
         name=quotas.name,
         max_channel_count=quotas.max_channel_count,
         max_message_size=quotas.max_message_size,
@@ -250,20 +250,20 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager,
 
             return jsonify(UserResponseJson(
                 auth=True, user=get_user_json(current_user),
-                path='/', quotas=get_quotas_json(quotas)))
+                path='/', quota=get_quotas_json(quotas)))
 
         return jsonify(
-            UserResponseJson(auth=False, user={}, path='/', quotas={}))
+            UserResponseJson(auth=False, user={}, path='/', quota={}))
 
     @app.route(ApiRoutes.GetQuotas, methods=[RequestMethods.GET])
     @limits(Limits.GetUser, LimitTypes.ip)
     @limits(Limits.GetUser, LimitTypes.user)
     def get_quotas():
         session = sess_cr()
-        quotas: List[UserType] = list(session.query(UserType).all())
+        quotas: List[QuotaJson] = list(
+            get_quotas_json(q) for q in session.query(UserType).all())
 
-        return jsonify({quota.name: get_quotas_json(quota)
-                        for quota in quotas})
+        return jsonify({'account_types': quotas})
 
     @app.route(ApiRoutes.Register, methods=[RequestMethods.POST])
     @limits(Limits.Register, LimitTypes.ip)
@@ -292,11 +292,14 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager,
             ),
                 HTTPStatus.CONFLICT)
 
+        free = session.query(UserType)\
+            .filter(UserType.name == 'Free').first()
         # noinspection PyArgumentList
         user = User(
             id=generate_user_id(),
             email=email,
-            username=username
+            username=username,
+            user_type=free.type_id
         )
 
         user.set_password(password)
