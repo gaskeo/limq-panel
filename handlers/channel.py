@@ -23,7 +23,10 @@ from storage.user_type import UserType
 
 from . import make_abort, ApiRoutes, RequestMethods, AbortResponse
 from .errors import ChannelError, ChannelNotExistError, \
-    NotChannelOwnerError, ChannelNameError, ChannelLimitOver
+    NotChannelOwnerError, ChannelNameError, ChannelLimitOver, \
+    ChannelMaxMessageSizeLimitOver, ChannelBufferLimitOver, \
+    ChannelBufferedMessageCountLimitOver, ChannelBufferedDataTTLOver, \
+    ChannelEndToEndNotAvailable
 
 MAX_CHANNEL_NAME_LENGTH = 64
 
@@ -44,9 +47,20 @@ class ChannelJson(TypedDict):
     read_keys: KeysTypesCount
     write_keys: KeysTypesCount
 
+    max_message_size: int
+    need_bufferization: bool
+    buffered_message_count: int
+    buffered_data_persistency: int
+    end_to_end_data_encryption: bool
+
 
 class CreateChannelTuple(NamedTuple):
     channel_name: str
+    max_message_size: int
+    need_bufferization: bool
+    buffered_message_count: int
+    buffered_data_persistency: int
+    end_to_end_data_encryption: bool
 
 
 class RenameChannelTuple(NamedTuple):
@@ -75,7 +89,13 @@ def get_base_json_channel(channel: Channel) -> ChannelJson:
     return ChannelJson(channel_id=channel.id,
                        channel_name=channel.name,
                        read_keys=KeysTypesCount(active=0, inactive=0),
-                       write_keys=KeysTypesCount(active=0, inactive=0))
+                       write_keys=KeysTypesCount(active=0, inactive=0),
+                       max_message_size=0,
+                       need_bufferization=False,
+                       buffered_message_count=0,
+                       buffered_data_persistency=0,
+                       end_to_end_data_encryption=False
+                       )
 
 
 def get_json_channel(channel: Channel, session: ClassVar) -> \
@@ -88,6 +108,15 @@ def get_json_channel(channel: Channel, session: ClassVar) -> \
     keys_stats = get_keys_count(keys)
     json_channel['read_keys'] = keys_stats.can_read
     json_channel['write_keys'] = keys_stats.can_write
+
+    json_channel['max_message_size'] = channel.max_message_size
+    json_channel['need_bufferization'] = channel.need_bufferization
+    json_channel['buffered_message_count'] = \
+        channel.buffered_message_count
+    json_channel['buffered_data_persistency'] = \
+        channel.buffered_data_persistency
+    json_channel['end_to_end_data_encryption'] = \
+        channel.end_to_end_data_encryption
     return json_channel
 
 
@@ -113,13 +142,60 @@ def confirm_channel(channel: Channel or None,
 
 
 def confirm_create_channel_form(
-        form: RegisterChannelForm) -> (
+        form: RegisterChannelForm, quota: UserType) -> (
         CreateChannelTuple, ChannelError or None):
     valid_channel_name = get_valid_channel_name(form.name.data)
     if not valid_channel_name:
-        return CreateChannelTuple(''), ChannelNameError()
+        return (CreateChannelTuple('', 0, False, 0, 0, False),
+                ChannelNameError())
 
-    return CreateChannelTuple(valid_channel_name), None
+    valid_message_size = form.max_message_size.data
+    if valid_message_size is None or \
+            (valid_message_size > quota.max_message_size or
+             valid_message_size < 1):
+        return (CreateChannelTuple('', 0, False, 0, 0, False),
+                ChannelMaxMessageSizeLimitOver())
+
+    if (valid_need_bufferization := form.need_bufferization.data) and \
+            not quota.bufferization:
+        return (CreateChannelTuple('', 0, False, 0, 0, False),
+                ChannelBufferLimitOver())
+
+    valid_buffered_message_count = valid_buffered_data_persistency = 0
+    if valid_need_bufferization:
+        valid_buffered_message_count = \
+            form.buffered_message_count.data
+        if valid_buffered_message_count is None or \
+                (valid_buffered_message_count >
+                 quota.max_bufferred_message_count or
+                 valid_buffered_message_count < 0):
+            return (CreateChannelTuple('', 0, False, 0, 0, False),
+                    ChannelBufferedMessageCountLimitOver())
+
+        valid_buffered_data_persistency = (
+            form.buffered_data_persistency.data)
+        if valid_buffered_data_persistency is None or \
+                (valid_buffered_data_persistency >
+                 quota.buffered_data_persistency or
+                 valid_buffered_data_persistency < 0):
+            return (CreateChannelTuple('', 0, False, 0, 0, False),
+                    ChannelBufferedDataTTLOver())
+
+    valid_end_to_end_data_encryption = (
+            form.end_to_end_data_encryption.data and False)
+    # and False because not available now
+
+    if (valid_end_to_end_data_encryption
+            and not quota.end_to_end_data_encryption):
+        return (CreateChannelTuple('', 0, False, 0, 0, False),
+                ChannelEndToEndNotAvailable())
+
+    return CreateChannelTuple(valid_channel_name,
+                              valid_message_size,
+                              valid_need_bufferization,
+                              valid_buffered_message_count,
+                              valid_buffered_data_persistency,
+                              valid_end_to_end_data_encryption), None
 
 
 def confirm_edit_channel_form(
@@ -135,13 +211,8 @@ def confirm_edit_channel_form(
 
 def get_user_channels(user: User, session: ClassVar):
     channels = session.query(Channel) \
-            .filter(Channel.owner_id == user.id).all()
+        .filter(Channel.owner_id == user.id).all()
     return [channel.id for channel in channels]
-
-
-def how_much_channels_available(user: User, channel_count: int):
-    # if user.
-    ...
 
 
 def create_handler(sess_cr: ClassVar,
@@ -177,7 +248,14 @@ def create_handler(sess_cr: ClassVar,
 
         form = RegisterChannelForm()
 
-        channel_name, error = confirm_create_channel_form(form)
+        (channel_name,
+         max_message_size,
+         need_bufferization,
+         buffered_message_count,
+         buffered_data_persistency,
+         end_to_end_data_encryption), error = (
+            confirm_create_channel_form(form, user_quota))
+
         if error:
             return make_abort(
                 AbortResponse(ok=False,
@@ -188,11 +266,17 @@ def create_handler(sess_cr: ClassVar,
         channel = Channel(
             name=channel_name,
             id=generate_channel_id(),
-            owner_id=current_user.id
+            owner_id=current_user.id,
+            max_message_size=max_message_size,
+            need_bufferization=need_bufferization,
+            buffered_message_count=buffered_message_count,
+            buffered_data_persistency=buffered_data_persistency,
+            end_to_end_data_encryption=end_to_end_data_encryption
         )
 
         session.add(channel)
         session.commit()
+        # redis_api.add_channel(...)
         return jsonify(get_base_json_channel(channel))
 
     @app.route(ApiRoutes.GetChannels, methods=[RequestMethods.GET])

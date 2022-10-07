@@ -50,6 +50,32 @@ class NotChannelOwnerError(ChannelError):
     description = "No access to this channel"
 
 
+class ChannelMaxMessageSizeLimitOver(ChannelError):
+    code = 703
+    description = "Max message size limit over"
+
+
+class ChannelBufferLimitOver(ChannelError):
+    code = 704
+    description = "Buffer limit over"
+
+
+class ChannelBufferedMessageCountLimitOver(ChannelError):
+    code = 705
+    description = "Buffered message count limit over"
+
+
+class ChannelBufferedDataTTLOver(ChannelError):
+    code = 706
+    description = "Buffered data TTL over"
+
+
+class ChannelEndToEndNotAvailable(ChannelError):
+    code = 707
+    description = "End-to-end data encryption not available " \
+                  "on your account plan"
+
+
 class KeyNameError(GrantError):
     code = 800
     description = "Bad key name"

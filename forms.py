@@ -7,7 +7,7 @@
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, \
-    HiddenField, RadioField
+    HiddenField, RadioField, IntegerField
 from wtforms.validators import DataRequired, Length, Email
 
 
@@ -30,6 +30,17 @@ class RegisterChannelForm(FlaskForm):
     """ WTForm for channel creation """
 
     name = StringField("Название", validators=[DataRequired()])
+    max_message_size = IntegerField('Максимальный размер сообщений',
+                                    default=1)
+    need_bufferization = BooleanField('Включить буферизацию',
+                                      false_values=['0'])
+    buffered_message_count = IntegerField('Количество '
+                                          'буферизированных сообщений',
+                                          default=0)
+    buffered_data_persistency = IntegerField('TTL сообщения',
+                                             default=0)
+    end_to_end_data_encryption = BooleanField('end-to-end шифрование',
+                                              false_values=['0'])
 
 
 class RenameChannelForm(FlaskForm):

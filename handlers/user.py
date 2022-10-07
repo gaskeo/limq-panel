@@ -46,7 +46,7 @@ class QuotaJson(TypedDict):
     max_message_size: int               # KB
     bufferization: bool
     max_bufferred_message_count: int    # pcs
-    buffered_data_persistency: int      # secs
+    buffered_data_persistency: int      # hours
     end_to_end_data_encryption: bool
 
 

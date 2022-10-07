@@ -29,5 +29,5 @@ INSERT INTO user_types (name,
                         bufferization,
                         max_bufferred_message_count,
                         buffered_data_persistency,
-                        end_to_end_data_enctyption)
-VALUES ('free', 2, 256, true, 256, 43200, false);
+                        end_to_end_data_encryption)
+VALUES ('Free', 2, 256, true, 256, 12, false);

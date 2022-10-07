@@ -29,3 +29,13 @@ class Channel(ModelBase):
     owner_id = sqlalchemy.Column(sqlalchemy.String,
                                  sqlalchemy.ForeignKey("users.id"),
                                  nullable=False)
+
+    max_message_size = sqlalchemy.Column(sqlalchemy.Integer, default=1)
+    need_bufferization = sqlalchemy.Column(sqlalchemy.Boolean,
+                                           default=False)
+    buffered_message_count = sqlalchemy.Column(sqlalchemy.Integer,
+                                               default=0)
+    buffered_data_persistency = sqlalchemy.Column(sqlalchemy.Integer,
+                                                  default=0)
+    end_to_end_data_encryption = sqlalchemy.Column(sqlalchemy.Boolean,
+                                                   default=False)
