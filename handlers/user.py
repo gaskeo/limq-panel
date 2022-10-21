@@ -339,10 +339,12 @@ def create_handler(sess_cr: ClassVar, lm: LoginManager,
 
         login_user(user, remember=remember)
         path = get_path(request.args.get("path", ''))
+        quotas: UserType = session.query(UserType).filter(
+            UserType.type_id == current_user.user_type).first()
 
         return jsonify(UserResponseJson(
             auth=True, user=get_user_json(current_user),
-            path=path))
+            path=path, quota=get_quotas_json(quotas)))
 
     @app.route(ApiRoutes.RenameUser, methods=[RequestMethods.PUT])
     @login_required
