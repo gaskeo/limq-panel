@@ -12,6 +12,9 @@ from flask_login import current_user, login_required
 from http import HTTPStatus
 from flask_limiter.extension import LimitDecorator
 
+from redis import Redis
+import redis_storage
+
 from forms import RegisterChannelForm, RenameChannelForm
 from content_limits import LimitTypes, Limits
 
@@ -216,6 +219,7 @@ def get_user_channels(user: User, session: ClassVar):
 
 
 def create_handler(sess_cr: ClassVar,
+                   rds_sess: Redis,
                    limits: Callable[[int, LimitTypes], LimitDecorator]
                    ) -> Blueprint:
     """
@@ -276,7 +280,16 @@ def create_handler(sess_cr: ClassVar,
 
         session.add(channel)
         session.commit()
-        # redis_api.add_channel(...)
+        redis_storage.add_channel(
+            sess=rds_sess,
+            channel_id=channel.id,
+            max_message_size=channel.max_message_size,
+            need_bufferization=channel.need_bufferization,
+            buffered_message_count=channel.buffered_message_count,
+            buffered_data_persistency=channel.buffered_data_persistency,
+            end_to_end_data_encryption=
+            channel.end_to_end_data_encryption
+        )
         return jsonify(get_base_json_channel(channel))
 
     @app.route(ApiRoutes.GetChannels, methods=[RequestMethods.GET])

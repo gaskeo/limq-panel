@@ -49,7 +49,9 @@ limit_generator = init_limit(app, storage_uri, redis_params)
 # Blueprints registration
 app.register_blueprint(index.create_handler(limit_generator))
 app.register_blueprint(
-    channel.create_handler(SessObject, limit_generator))
+    channel.create_handler(
+        SessObject, RedisSessObject, limit_generator)
+)
 
 app.register_blueprint(user.create_handler(SessObject, login_manager,
                                            limit_generator))

@@ -13,7 +13,8 @@ from queue import Queue
 from storage.mixin import Mixin
 
 REDIS_KEY_KEY = 'limq_isolate_{key}'
-REDIS_MIXIN_KEY = 'limq_mixin_{channel_id}'
+REDIS_CHANNEL_KEY = 'limq_channel_{channel_id}'
+MIXINS_FIELD = 'mixins'
 
 
 class RedisKeys:
@@ -34,8 +35,12 @@ def get_redis_key(key: str) -> str:
     return REDIS_KEY_KEY.format(key=key)
 
 
-def get_redis_mixin(source_channel_id: str) -> str:
-    return REDIS_MIXIN_KEY.format(channel_id=source_channel_id)
+# def get_redis_mixin(source_channel_id: str) -> str:
+#     return REDIS_MIXIN_KEY.format(channel_id=source_channel_id)
+
+
+def get_redis_channel(channel_id: str) -> str:
+    return REDIS_CHANNEL_KEY.format(channel_id=channel_id)
 
 
 def set_key_permissions(sess: Redis, key: str, permissions: int):
@@ -52,13 +57,32 @@ def delete_key(sess: Redis, key: str):
     sess.delete(REDIS_KEY_KEY.format(key=key))
 
 
+def generate_redis_mixins(mixins: List[str]) -> str:
+    return ','.join(mixins) if mixins else ''
+
+
+def generate_mixins(redis_mixins: str) -> List[str]:
+    return redis_mixins.split(',') if redis_mixins else []
+
+
 def set_mixins(sess: Redis, src_channel_id: str, mixins: List[str]):
-    sess.set(get_redis_mixin(src_channel_id), ','.join(mixins))
+    str_mixins = generate_redis_mixins(mixins)
+    sess.hset(
+        get_redis_channel(src_channel_id), MIXINS_FIELD, str_mixins)
 
 
 def get_mixins(sess: Redis, src_channel_id: str) -> List[str]:
-    mixins = str(sess.get(get_redis_mixin(src_channel_id))) or ''
-    return mixins.split(',') if mixins else []
+    redis_mixins = sess.hget(
+        get_redis_channel(src_channel_id), MIXINS_FIELD
+    )
+
+    if not redis_mixins:
+        redis_mixins = ''
+
+    if isinstance(redis_mixins, bytes):
+        redis_mixins = redis_mixins.decode('utf-8')
+
+    return generate_mixins(redis_mixins)
 
 
 def add_mixin(sess: Redis,
@@ -101,3 +125,23 @@ def mixin_not_create_loop(db_sess: ClassVar, source_id: str,
         if mixins_out:
             queue.put_several(get_dest_ids(mixins_out))
     return True
+
+
+def add_channel(sess: Redis,
+                channel_id: str,
+                max_message_size: int,
+                need_bufferization: bool,
+                buffered_message_count: int,
+                buffered_data_persistency: int,
+                end_to_end_data_encryption: bool = False):
+    pairs = {
+        "mixins": "",
+        "max_message_size": max_message_size,
+        "need_bufferization": int(need_bufferization),
+        "buffered_message_count": buffered_message_count,
+        "buffered_data_persistency": buffered_data_persistency,
+        "end_to_end_data_encryption": int(end_to_end_data_encryption)
+    }
+
+    sess.hset(REDIS_CHANNEL_KEY.format(channel_id=channel_id),
+              mapping=pairs)
