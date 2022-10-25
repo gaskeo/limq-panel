@@ -10,3 +10,4 @@ psycopg2
 Werkzeug>=2.1.2
 redis>=4.3.3
 requests>=2.28.0
+Flask-Limiter>=2.6.3
