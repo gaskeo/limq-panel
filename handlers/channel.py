@@ -283,12 +283,7 @@ def create_handler(sess_cr: ClassVar,
         redis_storage.add_channel(
             sess=rds_sess,
             channel_id=channel.id,
-            max_message_size=channel.max_message_size,
-            need_bufferization=channel.need_bufferization,
-            buffered_message_count=channel.buffered_message_count,
-            buffered_data_persistency=channel.buffered_data_persistency,
-            end_to_end_data_encryption=
-            channel.end_to_end_data_encryption
+            data=dict(channel)
         )
         return jsonify(get_base_json_channel(channel))
 

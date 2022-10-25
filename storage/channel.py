@@ -39,3 +39,9 @@ class Channel(ModelBase):
                                                   default=0)
     end_to_end_data_encryption = sqlalchemy.Column(sqlalchemy.Boolean,
                                                    default=False)
+
+    def __iter__(self):
+        all_items = filter(lambda item: not item[0].startswith('_'),
+                           self.__dict__.items())
+
+        return iter(all_items)

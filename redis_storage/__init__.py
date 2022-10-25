@@ -127,21 +127,24 @@ def mixin_not_create_loop(db_sess: ClassVar, source_id: str,
     return True
 
 
+def convert_value(v):
+    if isinstance(v, bool):
+        return int(v)
+    return v
+
+
+def convert_dict_to_redis(d: dict) -> dict:
+    converted_dict = dict()
+    for k, v in d.items():
+        converted_dict[str(k)] = convert_value(v)
+
+    return converted_dict
+
+
 def add_channel(sess: Redis,
                 channel_id: str,
-                max_message_size: int,
-                need_bufferization: bool,
-                buffered_message_count: int,
-                buffered_data_persistency: int,
-                end_to_end_data_encryption: bool = False):
-    pairs = {
-        "mixins": "",
-        "max_message_size": max_message_size,
-        "need_bufferization": int(need_bufferization),
-        "buffered_message_count": buffered_message_count,
-        "buffered_data_persistency": buffered_data_persistency,
-        "end_to_end_data_encryption": int(end_to_end_data_encryption)
-    }
+                data: dict):
+    data['mixins'] = ''
 
     sess.hset(REDIS_CHANNEL_KEY.format(channel_id=channel_id),
-              mapping=pairs)
+              mapping=convert_dict_to_redis(data))
