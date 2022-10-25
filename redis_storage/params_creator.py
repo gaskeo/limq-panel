@@ -42,3 +42,14 @@ def get_limits_params() -> Params:
     password = getenv('redis_limit_password') or ''
 
     return Params(host=host, port=port, db=db, password=password)
+
+
+redis_uri = str
+
+
+def get_redis_link() -> (redis_uri, Params):
+    redis_params = get_limits_params()
+    storage_uri = f"redis://{redis_params['host']}:" \
+                  f"{redis_params['port']}"
+
+    return storage_uri, redis_params

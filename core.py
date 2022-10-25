@@ -14,12 +14,12 @@ from flask_login import LoginManager
 from handlers import index, grant, \
     helpdesk, \
     error_handlers, user, channel, mixin, service
-from redis_storage.params_creator import get_limits_params
+
+import limits
 
 from storage.db_session import base_init
 from redis_storage.redis_session import base_init as redis_base_init
 from version import version
-from content_limits import init_limit
 
 # Flask init
 app = Flask(__name__)
@@ -40,11 +40,7 @@ def add_header(response):
 SessObject = base_init()
 RedisSessObject = redis_base_init()
 
-redis_params = get_limits_params()
-storage_uri = f"redis://{redis_params['host']}:" \
-              f"{redis_params['port']}"
-
-limit_generator = init_limit(app, storage_uri, redis_params)
+limit_generator = limits.limit_generator(app)
 
 # Blueprints registration
 app.register_blueprint(index.create_handler(limit_generator))
