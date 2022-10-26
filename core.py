@@ -15,7 +15,7 @@ from handlers import index, grant, \
     helpdesk, \
     error_handlers, user, channel, mixin, service
 
-import limits
+import my_limits
 
 from storage.db_session import base_init
 from redis_storage.redis_session import base_init as redis_base_init
@@ -40,7 +40,7 @@ def add_header(response):
 SessObject = base_init()
 RedisSessObject = redis_base_init()
 
-limit_generator = limits.limit_generator(app)
+limit_generator = my_limits.limit_generator(app)
 
 # Blueprints registration
 app.register_blueprint(index.create_handler(limit_generator))
