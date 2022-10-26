@@ -4,9 +4,16 @@
 #  | |      | | | __| | "_ \  | | | | | | | "_ ` _ \  | |\/| | |  | |
 #  | |____  | | | |_  | | | | | | | |_| | | | | | | | | |  | | |__| |
 #  |______| |_|  \__| |_| |_| |_|  \__,_| |_| |_| |_| |_|  |_|\___\_\
+import psycopg2
+import logging
+
+import sqlalchemy
 
 from storage.db_session import base_init
 from storage.user_type import UserType
+
+FORMAT = '%(asctime)s [%(levelname)s] %(message)s'
+logging.basicConfig(format=FORMAT)
 
 # TODO in json or something else
 USER_TYPES = [
@@ -24,17 +31,28 @@ USER_TYPES = [
 
 # init data in tables
 def init_db_data():
-    sess_object = base_init()
+    while True:
+        try:
+            sess_object = base_init()
+            break
+        except sqlalchemy.exc.OperationalError:
+            logging.warning('DB host is down. Reconnect...')
+        except Exception as e:
+            logging.warning('Unknown error on connecting to DB. '
+                            'Reconnect...')
+
+    logging.info('Connected to DB')
+
     session = sess_object()
     accounts = session.query(UserType).first()
     if accounts:
-        print('db inited')
+        logging.info('DB has already been initialized')
         return
-    print('generate db data...')
+    logging.info('Insert data in DB')
     for user_type in USER_TYPES:
         session.add(user_type)
     session.commit()
-    print('db init done')
+    logging.info('DB init done')
 
 
 def main():
