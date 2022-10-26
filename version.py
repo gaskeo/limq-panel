@@ -7,7 +7,7 @@
 
 import os
 
-VERSION = 'v1.1.0'
+VERSION = 'v1.1.2'
 
 
 if not os.getenv('HOSTNAME'):
